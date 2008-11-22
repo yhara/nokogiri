@@ -2,7 +2,7 @@
 
 require 'rubygems'
 require 'rake'
-
+require 'lib/cross-ffi/rake'
 
 kind = Config::CONFIG['DLEXT']
 windows = RUBY_PLATFORM =~ /mswin/i ? true : false
