@@ -1,0 +1,38 @@
+# # -*- ruby -*-
+
+module CrossFFI
+  class Prim1Ordinary < FFI::Struct
+    @@@
+    struct do |s|
+      s.name "struct prim1"
+      s.include "#{File.dirname(@ffi_name)}/../clib/primitives_support.h"
+      s.field :i, :int
+      s.field :f, :float
+      s.field :d, :double
+      s.field :c, :string
+      s.field :next, :pointer
+    end
+    @@@
+  end
+end
+
+
+module CrossFFI
+  class Prim1CrossFFI < CrossFFI::Struct
+    @@@
+    struct do |s|
+      s.name "struct prim1"
+      s.include "#{File.dirname(@ffi_name)}/../clib/primitives_support.h"
+      s.field :i, :int
+      s.field :f, :float
+      s.field :d, :double
+      s.field :c, :string
+      s.field :next, :pointer
+    end
+    @@@
+
+    def self.gc_free(ptr)
+      ptr.free
+    end
+  end
+end

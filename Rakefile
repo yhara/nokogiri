@@ -279,6 +279,11 @@ namespace :test do
   end
 end
 
+desc "build ffi files"
+task :ffi do
+  ffi_generate("lib/nokogiri", {:cflags => "-I/usr/include/libxml2"})
+end
+
 
 # Only do this on unix, since we can't build on windows
 unless windows
