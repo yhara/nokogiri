@@ -21,6 +21,19 @@ else # ruby-ffi
   gem 'ffi', '>=0.2.0'
   require 'ffi'
 
+  module CrossFFI
+    class Struct < FFI::Struct
+
+      def initialize(pointer)
+        if self.class.respond_to? :free
+          pointer = FFI::AutoPointer.new(pointer) {|p| self.class.free(p)}
+        end
+        super(pointer)
+      end
+
+    end
+  end
+
   class Module
 
     extend FFI::Library

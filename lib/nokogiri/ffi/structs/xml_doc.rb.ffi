@@ -2,7 +2,7 @@
 
 module Nokogiri
   module LibXML
-    class XmlDoc < FFI::Struct
+    class XmlDoc < CrossFFI::Struct
       @@@
       struct do |s|
         s.name "struct _xmlDoc"
@@ -18,8 +18,9 @@ module Nokogiri
       end
       @@@
 
-      def free
-        puts "MIKE: xmlDoc free"
+      def self.free pointer
+        puts "LibXML::XmlDoc free(#{pointer})" if ENV['NOKOGIRI_DEBUG']
+        LibXML.xmlFreeDoc(pointer)
       end
     end
   end

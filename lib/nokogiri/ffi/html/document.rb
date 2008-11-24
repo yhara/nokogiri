@@ -8,14 +8,12 @@ module Nokogiri
       attr_accessor :cstruct
 
       def self.read_memory(string, url, encoding, options)
-        puts "MIKE: new read_memory"
         obj = self.new
         obj.cstruct = LibXML::XmlDoc.new(LibXML.htmlReadMemory(string, string.length, url, encoding, options))
         obj
       end
 
       def self.serialize(doc)
-        puts "MIKE: new serialize"
         mem = MemoryPointer.new :pointer
         size = MemoryPointer.new :int
         LibXML.htmlDocDumpMemory(doc.cstruct.pointer, mem, size)
