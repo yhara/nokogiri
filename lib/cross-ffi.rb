@@ -89,6 +89,7 @@ else # ruby-ffi
     end
   end
 
+  # this will be in ffi 0.2.0 and should be removed after that.
   module FFI
     class ManagedStruct < FFI::Struct
 
