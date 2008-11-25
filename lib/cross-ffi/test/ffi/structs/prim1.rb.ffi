@@ -5,7 +5,7 @@ module CrossFFI
     @@@
     struct do |s|
       s.name "struct prim1"
-      s.include "#{File.dirname(@ffi_name)}/../clib/primitives_support.h"
+      s.include "#{File.dirname(@ffi_name)}/../../clib/primitives_support.h"
       s.field :i, :int
       s.field :f, :float
       s.field :d, :double
@@ -22,7 +22,7 @@ module CrossFFI
     @@@
     struct do |s|
       s.name "struct prim1"
-      s.include "#{File.dirname(@ffi_name)}/../clib/primitives_support.h"
+      s.include "#{File.dirname(@ffi_name)}/../../clib/primitives_support.h"
       s.field :i, :int
       s.field :f, :float
       s.field :d, :double
