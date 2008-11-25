@@ -18,7 +18,7 @@ end
 
 
 module CrossFFI
-  class Prim1CrossFFI < CrossFFI::Struct
+  class Prim1CrossFFI < FFI::ManagedStruct
     @@@
     struct do |s|
       s.name "struct prim1"
@@ -31,8 +31,8 @@ module CrossFFI
     end
     @@@
 
-    def self.gc_free(ptr)
-      ptr.free
+    def self.release ptr
+      CrossFFI::Primitives.free(ptr)
     end
   end
 end

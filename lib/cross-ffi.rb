@@ -89,19 +89,18 @@ else # ruby-ffi
     end
   end
 
-  module CrossFFI
-    class Struct < FFI::Struct
+  module FFI
+    class ManagedStruct < FFI::Struct
 
-      def initialize(pointer)
-        if self.class.respond_to? :gc_free
-          pointer = FFI::AutoPointer.new(pointer, self.class.finalizer)
+      def initialize(pointer=nil)
+        unless pointer
+          pointer = FFI::MemoryPointer.new(:pointer) 
+        end
+        if self.class.respond_to? :release
+          pointer.autorelease = false if pointer.is_a?(FFI::MemoryPointer)
+          pointer = FFI::AutoPointer.new(pointer, self.class.method(:release))
         end
         super(pointer)
-      end
-
-      def self.finalizer
-        # in a separate method to avoid including the object in the Proc's bound scope.
-        self.method(:gc_free).to_proc
       end
 
     end

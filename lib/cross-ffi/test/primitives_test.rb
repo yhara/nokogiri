@@ -31,7 +31,7 @@ class PrimitivesTest < Test::Unit::TestCase
       assert_equal s.pointer, s2[:next]
     end    
 
-    should "be able to use AutoPointer to invoke a custom gc_free method" do
+    should "be able to use AutoPointer to invoke a custom release method" do
       ExampleFreeMethodWrapper.expects(:free_method).at_least(28) # allow some wiggle room
 
       30.times do
