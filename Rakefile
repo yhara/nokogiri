@@ -30,7 +30,7 @@ HOE = Hoe.new('nokogiri', Nokogiri::VERSION) do |p|
     GENERATED_TOKENIZER,
     'cross',
   ]
-  p.spec_extras = { :extensions => ["Rakefile"] }
+  p.spec_extras = { :extensions => ["ext/nokogiri/extconf.rb"] }
 end
 
 namespace :gem do
@@ -87,7 +87,9 @@ end
 
 file GENERATED_PARSER => "lib/nokogiri/css/parser.y" do |t|
   begin
-    sh "racc -o #{t.name} #{t.prerequisites.first}"
+    racc = `which racc`.strip
+    racc = "#{::Config::CONFIG['bindir']}/racc" if racc.empty?
+    sh "#{racc} -o #{t.name} #{t.prerequisites.first}"
   rescue
     abort "need racc, get the tarball from http://i.loveruby.net/archive/racc/racc-1.4.5-all.tar.gz" 
   end
@@ -284,6 +286,37 @@ task :ffi do
   ffi_generate("lib/nokogiri", {:cflags => "-I/usr/include/libxml2"})
 end
 
+namespace :install do
+  desc "Install frex and racc for development"
+  task :deps => %w(frex racc)
+
+  directory "stash"
+
+  file "stash/racc-1.4.5-all.tar.gz" => "stash" do |t|
+    puts "Downloading racc to #{t.name}..."
+
+    Dir.chdir File.dirname(t.name) do
+      url = "http://i.loveruby.net/archive/racc/racc-1.4.5-all.tar.gz"
+      system "wget #{url} || curl -O #{url}"
+    end
+  end
+
+  task :racc => "stash/racc-1.4.5-all.tar.gz" do |t|
+    sh "tar xvf #{t.prerequisites.first} -C stash"
+
+    Dir.chdir "stash/#{File.basename(t.prerequisites.first, ".tar.gz")}" do
+      sh "ruby setup.rb config"
+      sh "ruby setup.rb setup"
+      sh "sudo ruby setup.rb install"
+    end
+
+    puts "The racc binary is likely in #{::Config::CONFIG["bindir"]}."
+  end
+
+  task :frex do
+    sh "sudo gem install aaronp-frex -s http://gems.github.com"
+  end
+end
 
 # Only do this on unix, since we can't build on windows
 unless windows
