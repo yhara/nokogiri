@@ -51,20 +51,13 @@ else # ruby-ffi
       # going to be useful if you subclass AutoPointer, and override
       # release(), which by default does nothing.
       #
-      def self.new(ptr, proc=nil, &block)
-        temp_ptr = FFI::Pointer.from_address(ptr.address) # essentially a weak reference to the memory location
-        free_lambda = if block_given?
-                        #  most likely, the passed-in block contains a
-                        #  reference to the pointer in its bound scope,
-                        #  meaning this will be a memory leak.
-                        #  TODO: should we warn developers? should we deprecate?
-                        finalize(temp_ptr, block)
-                      elsif proc and proc.is_a? Method
-                        finalize(temp_ptr, self.method_to_proc(proc))
+      def self.new(ptr, proc=nil)
+        free_lambda = if proc and proc.is_a? Method
+                        finalize(ptr, self.method_to_proc(proc))
                       elsif proc and proc.is_a? Proc
-                        finalize(temp_ptr, proc)
+                        finalize(ptr, proc)
                       else
-                        finalize(temp_ptr, self.method_to_proc(self.method(:release)))
+                        finalize(ptr, self.method_to_proc(self.method(:release)))
                       end
         ap = self.__alloc(ptr)
         ObjectSpace.define_finalizer(ap, free_lambda)
@@ -80,7 +73,7 @@ else # ruby-ffi
         #  references to the underlying object, which would prevent GC
         #  from running.
         #
-        lambda { proc.call(ptr) }
+        Proc.new { proc.call(ptr) }
       end
       def self.method_to_proc method
         #  again, can't call this inline as it causes a memory leak.
@@ -114,6 +107,13 @@ else # ruby-ffi
     def ffi_attach library, name, arg_types, ret_type
       self.class.ffi_lib library
       self.class.attach_function name, arg_types, ret_type
+    end
+
+  end
+
+  module CrossFFI
+
+    class Struct < FFI::ManagedStruct
     end
 
   end

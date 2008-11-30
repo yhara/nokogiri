@@ -2,7 +2,7 @@
 
 module Nokogiri
   module LibXML
-    class XmlDoc < FFI::ManagedStruct
+    class XmlDoc < CrossFFI::Struct
       @@@
       struct do |s|
         s.name "struct _xmlDoc"

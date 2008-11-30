@@ -5,7 +5,7 @@ module Nokogiri
     #
     #  this class only exists to create a xmlFree() finalizer
     #
-    class XmlAlloc < FFI::ManagedStruct
+    class XmlAlloc < CrossFFI::Struct
 
       def self.release ptr
         LibXML.xmlFree(ptr)
