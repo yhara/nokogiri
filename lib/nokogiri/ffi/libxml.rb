@@ -24,3 +24,6 @@ module Nokogiri
 
   end
 end
+
+require "#{File.dirname(__FILE__)}/structs/xml_alloc"
+require "#{File.dirname(__FILE__)}/structs/xml_doc"
