@@ -16,6 +16,12 @@ class PrimitivesTest < Test::Unit::TestCase
 
     require "#{File.dirname(__FILE__)}/ffi_helper"
 
+    should "have sensible default pointer value" do
+      p = MemoryPointer.new :pointer
+      assert_equal 0, p.read_pointer.address
+      assert p.read_pointer.null?
+    end
+
     should "be able to pass values and pointers" do
       p = CrossFFI::Primitives.prim1_create(1, 2.2, 3.3, "foobar", FFI::MemoryPointer.new(:pointer))
       assert_equal FFI::Pointer, p.class
@@ -49,6 +55,21 @@ class PrimitivesTest < Test::Unit::TestCase
         assert_equal 0, s[:next].read_pointer.address
       end
       gc_everything
+    end
+
+    context "when receiving pointer values as output parameters" do
+      
+      setup do
+        @p1 = CrossFFI::Primitives.prim1_create(1, 2.2, 3.3, "foobar", FFI::MemoryPointer.new(:pointer))
+        @p2 = CrossFFI::Primitives.prim1_create(1, 2.2, 3.3, "foobar", @p1)
+      end
+
+      should "be able to receive values back" do
+        p3 = MemoryPointer.new :pointer
+        CrossFFI::Primitives.prim1_get_next(@p2, p3)
+        s = CrossFFI::Prim1Ordinary.new(p3)
+        assert_equal @p1.address, p3.read_pointer.address
+      end
     end
 
   end

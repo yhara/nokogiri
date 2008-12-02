@@ -1,6 +1,7 @@
 # # -*- ruby -*-
 
 module CrossFFI
+  extend FFI::Library
   class Prim1Ordinary < FFI::Struct
     @@@
     struct do |s|
@@ -18,6 +19,7 @@ end
 
 
 module CrossFFI
+  extend FFI::Library
   class Prim1CrossFFI < FFI::ManagedStruct
     @@@
     struct do |s|
