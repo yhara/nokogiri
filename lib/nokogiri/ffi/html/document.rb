@@ -9,7 +9,7 @@ module Nokogiri
       attr_accessor :cstruct
 
       def self.read_memory(string, url, encoding, options)
-        obj = self.new
+        obj = allocate
         obj.cstruct = LibXML::XmlDoc.new(LibXML.htmlReadMemory(string, string.length, url, encoding, options))
         # TODO: nil check
         obj

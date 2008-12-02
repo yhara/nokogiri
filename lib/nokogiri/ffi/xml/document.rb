@@ -14,7 +14,7 @@ module Nokogiri
       end
 
       def self.read_memory(string, url, encoding, options)
-        obj = self.new
+        obj = allocate
         obj.cstruct = LibXML::XmlDoc.new(LibXML.xmlReadMemory(string, string.length, url, encoding, options))
         # TODO: nil check
         obj
