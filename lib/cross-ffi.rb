@@ -52,6 +52,8 @@ else # ruby-ffi
       # release(), which by default does nothing.
       #
       def self.new(ptr, proc=nil)
+        raise ArgumentError, "Invalid pointer" if ptr.nil? || !ptr.kind_of?(Pointer) \
+          || ptr.kind_of?(MemoryPointer) || ptr.kind_of?(AutoPointer)
         free_lambda = if proc and proc.is_a? Method
                         finalize(ptr, self.method_to_proc(proc))
                       elsif proc and proc.is_a? Proc
@@ -73,7 +75,7 @@ else # ruby-ffi
         #  references to the underlying object, which would prevent GC
         #  from running.
         #
-        Proc.new { proc.call(ptr) }
+        Proc.new {|*args| proc.call(ptr) }
       end
       def self.method_to_proc method
         #  again, can't call this inline as it causes a memory leak.
@@ -87,14 +89,9 @@ else # ruby-ffi
     class ManagedStruct < FFI::Struct
 
       def initialize(pointer=nil)
-        unless pointer
-          pointer = FFI::MemoryPointer.new(:pointer) 
-        end
-        if self.class.respond_to? :release
-          pointer.autorelease = false if pointer.is_a?(FFI::MemoryPointer)
-          pointer = FFI::AutoPointer.new(pointer, self.class.method(:release))
-        end
-        super(pointer)
+        raise NoMethodError, "release() not implemented for class #{self}" unless self.class.respond_to? :release
+        raise ArgumentError, "Must supply a pointer to memory for the Struct" unless pointer
+        super FFI::AutoPointer.new(pointer, self.class.method(:release))
       end
 
     end
