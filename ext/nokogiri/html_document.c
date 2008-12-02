@@ -81,6 +81,6 @@ void init_html_document()
 
 //  rb_define_singleton_method(klass, "read_memory", read_memory, 4);
 
-  rb_define_method(klass, "type", type, 0);
+//  rb_define_method(klass, "type", type, 0);
 //  rb_define_method(klass, "serialize", serialize, 0);
 }

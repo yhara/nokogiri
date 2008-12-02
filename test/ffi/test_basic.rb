@@ -11,7 +11,7 @@ class TestFFI
       Nokogiri::LibXML::XmlDoc.expects(:release).at_least(LOOP_COUNT - WIGGLE_ROOM)
       LOOP_COUNT.times do
         doc = Nokogiri::HTML::Document.read_memory(File.read(HTML_FILE), nil, nil, 2145)
-        assert_equal 66734, Nokogiri::HTML::Document.serialize(doc).size
+        assert_equal 66734, doc.serialize.size
       end
       10.times { GC.start }
     end

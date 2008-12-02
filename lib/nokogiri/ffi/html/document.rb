@@ -15,11 +15,19 @@ module Nokogiri
         obj
       end
 
-      def self.serialize(doc)
-        buf = LibXML::XmlAlloc.new
+      def serialize
+        buf_ref = MemoryPointer.new :pointer
         size = MemoryPointer.new :int
-        LibXML.htmlDocDumpMemory(doc.cstruct, buf, size)
-        buf.pointer.read_pointer.read_string(size.read_int)
+        begin
+          LibXML.htmlDocDumpMemory(cstruct, buf_ref, size)
+          buf_ref.read_pointer.read_string(size.read_int)
+        ensure
+          LibXML.xmlFree(buf_ref.read_pointer) unless buf_ref.read_pointer.null?
+        end
+      end
+
+      def type
+        cstruct[:type]
       end
 
     end
