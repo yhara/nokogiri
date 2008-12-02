@@ -7,6 +7,8 @@ module Nokogiri
     #
     class XmlAlloc < CrossFFI::Struct
 
+      layout :dummy, :int, 0 # to avoid @layout warnings
+
       def self.release ptr
         LibXML.xmlFree(ptr)
       end

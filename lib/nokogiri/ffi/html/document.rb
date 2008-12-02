@@ -18,12 +18,9 @@ module Nokogiri
       def serialize
         buf_ref = MemoryPointer.new :pointer
         size = MemoryPointer.new :int
-        begin
-          LibXML.htmlDocDumpMemory(cstruct, buf_ref, size)
-          buf_ref.read_pointer.read_string(size.read_int)
-        ensure
-          LibXML.xmlFree(buf_ref.read_pointer) unless buf_ref.read_pointer.null?
-        end
+        LibXML.htmlDocDumpMemory(cstruct, buf_ref, size)
+        buf = Nokogiri::LibXML::XmlAlloc.new(buf_ref.read_pointer)
+        buf.pointer.read_string(size.read_int)
       end
 
       def type
