@@ -1,6 +1,6 @@
 # # -*- ruby -*-
 
-module CrossFFI
+module TestFFI
   extend FFI::Library
   class Prim1Ordinary < FFI::Struct
     @@@
@@ -18,9 +18,9 @@ module CrossFFI
 end
 
 
-module CrossFFI
+module TestFFI
   extend FFI::Library
-  class Prim1CrossFFI < FFI::ManagedStruct
+  class Prim1Managed < FFI::ManagedStruct
     @@@
     struct do |s|
       s.name "struct prim1"

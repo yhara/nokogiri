@@ -23,17 +23,17 @@ class PrimitivesTest < Test::Unit::TestCase
     end
 
     should "be able to pass values and pointers" do
-      p = CrossFFI::Primitives.prim1_create(1, 2.2, 3.3, "foobar", FFI::MemoryPointer.new(:pointer))
+      p = TestFFI::Primitives.prim1_create(1, 2.2, 3.3, "foobar", FFI::MemoryPointer.new(:pointer))
       assert_equal FFI::Pointer, p.class
 
-      s = CrossFFI::Prim1Ordinary.new(p)
+      s = TestFFI::Prim1Ordinary.new(p)
       assert_equal 1, s[:i]
       assert_fequal 2.2, s[:f]
       assert_fequal 3.3, s[:d]
       assert_equal "foobar", s[:c]
       assert_equal 0, s[:next].read_pointer.address
 
-      s2 = CrossFFI::Prim1Ordinary.new(CrossFFI::Primitives.prim1_create(1, 2.2, 3.3, "foobar", s))
+      s2 = TestFFI::Prim1Ordinary.new(TestFFI::Primitives.prim1_create(1, 2.2, 3.3, "foobar", s))
       assert_equal s.pointer, s2[:next]
     end    
 
@@ -41,13 +41,13 @@ class PrimitivesTest < Test::Unit::TestCase
       ExampleFreeMethodWrapper.expects(:free_method).at_least(28) # allow some wiggle room
 
       30.times do
-        p1 = CrossFFI::Primitives.prim1_create(1, 2.2, 3.3, "foobar", FFI::MemoryPointer.new(:pointer))
+        p1 = TestFFI::Primitives.prim1_create(1, 2.2, 3.3, "foobar", FFI::MemoryPointer.new(:pointer))
         assert_equal FFI::Pointer, p1.class
 
         free_proc = ExampleFreeMethodWrapper.create_finalizer(ExampleFreeMethodWrapper, :free_method)
         p2 = FFI::AutoPointer.new(p1, free_proc)
 
-        s = CrossFFI::Prim1Ordinary.new(p1)
+        s = TestFFI::Prim1Ordinary.new(p1)
         assert_equal 1, s[:i]
         assert_fequal 2.2, s[:f]
         assert_fequal 3.3, s[:d]
@@ -60,14 +60,14 @@ class PrimitivesTest < Test::Unit::TestCase
     context "when receiving pointer values as output parameters" do
       
       setup do
-        @p1 = CrossFFI::Primitives.prim1_create(1, 2.2, 3.3, "foobar", FFI::MemoryPointer.new(:pointer))
-        @p2 = CrossFFI::Primitives.prim1_create(1, 2.2, 3.3, "foobar", @p1)
+        @p1 = TestFFI::Primitives.prim1_create(1, 2.2, 3.3, "foobar", FFI::MemoryPointer.new(:pointer))
+        @p2 = TestFFI::Primitives.prim1_create(1, 2.2, 3.3, "foobar", @p1)
       end
 
       should "be able to receive values back" do
         p3 = MemoryPointer.new :pointer
-        CrossFFI::Primitives.prim1_get_next(@p2, p3)
-        s = CrossFFI::Prim1Ordinary.new(p3)
+        TestFFI::Primitives.prim1_get_next(@p2, p3)
+        s = TestFFI::Prim1Ordinary.new(p3)
         assert_equal @p1.address, p3.read_pointer.address
         assert_equal @p1.address, s.pointer.read_pointer.address
       end
