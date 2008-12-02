@@ -34,7 +34,6 @@ module CrossFFI
     @@@
 
     def self.release ptr
-      CrossFFI::Primitives.free(ptr)
     end
   end
 end
