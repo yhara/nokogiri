@@ -69,7 +69,9 @@ class PrimitivesTest < Test::Unit::TestCase
         CrossFFI::Primitives.prim1_get_next(@p2, p3)
         s = CrossFFI::Prim1Ordinary.new(p3)
         assert_equal @p1.address, p3.read_pointer.address
+        assert_equal @p1.address, s.pointer.read_pointer.address
       end
+
     end
 
   end
