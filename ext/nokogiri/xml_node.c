@@ -641,7 +641,7 @@ void init_xml_node()
 
   VALUE klass = cNokogiriXmlNode = rb_const_get(mNokogiriXml, rb_intern("Node"));
 
-//  rb_define_singleton_method(klass, "new", new, 2);
+  rb_define_singleton_method(klass, "new", new, 2);
   rb_define_singleton_method(klass, "new_from_str", new_from_str, 1);
 
   rb_define_method(klass, "name", get_name, 0);
@@ -652,7 +652,7 @@ void init_xml_node()
   rb_define_method(klass, "next_sibling", next_sibling, 0);
   rb_define_method(klass, "previous_sibling", previous_sibling, 0);
   rb_define_method(klass, "replace", replace, 1);
-//  rb_define_method(klass, "type", type, 0);
+  rb_define_method(klass, "type", type, 0);
   rb_define_method(klass, "content", get_content, 0);
   rb_define_method(klass, "path", path, 0);
   rb_define_method(klass, "key?", key_eh, 1);
