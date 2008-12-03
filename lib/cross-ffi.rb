@@ -79,7 +79,7 @@ else # ruby-ffi
           begin
             proc.call(ptr)
           rescue
-            STDERR.puts "autopointer:finalize: caught exception '#{$!}'"
+            warn "autopointer:finalize: caught exception '#{$!.to_s.chomp}'" if $DEBUG
             raise $!
           end
         end
@@ -111,6 +111,10 @@ else # ruby-ffi
     def ffi_attach library, name, arg_types, ret_type
       self.class.ffi_lib library
       self.class.attach_function name, arg_types, ret_type
+    end
+
+    def ffi_callback(*args)
+      self.class.callback *args
     end
 
   end
