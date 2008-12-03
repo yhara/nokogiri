@@ -5,12 +5,12 @@ module Nokogiri
       attr_accessor :cstruct
 
       def self.new(name, document, &block)
+        ptr = LibXML::xmlNewNode(nil, name)
+
         node = allocate
-        node.cstruct = LibXML::XmlNode.new(LibXML::xmlNewNode(nil, name))
+        node.cstruct = LibXML::XmlNode.new(ptr) # TODO: Node#wrap
         node.cstruct[:doc] = document
-        if block_given
-          yield node
-        end
+        yield node if block_given
         node
       end
 

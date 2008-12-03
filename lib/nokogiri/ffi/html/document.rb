@@ -5,17 +5,19 @@ module Nokogiri
       attr_accessor :cstruct
 
       def self.read_memory(string, url, encoding, options)
-        obj = allocate
-        obj.cstruct = LibXML::HtmlDocument.new(LibXML.htmlReadMemory(string, string.length, url, encoding, options))
-        # TODO: nil check
-        obj
+        ptr = LibXML.htmlReadMemory(string, string.length, url, encoding, options)
+        raise(RuntimeError, "Couldn't create a document") if ptr.null?
+
+        doc = allocate
+        doc.cstruct = LibXML::HtmlDocument.new(ptr)
+        doc
       end
 
       def serialize
-        buf_ref = MemoryPointer.new :pointer
+        buf_ptr = MemoryPointer.new :pointer
         size = MemoryPointer.new :int
-        LibXML.htmlDocDumpMemory(cstruct, buf_ref, size)
-        buf = Nokogiri::LibXML::XmlAlloc.new(buf_ref.read_pointer)
+        LibXML.htmlDocDumpMemory(cstruct, buf_ptr, size)
+        buf = Nokogiri::LibXML::XmlAlloc.new(buf_ptr.read_pointer)
         buf.pointer.read_string(size.read_int)
       end
 

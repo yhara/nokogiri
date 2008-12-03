@@ -5,9 +5,12 @@ module Nokogiri
       attr_accessor :cstruct
 
       def node_set
+        ptr = cstruct[:nodesetval] if cstruct[:nodesetval]
+        ptr = LibXml.xmlXPathNodeSetCreate(nil) if ptr.null?
+
         set = XML::NodeSet.new(@document)
-        set.cstruct = LibXML::XmlNodeSet.new(cstruct[:nodesetval]) if cstruct[:nodesetval]
-        set.cstruct = LibXML::XmlNodeSet.new(LibXml.xmlXPathNodeSetCreate(nil)) if set.cstruct.nil?
+        set.cstruct = LibXML::XmlNodeSet.new(ptr)
+        set.document = @document
         set
       end
 
