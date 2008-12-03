@@ -21,6 +21,10 @@ module Nokogiri
       def self.release ptr
         # this method intentionally left blank.
       end
+
+      def document
+        LibXML::XmlDocumentCast.new(self[:doc])
+      end
     end
   end
 end    

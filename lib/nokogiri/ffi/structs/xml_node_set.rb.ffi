@@ -17,7 +17,11 @@ module Nokogiri
         LibXML::xmlFree ptr[:nodeTab] if ptr[:nodeTab]
         LibXML::xmlFree ptr
       end
-    end
 
+      def nodeTab
+        self[:nodeTab].read_array_of_type(:pointer, :read_pointer, self[:nodeNr])
+      end
+
+    end
   end
 end    

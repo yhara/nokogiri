@@ -36,7 +36,13 @@ module Nokogiri
       end
 
       def root
-        Node.wrap(LibXML::XmlNode.new(LibXML.xmlDocGetRootElement(cstruct)))
+        ptr = LibXML.xmlDocGetRootElement(cstruct)
+        ptr.null? ? nil : Node.wrap(LibXML::XmlNode.new(ptr))
+      end
+
+      def root=(node)
+        LibXML.xmlDocSetRootElement(cstruct, node.cstruct)
+        node
       end
 
     end

@@ -48,6 +48,9 @@ module Nokogiri
     ffi_attach 'libxml2', :xmlXPathNewContext, [:pointer], :pointer
     ffi_attach 'libxml2', :xmlXPathFreeContext, [:pointer], :void
     ffi_attach 'libxml2', :xmlXPathEvalExpression, [:pointer, :pointer], :pointer
+    ffi_attach 'libxml2', :xmlXPathRegisterNs, [:pointer, :pointer, :pointer], :int
+    ffi_attach 'libxml2', :xmlXPathNodeSetAdd, [:pointer, :pointer], :void
+    ffi_attach 'libxml2', :xmlXPathNodeSetCreate, [:pointer], :pointer
 
     # xmlFree is a C preprocessor macro, not an actual address.
     ffi_attach nil, :free, [:pointer], :void

@@ -21,8 +21,12 @@ module Nokogiri
 
         xpath = XML::XPath.new
         xpath.cstruct = LibXML::XmlXpath.new(ptr)
-        xpath.document = LibXML::XmlNode.new(cstruct[:node]).private
+        xpath.document = cstruct.node.document.private
         xpath
+      end
+
+      def register_ns(prefix, uri)
+        LibXML::xmlXPathRegisterNs(cstruct, prefix, uri)
       end
 
     end

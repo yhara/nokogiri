@@ -16,6 +16,10 @@ module Nokogiri
         LibXML.xmlXPathFreeContext(ptr)
       end
 
+      def node
+        LibXML::XmlNode.new(self[:node])
+      end
+
     end
   end
 end
