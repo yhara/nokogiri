@@ -75,7 +75,14 @@ else # ruby-ffi
         #  references to the underlying object, which would prevent GC
         #  from running.
         #
-        Proc.new {|*args| proc.call(ptr) }
+        Proc.new do |*args|
+          begin
+            proc.call(ptr)
+          rescue
+            STDERR.puts "autopointer:finalize: caught exception '#{$!}'"
+            raise $!
+          end
+        end
       end
       def self.method_to_proc method
         #  again, can't call this inline as it causes a memory leak.
