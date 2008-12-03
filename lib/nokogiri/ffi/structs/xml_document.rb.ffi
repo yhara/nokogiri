@@ -2,25 +2,26 @@
 
 module Nokogiri
   module LibXML
-    class XmlDocument < CrossFFI::Struct
-      @@@
-      struct do |s|
-        s.name "struct _xmlDoc"
-        s.include "libxml/tree.h"
-        s.field :_private, :int
-        s.field :type, :int
-        s.field :name, :pointer
-        s.field :children, :pointer
-        s.field :last, :pointer
-        s.field :parent, :pointer
-        s.field :next, :pointer
-        s.field :prev, :pointer
-        s.field :doc, :pointer
-      end
-      @@@
 
-      def self.release ptr
-        LibXML.xmlFreeDoc(ptr)
+    module XmlDocumentMixin
+      def self.included(base)
+        base.class_eval do
+          @@@
+          struct do |s|
+            s.name "struct _xmlDoc"
+            s.include "libxml/tree.h"
+            s.field :_private, :int
+            s.field :type, :int
+            s.field :name, :pointer
+            s.field :children, :pointer
+            s.field :last, :pointer
+            s.field :parent, :pointer
+            s.field :next, :pointer
+            s.field :prev, :pointer
+            s.field :doc, :pointer
+          end
+          @@@
+        end
       end
 
       def private=(object)
@@ -30,29 +31,18 @@ module Nokogiri
       def private
         ObjectSpace._id2ref(self[:_private])
       end
-
     end
 
-    class XmlDocumentCast < XmlDocument
-      @@@
-      struct do |s|
-        s.name "struct _xmlDoc"
-        s.include "libxml/tree.h"
-        s.field :_private, :int
-        s.field :type, :int
-        s.field :name, :pointer
-        s.field :children, :pointer
-        s.field :last, :pointer
-        s.field :parent, :pointer
-        s.field :next, :pointer
-        s.field :prev, :pointer
-        s.field :doc, :pointer
-      end
-      @@@
+    class XmlDocument < CrossFFI::Struct
+      include XmlDocumentMixin
 
       def self.release ptr
-        # this space intentionally left blank
+        LibXML.xmlFreeDoc(ptr)
       end
+    end
+
+    class XmlDocumentCast < FFI::Struct
+      include XmlDocumentMixin
     end
 
     HtmlDocument = XmlDocument # implemented identically in libxml2.6
