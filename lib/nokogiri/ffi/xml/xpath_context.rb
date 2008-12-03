@@ -21,7 +21,7 @@ module Nokogiri
 
         xpath = XML::XPath.new
         xpath.cstruct = LibXML::XmlXpath.new(ptr)
-        xpath.document = LibXML::XmlNode.new(cstruct[:node])[:doc] # TODO doc->private
+        xpath.document = LibXML::XmlNode.new(cstruct[:node]).private
         xpath
       end
 

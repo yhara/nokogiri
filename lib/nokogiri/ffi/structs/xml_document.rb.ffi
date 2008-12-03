@@ -7,6 +7,7 @@ module Nokogiri
       struct do |s|
         s.name "struct _xmlDoc"
         s.include "libxml/tree.h"
+        s.field :_private, :int
         s.field :type, :int
         s.field :name, :pointer
         s.field :children, :pointer
@@ -21,9 +22,41 @@ module Nokogiri
       def self.release ptr
         LibXML.xmlFreeDoc(ptr)
       end
+
+      def private=(object)
+        self[:_private] = object.object_id
+      end
+
+      def private
+        ObjectSpace._id2ref(self[:_private])
+      end
+
+    end
+
+    class XmlDocumentCast < XmlDocument
+      @@@
+      struct do |s|
+        s.name "struct _xmlDoc"
+        s.include "libxml/tree.h"
+        s.field :_private, :int
+        s.field :type, :int
+        s.field :name, :pointer
+        s.field :children, :pointer
+        s.field :last, :pointer
+        s.field :parent, :pointer
+        s.field :next, :pointer
+        s.field :prev, :pointer
+        s.field :doc, :pointer
+      end
+      @@@
+
+      def self.release ptr
+        # this space intentionally left blank
+      end
     end
 
     HtmlDocument = XmlDocument # implemented identically in libxml2.6
-
+    HtmlDocumentCast = XmlDocumentCast # implemented identically in libxml2.6
   end
+
 end    

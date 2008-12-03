@@ -8,7 +8,7 @@ class TestFFI
     if defined? FFI
 
       def setup
-        @loop_count = 100
+        @loop_count = 10
         @wiggle_room = 2
       end
       

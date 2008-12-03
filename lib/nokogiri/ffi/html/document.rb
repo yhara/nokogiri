@@ -7,10 +7,7 @@ module Nokogiri
       def self.read_memory(string, url, encoding, options)
         ptr = LibXML.htmlReadMemory(string, string.length, url, encoding, options)
         raise(RuntimeError, "Couldn't create a document") if ptr.null?
-
-        doc = allocate
-        doc.cstruct = LibXML::HtmlDocument.new(ptr)
-        doc
+        wrap(ptr)
       end
 
       def serialize

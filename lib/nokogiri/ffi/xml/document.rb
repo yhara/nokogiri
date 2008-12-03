@@ -6,17 +6,20 @@ module Nokogiri
 
       def self.new(*args)
         version = args.first || "1.0"
-        doc = allocate
-        doc.cstruct = LibXML::XmlDocument.new(LibXML::xmlNewDoc(version))
-        doc
+        wrap(LibXML::xmlNewDoc(version))
       end
 
       def self.read_memory(string, url, encoding, options)
         ptr = LibXML.xmlReadMemory(string, string.length, url, encoding, options)
         raise(RuntimeError, "Couldn't create a document") if ptr.null?
+        wrap(ptr)
+      end
 
+      def self.wrap(ptr) # :nodoc:
         doc = allocate
-        doc.cstruct = LibXML::HtmlDocument.new(ptr)
+        doc.cstruct = LibXML::XmlDocument.new(ptr)
+        doc.cstruct.private = doc
+        doc.instance_eval { @decorators = nil }
         doc
       end
 
@@ -33,7 +36,7 @@ module Nokogiri
       end
 
       def root
-        LibXML::XmlNode.new(LibXML.xmlDocGetRootElement(cstruct))
+        Node.wrap(LibXML::XmlNode.new(LibXML.xmlDocGetRootElement(cstruct)))
       end
 
     end
