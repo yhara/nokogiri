@@ -14,7 +14,8 @@ module Nokogiri
       @@@
 
       def self.release ptr
-        LibXML::xmlFree ptr[:nodeTab] if ptr[:nodeTab]
+        ns = XmlNodeSetCast.new(ptr)
+        LibXML::xmlFree ns[:nodeTab] if ns[:nodeTab]
         LibXML::xmlFree ptr
       end
 
@@ -23,5 +24,18 @@ module Nokogiri
       end
 
     end
+
+    class XmlNodeSetCast < FFI::Struct
+      @@@
+      struct do |s|
+        s.name "struct _xmlNodeSet"
+        s.include "libxml/xpath.h"
+        s.field :nodeNr, :int
+        s.field :nodeMax, :int
+        s.field :nodeTab, :pointer
+      end
+      @@@
+    end
+
   end
 end    
