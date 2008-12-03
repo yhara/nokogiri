@@ -36,9 +36,12 @@ module Nokogiri
     ffi_attach 'libxml2', :xmlGetNodePath, [:pointer], :pointer
     ffi_attach 'libxml2', :xmlNodeDump, [:pointer, :pointer, :pointer, :int, :int], :int
 
+    # buffer
+    ffi_attach 'libxml2', :xmlBufferCreate, [], :pointer
+    ffi_attach 'libxml2', :xmlBufferFree, [:pointer], :void
+
     # miscellaneous
     ffi_attach 'libxml2', :xmlInitParser, [], :void
-    ffi_attach 'libxml2', :xmlBufferFree, [:pointer], :void
 
     # xpath
     ffi_attach 'libxml2', :xmlXPathInit, [], :void
@@ -63,6 +66,7 @@ end
   "structs/xml_node_set",
   "structs/xml_xpath_context",
   "structs/xml_xpath",
+  "structs/xml_buffer",
   "html/document.rb",
   "xml/document.rb",
   "xml/node.rb",

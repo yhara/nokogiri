@@ -32,7 +32,9 @@ class TestFFI
 
       def test_document_root
         doc = Nokogiri::XML(File.read(XML_FILE))
-        assert_equal Nokogiri::XML::Element, doc.root.class
+        root = doc.root
+        assert_equal Nokogiri::XML::Element, root.class
+        assert_equal 1463, root.to_html.size
       end
 
     end

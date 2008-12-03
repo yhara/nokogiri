@@ -42,6 +42,12 @@ module Nokogiri
         cstruct[:type]
       end
 
+      def to_xml
+        buffer = LibXML::XmlBuffer.new(LibXML.xmlBufferCreate())
+        LibXML.xmlNodeDump(buffer, cstruct[:doc], cstruct, 2, 1)
+        buffer[:content]
+      end
+
     end
   end
 end
