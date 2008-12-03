@@ -1,0 +1,27 @@
+# -*- ruby -*-
+
+module Nokogiri
+  module LibXML
+    class XmlSyntaxError < FFI::Struct
+      
+      @@@
+      struct do |s|
+        s.name "struct _xmlError"
+        s.include "libxml/xmlerror.h"
+        s.field :domain, :int
+        s.field :code, :int
+        s.field :message, :string
+        s.field :level, :int
+        s.field :file, :string
+        s.field :line, :int
+        s.field :str1, :string
+        s.field :str2, :string
+        s.field :str3, :string
+        s.field :int1, :int
+        s.field :int2, :int
+      end
+      @@@
+
+    end
+  end
+end

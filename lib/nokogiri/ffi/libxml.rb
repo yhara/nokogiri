@@ -51,6 +51,7 @@ module Nokogiri
     ffi_attach 'libxml2', :xmlXPathRegisterNs, [:pointer, :pointer, :pointer], :int
     ffi_attach 'libxml2', :xmlXPathNodeSetAdd, [:pointer, :pointer], :void
     ffi_attach 'libxml2', :xmlXPathNodeSetCreate, [:pointer], :pointer
+    ffi_attach 'libxml2', :xmlXPathFreeNodeSetList, [:pointer], :void
 
     # xmlFree is a C preprocessor macro, not an actual address.
     ffi_attach nil, :free, [:pointer], :void
@@ -58,10 +59,12 @@ module Nokogiri
       self.free(pointer)
     end
 
+    # syntax error handler
+    ffi_callback :syntax_error_handler, [:pointer, :pointer], :void
+    ffi_attach 'libxml2', :xmlSetStructuredErrorFunc, [:pointer, :syntax_error_handler], :void
+
   end
 end
-
-
 
 [ "structs/xml_alloc",
   "structs/xml_document",
@@ -70,11 +73,13 @@ end
   "structs/xml_xpath_context",
   "structs/xml_xpath",
   "structs/xml_buffer",
+  "structs/xml_syntax_error",
   "html/document.rb",
   "xml/document.rb",
   "xml/node.rb",
   "xml/node_set.rb",
   "xml/xpath.rb",
-  "xml/xpath_context.rb" ].each do |file|
+  "xml/xpath_context.rb",
+  "xml/syntax_error.rb" ].each do |file|
   require File.join(File.dirname(__FILE__), file)
 end
