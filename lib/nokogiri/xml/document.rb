@@ -54,5 +54,3 @@ module Nokogiri
     end
   end
 end
-
-require 'nokogiri/ffi/xml/document'

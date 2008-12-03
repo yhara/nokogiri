@@ -1,5 +1,3 @@
-require 'nokogiri/ffi/libxml'
-
 module Nokogiri
   module XML
     class Document
@@ -9,13 +7,13 @@ module Nokogiri
       def self.new(*args)
         obj = allocate
         version = args.first || "1.0"
-        obj.cstruct = LibXML::XmlDoc.new(LibXML::xmlNewDoc(version))
+        obj.cstruct = LibXML::XmlDocument.new(LibXML::xmlNewDoc(version))
         obj
       end
 
       def self.read_memory(string, url, encoding, options)
         obj = allocate
-        obj.cstruct = LibXML::XmlDoc.new(LibXML.xmlReadMemory(string, string.length, url, encoding, options))
+        obj.cstruct = LibXML::XmlDocument.new(LibXML.xmlReadMemory(string, string.length, url, encoding, options))
         # TODO: nil check
         obj
       end
@@ -30,6 +28,10 @@ module Nokogiri
 
       def type
         cstruct[:type]
+      end
+
+      def root
+        LibXML::XmlNode.new(LibXML.xmlDocGetRootElement(cstruct))
       end
 
     end

@@ -1,0 +1,21 @@
+# -*- ruby -*-
+
+module Nokogiri
+  module LibXML
+    class XmlXpathContext < CrossFFI::Struct
+      @@@
+      struct do |s|
+        s.name "struct _xmlXPathContext"
+        s.include "libxml/xpath.h"
+        s.field :doc, :pointer
+        s.field :node, :pointer
+      end
+      @@@
+
+      def self.release ptr
+        LibXML.xmlXPathFreeContext(ptr)
+      end
+
+    end
+  end
+end

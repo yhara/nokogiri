@@ -1,0 +1,26 @@
+# -*- ruby -*-
+
+module Nokogiri
+  module LibXML
+    class XmlNode < CrossFFI::Struct
+      @@@
+      struct do |s|
+        s.name "struct _xmlNode"
+        s.include "libxml/tree.h"
+        s.field :type, :int
+        s.field :name, :pointer
+        s.field :children, :pointer
+        s.field :last, :pointer
+        s.field :parent, :pointer
+        s.field :next, :pointer
+        s.field :prev, :pointer
+        s.field :doc, :pointer
+      end
+      @@@
+
+      def self.release ptr
+        # this method intentionally left blank.
+      end
+    end
+  end
+end    

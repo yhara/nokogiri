@@ -93,7 +93,7 @@ void init_xml_xpath_context(void)
 
   cNokogiriXmlXpathContext = klass;
 
-  rb_define_singleton_method(klass, "new", new, 1);
-  rb_define_method(klass, "evaluate", evaluate, 1);
+//  rb_define_singleton_method(klass, "new", new, 1);
+//  rb_define_method(klass, "evaluate", evaluate, 1);
   rb_define_method(klass, "register_ns", register_ns, 2);
 }

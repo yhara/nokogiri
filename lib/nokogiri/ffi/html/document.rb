@@ -1,7 +1,3 @@
-require 'nokogiri/ffi/libxml'
-require 'nokogiri/ffi/structs/xml_doc'
-require 'nokogiri/ffi/structs/xml_alloc'
-
 module Nokogiri
   module HTML
     class Document
@@ -10,7 +6,7 @@ module Nokogiri
 
       def self.read_memory(string, url, encoding, options)
         obj = allocate
-        obj.cstruct = LibXML::XmlDoc.new(LibXML.htmlReadMemory(string, string.length, url, encoding, options))
+        obj.cstruct = LibXML::HtmlDocument.new(LibXML.htmlReadMemory(string, string.length, url, encoding, options))
         # TODO: nil check
         obj
       end

@@ -186,7 +186,7 @@ void init_xml_document()
   rb_define_singleton_method(klass, "substitute_entities=", substitute_entities_set, 1);
   rb_define_singleton_method(klass, "load_external_subsets=", load_external_subsets_set, 1);
 
-  rb_define_method(klass, "root", root, 0);
+//  rb_define_method(klass, "root", root, 0);
   rb_define_method(klass, "root=", set_root, 1);
 //  rb_define_method(klass, "serialize", serialize, 0);
   rb_undef_method(klass, "parent");

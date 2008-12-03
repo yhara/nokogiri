@@ -49,5 +49,5 @@ void init_xml_xpath(void)
   VALUE klass = rb_define_class_under(xml, "XPath", rb_cObject);
 
   cNokogiriXmlXpath = klass;
-  rb_define_method(klass, "node_set", node_set, 0);
+//  rb_define_method(klass, "node_set", node_set, 0);
 }

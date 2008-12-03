@@ -28,5 +28,10 @@ class TestFFI
       10.times { GC.start }
     end
 
+    def test_document_root
+      doc = Nokogiri::XML(File.read(XML_FILE))
+      assert_equal Nokogiri::XML::Element, doc.root.class
+    end
+
   end
 end

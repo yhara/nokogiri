@@ -1,0 +1,23 @@
+# -*- ruby -*-
+
+module Nokogiri
+  module LibXML
+    class XmlNodeSet < CrossFFI::Struct
+      @@@
+      struct do |s|
+        s.name "struct _xmlNodeSet"
+        s.include "libxml/xpath.h"
+        s.field :nodeNr, :int
+        s.field :nodeMax, :int
+        s.field :nodeTab, :pointer
+      end
+      @@@
+
+      def self.release ptr
+        LibXML::xmlFree ptr[:nodeTab] if ptr[:nodeTab]
+        LibXML::xmlFree ptr
+      end
+    end
+
+  end
+end    
