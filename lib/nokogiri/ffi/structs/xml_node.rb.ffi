@@ -2,7 +2,7 @@
 
 module Nokogiri
   module LibXML
-    class XmlNode < CrossFFI::Struct
+    class XmlNode < FFI::Struct
       @@@
       struct do |s|
         s.name "struct _xmlNode"
@@ -18,12 +18,9 @@ module Nokogiri
       end
       @@@
 
-      def self.release ptr
-        # this method intentionally left blank.
-      end
-
       def document
-        LibXML::XmlDocumentCast.new(self[:doc])
+        p = self[:doc]
+        p.null? ? nil : LibXML::XmlDocumentCast.new(p)
       end
     end
   end

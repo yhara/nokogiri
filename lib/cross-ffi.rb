@@ -104,22 +104,24 @@ else # ruby-ffi
     end
   end
 
-  class Module
-
-    extend FFI::Library
-
-    def ffi_attach library, name, arg_types, ret_type
-      self.class.ffi_lib library
-      self.class.attach_function name, arg_types, ret_type
-    end
-
-    def ffi_callback(*args)
-      self.class.callback *args
-    end
-
-  end
-
   module CrossFFI
+
+    module ModuleMixin
+
+      def self.extended(base)
+        base.extend FFI::Library
+      end
+      
+      def ffi_attach library, name, arg_types, ret_type
+        self.ffi_lib library
+        self.attach_function name, arg_types, ret_type
+      end
+      
+      def ffi_callback(*args)
+        self.callback *args
+      end
+      
+    end
 
     class Struct < FFI::ManagedStruct
     end

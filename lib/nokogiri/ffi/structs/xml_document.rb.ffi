@@ -19,6 +19,7 @@ module Nokogiri
             s.field :next, :pointer
             s.field :prev, :pointer
             s.field :doc, :pointer
+            s.field :intSubset, :pointer
           end
           @@@
         end
@@ -30,6 +31,11 @@ module Nokogiri
 
       def private
         ObjectSpace._id2ref(self[:_private])
+      end
+
+      def document
+        p = self[:doc]
+        p.null? ? nil : LibXML::XmlDocumentCast.new(p)
       end
     end
 

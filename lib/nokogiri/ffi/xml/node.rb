@@ -5,7 +5,7 @@ module Nokogiri
       attr_accessor :cstruct
 
       def self.new(name, document, &block)
-        ptr = LibXML::xmlNewNode(nil, name)
+        ptr = LibXML::xmlNewNode(nil, name.to_s)
 
         node_struct = LibXML::XmlNode.new(ptr)
         node_struct[:doc] = document.cstruct
@@ -18,7 +18,10 @@ module Nokogiri
 
       #  accepts either a 
       def self.wrap(node_struct) # :nodoc:
-        node_struct = LibXML::XmlNode.new(node_struct) if node_struct.is_a?(FFI::Pointer)
+        if node_struct.is_a?(FFI::Pointer)
+          return nil if node_struct.null?
+          node_struct = LibXML::XmlNode.new(node_struct) 
+        end
         doc = LibXML::XmlDocumentCast.new(node_struct[:doc]).private
         node = doc.node_cache[node_struct.pointer.address]
         return node if node
@@ -81,6 +84,34 @@ module Nokogiri
         content = content_ptr.read_string
         LibXML.xmlFree(content_ptr)
         content
+      end
+
+      def get(attribute)
+        prop_str = LibXML.xmlGetProp(cstruct, attribute.to_s)
+        prop = prop_str.read_string
+        LibXML.xmlFree(prop_str)
+        prop
+      end
+
+      def []=(property, value)
+        LibXML.xmlSetProp(cstruct, property, value)
+        value
+      end
+
+      def parent
+        Node.wrap(cstruct[:parent])
+      end
+      
+      def parent=(parent_node)
+        LibXML.xmlAddChild(parent_node.cstruct, cstruct)
+        parent_node
+      end
+
+      def internal_subset
+        return nil if cstruct[:doc].null?
+        doc = cstruct.document
+        return nil if doc[:intSubset].null?
+        Node.wrap(doc[:intSubset])
       end
 
     end

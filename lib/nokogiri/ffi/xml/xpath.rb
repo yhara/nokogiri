@@ -6,7 +6,7 @@ module Nokogiri
 
       def node_set
         ptr = cstruct[:nodesetval] if cstruct[:nodesetval]
-        ptr = LibXml.xmlXPathNodeSetCreate(nil) if ptr.null?
+        ptr = LibXML.xmlXPathNodeSetCreate(nil) if ptr.null?
 
         set = XML::NodeSet.new(@document)
         set.cstruct = LibXML::XmlNodeSet.new(ptr)
