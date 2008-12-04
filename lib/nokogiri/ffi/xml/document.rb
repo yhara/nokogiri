@@ -15,6 +15,19 @@ module Nokogiri
         wrap(ptr)
       end
 
+      def self.read_io(io, url, encoding, options)
+        LibXML.xmlInitParser
+        read_proc = lambda do |ctx, buffer, len|
+          string = io.read(len)
+          return 0 if string.nil?
+          LibXML.memcpy(buffer, string, string.length)
+          string.length
+        end
+        close_proc = lambda { |ctx| return 0 }
+        doc_ptr = LibXML.xmlReadIO(read_proc, close_proc, nil, url, encoding, options)
+        wrap(doc_ptr)
+      end
+
       def self.wrap(ptr) # :nodoc:
         doc = allocate
         doc.cstruct = LibXML::XmlDocument.new(ptr)

@@ -63,6 +63,12 @@ module Nokogiri
     ffi_callback :syntax_error_handler, [:pointer, :pointer], :void
     ffi_attach 'libxml2', :xmlSetStructuredErrorFunc, [:pointer, :syntax_error_handler], :void
 
+    # IO
+    ffi_callback :io_read_callback, [:pointer, :pointer, :int], :int
+    ffi_callback :io_close_callback, [:pointer], :int
+    ffi_attach nil, :memcpy, [:pointer, :pointer, :int], :pointer
+    ffi_attach 'libxml2', :xmlReadIO, [:io_read_callback, :io_close_callback, :pointer, :string, :string, :int], :pointer
+
   end
 end
 
