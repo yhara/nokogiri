@@ -51,11 +51,14 @@ module Nokogiri
 
     end
   end
-end
 
-Nokogiri::LibXML.xmlSetStructuredErrorFunc(nil) do |context, error_ptr|
-  error_struct = Nokogiri::LibXML::XmlSyntaxError.new(error_ptr)
-  error = Nokogiri::XML::SyntaxError.new
-  error.cstruct = error_struct
-  Nokogiri.error_handler.call(error)
+  # the lambda needs to be permanently referenced to avoid being GC'd
+  Nokogiri::ErrorHandlerWrapper = lambda do |context, error_ptr|
+    error_struct = Nokogiri::LibXML::XmlSyntaxError.new(error_ptr)
+    error = Nokogiri::XML::SyntaxError.new
+    error.cstruct = error_struct
+    Nokogiri.error_handler.call(error)
+  end
+  Nokogiri::LibXML.xmlSetStructuredErrorFunc(nil, Nokogiri::ErrorHandlerWrapper)
+
 end
