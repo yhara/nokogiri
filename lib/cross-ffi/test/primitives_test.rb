@@ -72,6 +72,12 @@ class PrimitivesTest < Test::Unit::TestCase
         assert_equal @p1.address, s.pointer.read_pointer.address
       end
 
+      should "be able to receive strings back" do
+        str = TestFFI::Primitives.prim1_dup_string("hello world")
+        assert_equal str, "hello world"
+        TestFFI::Primitives.free(str)
+      end
+
     end
 
   end

@@ -19,3 +19,8 @@ void prim1_get_next(struct prim1* s, struct prim1 **next)
 {
   *next = s->next ;
 }
+
+char* prim1_dup_string(char* input)
+{
+  return strdup(input);
+}
