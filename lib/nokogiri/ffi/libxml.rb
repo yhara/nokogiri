@@ -37,6 +37,8 @@ module Nokogiri
     ffi_attach 'libxml2', :xmlNodeSetName, [:pointer, :pointer], :void
     ffi_attach 'libxml2', :xmlGetNodePath, [:pointer], :pointer
     ffi_attach 'libxml2', :xmlNodeDump, [:pointer, :pointer, :pointer, :int, :int], :int
+    ffi_attach 'libxml2', :xmlNewCDataBlock, [:pointer, :pointer, :int], :pointer
+    ffi_attach 'libxml2', :xmlNewDocComment, [:pointer, :pointer], :pointer
 
     # buffer
     ffi_attach 'libxml2', :xmlBufferCreate, [], :pointer
@@ -85,6 +87,8 @@ end
   "html/document.rb",
   "xml/document.rb",
   "xml/node.rb",
+  "xml/cdata.rb",
+  "xml/comment.rb",
   "xml/node_set.rb",
   "xml/xpath.rb",
   "xml/xpath_context.rb",

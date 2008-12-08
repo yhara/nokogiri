@@ -60,8 +60,7 @@ module Nokogiri
 
       def child
         val = cstruct[:children]
-        return nil if val.null?
-        return XML::Node.wrap(val)
+        val.null? ? nil : XML::Node.wrap(val)
       end
 
       def encode_special_chars(string)
@@ -115,6 +114,32 @@ module Nokogiri
         doc = cstruct.document
         return nil if doc[:intSubset].null?
         Node.wrap(doc[:intSubset])
+      end
+
+      def blank?
+        LibXML.xmlIsBlankNode(cstruct) == 1
+      end
+
+      def next_sibling
+        val = cstruct[:next]
+        val.null? ? nil : Node.wrap(val)
+      end
+
+      def previous_sibling
+        val = cstruct[:prev]
+        val.null? ? nil : Node.wrap(val)
+      end
+
+      def add_next_sibling new_sibling
+        LibXML.xmlAddNextSibling(cstruct, new_sibling.cstruct)
+        new_sibling.decorate!
+        new_sibling
+      end
+
+      def add_previous_sibling new_sibling
+        LibXML.xmlAddPrevSibling(cstruct, new_sibling.cstruct)
+        new_sibling.decorate!
+        new_sibling
       end
 
     end

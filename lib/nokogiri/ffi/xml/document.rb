@@ -4,6 +4,9 @@ module Nokogiri
 
       attr_accessor :cstruct
 
+      def parent ; end ; undef_method :parent
+      def parent= ; end ; undef_method :parent=
+
       def self.new(*args)
         version = args.first || "1.0"
         wrap(LibXML::xmlNewDoc(version))
