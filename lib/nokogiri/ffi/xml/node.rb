@@ -54,12 +54,14 @@ module Nokogiri
       end
 
       def name
-        cstruct[:name].read_string
+        val = cstruct[:name]
+        val.null? ? nil : val.read_string
       end
 
       def child
-        return nil if cstruct[:children].null?
-        return XML::Node.wrap(cstruct[:children])
+        val = cstruct[:children]
+        return nil if val.null?
+        return XML::Node.wrap(val)
       end
 
       def encode_special_chars(string)
@@ -99,7 +101,8 @@ module Nokogiri
       end
 
       def parent
-        Node.wrap(cstruct[:parent])
+        val = cstruct[:parent]
+        val.null? ? nil : Node.wrap(val)
       end
       
       def parent=(parent_node)
