@@ -39,6 +39,7 @@ module Nokogiri
     ffi_attach 'libxml2', :xmlNodeDump, [:pointer, :pointer, :pointer, :int, :int], :int
     ffi_attach 'libxml2', :xmlNewCDataBlock, [:pointer, :pointer, :int], :pointer
     ffi_attach 'libxml2', :xmlNewDocComment, [:pointer, :pointer], :pointer
+    ffi_attach 'libxml2', :xmlNewText, [:pointer], :pointer
 
     # buffer
     ffi_attach 'libxml2', :xmlBufferCreate, [], :pointer
@@ -46,6 +47,7 @@ module Nokogiri
 
     # miscellaneous
     ffi_attach 'libxml2', :xmlInitParser, [], :void
+    ffi_attach 'libxml2', :__xmlParserVersion, [], :string
 
     # xpath
     ffi_attach 'libxml2', :xmlXPathInit, [], :void
@@ -76,6 +78,8 @@ module Nokogiri
   end
 end
 
+Nokogiri::LIBXML_VERSION = Nokogiri::LibXML.__xmlParserVersion()
+
 [ "structs/xml_alloc",
   "structs/xml_document",
   "structs/xml_node",
@@ -84,10 +88,14 @@ end
   "structs/xml_xpath",
   "structs/xml_buffer",
   "structs/xml_syntax_error",
+  "structs/xml_attr.rb",
+  "structs/xml_ns.rb",
   "html/document.rb",
   "xml/document.rb",
   "xml/node.rb",
+  "xml/text.rb",
   "xml/cdata.rb",
+  "xml/dtd.rb",
   "xml/comment.rb",
   "xml/node_set.rb",
   "xml/xpath.rb",

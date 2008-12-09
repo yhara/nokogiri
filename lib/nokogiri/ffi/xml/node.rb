@@ -16,6 +16,14 @@ module Nokogiri
         node
       end
 
+      def self.new_from_str(xml)
+        doc = XML::Document.read_memory(xml, nil, nil, 0)
+        node_cstruct = LibXML.xmlCopyNode(LibXML.xmlDocGetRootElement(doc.cstruct), 1)
+        node = LibXML::XmlNode.new(node_cstruct)
+        node[:doc] = doc.cstruct
+        Node.wrap(node)
+      end
+
       #  accepts either a 
       def self.wrap(node_struct) # :nodoc:
         if node_struct.is_a?(FFI::Pointer)
@@ -56,6 +64,11 @@ module Nokogiri
       def name
         val = cstruct[:name]
         val.null? ? nil : val.read_string
+      end
+
+      def name=(string)
+        LibXML.xmlNodeSetName(cstruct, string)
+        string
       end
 
       def child
@@ -140,6 +153,59 @@ module Nokogiri
         LibXML.xmlAddPrevSibling(cstruct, new_sibling.cstruct)
         new_sibling.decorate!
         new_sibling
+      end
+
+      def attributes
+        ahash = {}
+        prop = cstruct[:properties]
+        while ! prop.null?
+          prop_cstruct = LibXML::XmlAttr.new(prop)
+          name = prop_cstruct[:name]
+          prop_str = LibXML.xmlGetProp(cstruct, name)
+          ahash[name] = prop_str.read_string unless prop_str.null?
+          prop = prop_cstruct[:next]
+        end
+        ahash
+      end
+
+      def remove_attribute(prop)
+        prop_ptr = LibXML.xmlHasProp(cstruct, prop)
+        LibXML.xmlRemoveProp(prop_ptr) unless prop_ptr.null?
+      end
+
+      def namespaces
+        ahash = {}
+        return ahash unless cstruct[:type] == ELEMENT_NODE
+        ns = cstruct[:nsDef]
+        while ! ns.null?
+          ns_cstruct = LibXML::XmlNs.new(ns)
+          prefix = ns_cstruct[:prefix]
+          key = if prefix.empty?
+                  "xmlns"
+                else
+                  "xmlns:#{prefix}"
+                end
+          ahash[key] = ns_cstruct[:href]
+          ns = ns_cstruct[:next]
+        end
+        ahash
+      end
+
+      def path
+        path_ptr = LibXML.xmlGetNodePath(cstruct)
+        val = path_ptr.null? ? nil : path_ptr.read_string
+        LibXML.xmlFree(path_ptr)
+        val
+      end
+
+      def replace(new_node)
+        LibXML.xmlReplaceNode(cstruct, new_node.cstruct)
+        self
+      end
+
+      def unlink
+        LibXML.xmlUnlinkNode(cstruct)
+        self
       end
 
     end

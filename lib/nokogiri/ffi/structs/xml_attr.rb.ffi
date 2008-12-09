@@ -2,28 +2,21 @@
 
 module Nokogiri
   module LibXML
-    class XmlNode < FFI::Struct
+    class XmlAttr < FFI::Struct
       @@@
       struct do |s|
-        s.name "struct _xmlNode"
+        s.name "struct _xmlAttr"
         s.include "libxml/tree.h"
         s.field :type, :int
-        s.field :name, :pointer
+        s.field :name, :string
         s.field :children, :pointer
         s.field :last, :pointer
         s.field :parent, :pointer
         s.field :next, :pointer
         s.field :prev, :pointer
         s.field :doc, :pointer
-        s.field :properties, :pointer
-        s.field :nsDef, :pointer
       end
       @@@
-
-      def document
-        p = self[:doc]
-        p.null? ? nil : LibXML::XmlDocumentCast.new(p)
-      end
     end
   end
 end    
