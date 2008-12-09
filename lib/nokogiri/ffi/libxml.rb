@@ -75,6 +75,10 @@ module Nokogiri
     ffi_attach nil, :memcpy, [:pointer, :pointer, :int], :pointer
     ffi_attach 'libxml2', :xmlReadIO, [:io_read_callback, :io_close_callback, :pointer, :string, :string, :int], :pointer
 
+    # dtd
+    ffi_callback :hash_copier_callback, [:pointer, :pointer, :string], :void
+    ffi_attach 'libxml2', :xmlHashScan, [:pointer, :hash_copier_callback, :pointer], :void
+
   end
 end
 
@@ -83,6 +87,8 @@ Nokogiri::LIBXML_VERSION = Nokogiri::LibXML.__xmlParserVersion()
 [ "structs/xml_alloc",
   "structs/xml_document",
   "structs/xml_node",
+  "structs/xml_dtd",
+  "structs/xml_notation",
   "structs/xml_node_set",
   "structs/xml_xpath_context",
   "structs/xml_xpath",
@@ -90,7 +96,6 @@ Nokogiri::LIBXML_VERSION = Nokogiri::LibXML.__xmlParserVersion()
   "structs/xml_syntax_error",
   "structs/xml_attr.rb",
   "structs/xml_ns.rb",
-  "html/document.rb",
   "xml/document.rb",
   "xml/node.rb",
   "xml/text.rb",
@@ -100,6 +105,8 @@ Nokogiri::LIBXML_VERSION = Nokogiri::LibXML.__xmlParserVersion()
   "xml/node_set.rb",
   "xml/xpath.rb",
   "xml/xpath_context.rb",
-  "xml/syntax_error.rb" ].each do |file|
+  "xml/syntax_error.rb",
+  "html/document.rb",
+].each do |file|
   require File.join(File.dirname(__FILE__), file)
 end

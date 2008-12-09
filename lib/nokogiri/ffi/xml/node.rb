@@ -9,7 +9,7 @@ module Nokogiri
 
         node_struct = LibXML::XmlNode.new(ptr)
         node_struct[:doc] = document.cstruct
-        node = self.wrap(node_struct)
+        node = Node.wrap(node_struct)
 
         yield node if block_given?
 
@@ -34,17 +34,17 @@ module Nokogiri
         node = doc.node_cache[node_struct.pointer.address]
         return node if node
 
-        klass = case node_struct[:type]
-                when TEXT_NODE then XML::Text
-                when COMMENT_NODE then XML::Comment
-                when ELEMENT_NODE then XML::Element
-                when ENTITY_DECL then XML::EntityDeclaration
-                when CDATA_SECTION_NODE then XML::CDATA
-                when DTD_NODE then XML::DTD
-                else XML::Node
-                end
-        node = klass.allocate
-        node.cstruct = node_struct
+        klasses = case node_struct[:type]
+                  when TEXT_NODE then [XML::Text]
+                  when COMMENT_NODE then [XML::Comment]
+                  when ELEMENT_NODE then [XML::Element]
+                  when ENTITY_DECL then [XML::EntityDeclaration]
+                  when CDATA_SECTION_NODE then [XML::CDATA]
+                  when DTD_NODE then [XML::DTD, LibXML::XmlDtd]
+                  else [XML::Node]
+                  end
+        node = klasses.first.allocate
+        node.cstruct = klasses[1] ? klasses[1].new(node_struct.pointer) : node_struct
         doc.node_cache[node_struct.pointer.address] = node
         node.document = doc
         node.decorate!
