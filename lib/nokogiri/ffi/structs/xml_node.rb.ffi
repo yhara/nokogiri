@@ -8,7 +8,7 @@ module Nokogiri
         s.name "struct _xmlNode"
         s.include "libxml/tree.h"
         s.field :type, :int
-        s.field :name, :pointer
+        s.field :name, :string
         s.field :children, :pointer
         s.field :last, :pointer
         s.field :parent, :pointer

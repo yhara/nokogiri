@@ -62,8 +62,7 @@ module Nokogiri
       end
 
       def name
-        val = cstruct[:name]
-        val.null? ? nil : val.read_string
+        cstruct[:name]
       end
 
       def name=(string)
