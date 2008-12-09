@@ -48,6 +48,7 @@ module Nokogiri
     # miscellaneous
     ffi_attach 'libxml2', :xmlInitParser, [], :void
     ffi_attach 'libxml2', :__xmlParserVersion, [], :string
+    ffi_attach 'libxml2', :xmlSplitQName2, [:string, :pointer], :pointer
 
     # xpath
     ffi_attach 'libxml2', :xmlXPathInit, [], :void
@@ -79,6 +80,27 @@ module Nokogiri
     ffi_callback :hash_copier_callback, [:pointer, :pointer, :string], :void
     ffi_attach 'libxml2', :xmlHashScan, [:pointer, :hash_copier_callback, :pointer], :void
 
+    # reader
+    ffi_attach 'libxml2', :xmlReaderForMemory, [:string, :int, :string, :string, :int], :pointer
+    ffi_attach 'libxml2', :xmlTextReaderGetAttribute, [:pointer, :string], :pointer
+    ffi_attach 'libxml2', :xmlTextReaderGetAttributeNo, [:pointer, :int], :pointer
+    ffi_attach 'libxml2', :xmlTextReaderLookupNamespace, [:pointer, :pointer], :pointer
+    ffi_attach 'libxml2', :xmlTextReaderRead, [:pointer], :int
+    ffi_attach 'libxml2', :xmlTextReaderAttributeCount, [:pointer], :int
+    ffi_attach 'libxml2', :xmlTextReaderCurrentNode, [:pointer], :pointer
+    ffi_attach 'libxml2', :xmlTextReaderExpand, [:pointer], :pointer
+    ffi_attach 'libxml2', :xmlTextReaderIsDefault, [:pointer], :int
+    ffi_attach 'libxml2', :xmlTextReaderDepth, [:pointer], :int
+    ffi_attach 'libxml2', :xmlTextReaderConstEncoding, [:pointer], :pointer
+    ffi_attach 'libxml2', :xmlTextReaderConstXmlLang, [:pointer], :pointer
+    ffi_attach 'libxml2', :xmlTextReaderConstLocalName, [:pointer], :pointer
+    ffi_attach 'libxml2', :xmlTextReaderConstName, [:pointer], :pointer
+    ffi_attach 'libxml2', :xmlTextReaderConstNamespaceUri, [:pointer], :pointer
+    ffi_attach 'libxml2', :xmlTextReaderConstPrefix, [:pointer], :pointer
+    ffi_attach 'libxml2', :xmlTextReaderConstValue, [:pointer], :pointer
+    ffi_attach 'libxml2', :xmlTextReaderConstXmlVersion, [:pointer], :pointer
+    ffi_attach 'libxml2', :xmlTextReaderReadState, [:pointer], :int
+    ffi_attach 'libxml2', :xmlTextReaderHasValue, [:pointer], :int
   end
 end
 
@@ -96,6 +118,7 @@ Nokogiri::LIBXML_VERSION = Nokogiri::LibXML.__xmlParserVersion()
   "structs/xml_syntax_error",
   "structs/xml_attr.rb",
   "structs/xml_ns.rb",
+  "structs/xml_text_reader.rb",
   "xml/document.rb",
   "xml/node.rb",
   "xml/text.rb",
@@ -106,6 +129,7 @@ Nokogiri::LIBXML_VERSION = Nokogiri::LibXML.__xmlParserVersion()
   "xml/xpath.rb",
   "xml/xpath_context.rb",
   "xml/syntax_error.rb",
+  "xml/reader.rb",
   "html/document.rb",
 ].each do |file|
   require File.join(File.dirname(__FILE__), file)

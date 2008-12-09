@@ -31,7 +31,7 @@ module Nokogiri
           node_struct = LibXML::XmlNode.new(node_struct) 
         end
         doc = LibXML::XmlDocumentCast.new(node_struct[:doc]).private
-        node = doc.node_cache[node_struct.pointer.address]
+        node = doc.node_cache[node_struct.pointer.address] if doc
         return node if node
 
         klasses = case node_struct[:type]
@@ -45,7 +45,7 @@ module Nokogiri
                   end
         node = klasses.first.allocate
         node.cstruct = klasses[1] ? klasses[1].new(node_struct.pointer) : node_struct
-        doc.node_cache[node_struct.pointer.address] = node
+        doc.node_cache[node_struct.pointer.address] = node if doc
         node.document = doc
         node.decorate!
         node
@@ -179,7 +179,7 @@ module Nokogiri
         while ! ns.null?
           ns_cstruct = LibXML::XmlNs.new(ns)
           prefix = ns_cstruct[:prefix]
-          key = if prefix.empty?
+          key = if prefix.nil? || prefix.empty?
                   "xmlns"
                 else
                   "xmlns:#{prefix}"
