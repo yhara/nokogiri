@@ -15,8 +15,8 @@ module Nokogiri
 
       def self.release ptr
         ns = XmlNodeSetCast.new(ptr)
-        LibXML::xmlFree ns[:nodeTab] if ns[:nodeTab]
-        LibXML::xmlFree ptr
+        LibXML.xmlFree ns[:nodeTab] if ns[:nodeTab]
+        LibXML.xmlFree ptr
       end
 
       def nodeTab

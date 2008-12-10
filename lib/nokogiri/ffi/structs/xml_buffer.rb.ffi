@@ -14,7 +14,7 @@ module Nokogiri
       @@@
 
       def self.release ptr
-        LibXML::xmlBufferFree(ptr)
+        LibXML.xmlBufferFree(ptr)
       end
     end
   end

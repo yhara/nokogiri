@@ -9,7 +9,7 @@ module Nokogiri
 
       def self.new(*args)
         version = args.first || "1.0"
-        wrap(LibXML::xmlNewDoc(version))
+        wrap(LibXML.xmlNewDoc(version))
       end
 
       def self.read_memory(string, url, encoding, options)

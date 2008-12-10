@@ -16,6 +16,7 @@ module Nokogiri
     ffi_attach 'libxml2', :xmlDocGetRootElement, [:pointer], :pointer
     ffi_attach 'libxml2', :xmlDocSetRootElement, [:pointer, :pointer], :pointer
     ffi_attach 'libxml2', :xmlSubstituteEntitiesDefault, [:int], :int
+    ffi_attach 'libxml2', :xmlCopyDoc, [:pointer, :int], :pointer
     ffi_attach 'libxml2', :xmlFreeDoc, [:pointer], :void
 
     # nodes
@@ -101,6 +102,14 @@ module Nokogiri
     ffi_attach 'libxml2', :xmlTextReaderConstXmlVersion, [:pointer], :pointer
     ffi_attach 'libxml2', :xmlTextReaderReadState, [:pointer], :int
     ffi_attach 'libxml2', :xmlTextReaderHasValue, [:pointer], :int
+    ffi_attach 'libxml2', :xmlFreeTextReader, [:pointer], :void
+
+    # xslt
+    ffi_attach 'libxslt', :xsltParseStylesheetDoc, [:pointer], :pointer
+    ffi_attach 'libxslt', :xsltFreeStylesheet, [:pointer], :void
+    ffi_attach 'libxslt', :xsltApplyStylesheet, [:pointer, :pointer, :pointer], :pointer
+    ffi_attach 'libxslt', :xsltSaveResultToString, [:pointer, :pointer, :pointer, :pointer], :void
+
   end
 end
 
@@ -119,6 +128,7 @@ Nokogiri::LIBXML_VERSION = Nokogiri::LibXML.__xmlParserVersion()
   "structs/xml_attr.rb",
   "structs/xml_ns.rb",
   "structs/xml_text_reader.rb",
+  "structs/xslt_stylesheet.rb",
   "xml/document.rb",
   "xml/node.rb",
   "xml/text.rb",
@@ -131,6 +141,7 @@ Nokogiri::LIBXML_VERSION = Nokogiri::LibXML.__xmlParserVersion()
   "xml/syntax_error.rb",
   "xml/reader.rb",
   "html/document.rb",
+  "xslt/stylesheet.rb",
 ].each do |file|
   require File.join(File.dirname(__FILE__), file)
 end

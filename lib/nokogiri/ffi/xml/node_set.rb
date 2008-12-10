@@ -25,7 +25,7 @@ module Nokogiri
       end
 
       def push(node)
-        LibXML::xmlXPathNodeSetAdd(cstruct, node.cstruct)
+        LibXML.xmlXPathNodeSetAdd(cstruct, node.cstruct)
         self
       end
 

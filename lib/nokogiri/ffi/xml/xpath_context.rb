@@ -16,7 +16,7 @@ module Nokogiri
       end
 
       def evaluate(search_path)
-        ptr = LibXML::xmlXPathEvalExpression(search_path, cstruct)
+        ptr = LibXML.xmlXPathEvalExpression(search_path, cstruct)
         raise(XPath::SyntaxError, "Couldn't evaluate expression '#{search_path}'") if ptr.null?
 
         xpath = XML::XPath.new
@@ -26,7 +26,7 @@ module Nokogiri
       end
 
       def register_ns(prefix, uri)
-        LibXML::xmlXPathRegisterNs(cstruct, prefix, uri)
+        LibXML.xmlXPathRegisterNs(cstruct, prefix, uri)
       end
 
     end

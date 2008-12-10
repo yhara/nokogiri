@@ -5,7 +5,7 @@ module Nokogiri
       attr_accessor :cstruct
 
       def self.new(name, document, &block)
-        ptr = LibXML::xmlNewNode(nil, name.to_s)
+        ptr = LibXML.xmlNewNode(nil, name.to_s)
 
         node_struct = LibXML::XmlNode.new(ptr)
         node_struct[:doc] = document.cstruct
