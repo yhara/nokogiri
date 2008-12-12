@@ -15,7 +15,7 @@ module Nokogiri
         ctx
       end
 
-      def evaluate(search_path)
+      def evaluate(search_path, xpath_handler = nil)
         ptr = LibXML.xmlXPathEvalExpression(search_path, cstruct)
         raise(XPath::SyntaxError, "Couldn't evaluate expression '#{search_path}'") if ptr.null?
 
