@@ -27,7 +27,7 @@ module Nokogiri
           else
             attr_ptr = LibXML.xmlTextReaderLookupNamespace(cstruct, prefix)
           end
-          LibXML.xmlFree(prefix)
+          LibXML.xmlFree(prefix.read_pointer)
         end
         return nil if attr_ptr.null?
 
@@ -37,10 +37,11 @@ module Nokogiri
       end
 
       def read
-        ret = LibXML.xmlTextReaderRead(cstruct)
-        return self if ret == 1
-        return nil if ret == 0
-        raise RuntimeError, "Error pulling: #{ret}"
+        case LibXML.xmlTextReaderRead(cstruct)
+        when 1 then self
+        when 0 then nil
+        else raise RuntimeError, "Error pulling: #{ret}"
+        end
       end
 
       def attribute_at index
