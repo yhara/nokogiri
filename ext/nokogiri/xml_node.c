@@ -70,14 +70,20 @@ static VALUE internal_subset(VALUE self)
  * call-seq:
  *  dup
  *
- * Copy this node
+ * Copy this node.  An optional depth may be passed in, but it defaults
+ * to a deep copy.  0 is a shallow copy, 1 is a deep copy.
  */
-static VALUE duplicate_node(VALUE self)
+static VALUE duplicate_node(int argc, VALUE *argv, VALUE self)
 {
+  VALUE level;
+
+  if(rb_scan_args(argc, argv, "01", &level) == 0)
+    level = INT2NUM(1);
+
   xmlNodePtr node, dup;
   Data_Get_Struct(self, xmlNode, node);
 
-  dup = xmlCopyNode(node, 1);
+  dup = xmlCopyNode(node, NUM2INT(level));
   if(dup == NULL) return Qnil;
   dup->doc = node->doc;
   assert(node->parent);
@@ -443,9 +449,13 @@ static VALUE add_next_sibling(VALUE self, VALUE rb_node)
 static VALUE add_previous_sibling(VALUE self, VALUE rb_node)
 {
   xmlNodePtr node, new_sibling;
+  Check_Type(rb_node, T_DATA);
+
   Data_Get_Struct(self, xmlNode, node);
   Data_Get_Struct(rb_node, xmlNode, new_sibling);
-  xmlAddPrevSibling(node, new_sibling);
+
+  if(!xmlAddPrevSibling(node, new_sibling))
+    rb_raise(rb_eRuntimeError, "Could not add previous sibling");
 
   rb_funcall(rb_node, rb_intern("decorate!"), 0);
 
@@ -670,7 +680,7 @@ void init_xml_node()
   rb_define_method(klass, "add_next_sibling", add_next_sibling, 1);
   rb_define_method(klass, "encode_special_chars", encode_special_chars, 1);
   rb_define_method(klass, "to_xml", to_xml, -1);
-  rb_define_method(klass, "dup", duplicate_node, 0);
+  rb_define_method(klass, "dup", duplicate_node, -1);
   rb_define_method(klass, "unlink", unlink_node, 0);
   rb_define_method(klass, "internal_subset", internal_subset, 0);
   rb_define_method(klass, "pointer_id", pointer_id, 0);
