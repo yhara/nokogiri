@@ -62,6 +62,7 @@ module Nokogiri
     ffi_attach 'libxml2', :xmlXPathFreeNodeSetList, [:pointer], :void
 
     # xmlFree is a C preprocessor macro, not an actual address.
+    ffi_attach nil, :calloc, [:int, :int], :pointer
     ffi_attach nil, :free, [:pointer], :void
     def self.xmlFree(pointer)
       self.free(pointer)
@@ -110,6 +111,18 @@ module Nokogiri
     ffi_attach 'libxslt', :xsltApplyStylesheet, [:pointer, :pointer, :pointer], :pointer
     ffi_attach 'libxslt', :xsltSaveResultToString, [:pointer, :pointer, :pointer, :pointer], :void
 
+    # sax
+    ffi_callback :start_document_sax_func, [:pointer], :void
+    ffi_callback :end_document_sax_func, [:pointer], :void
+    ffi_callback :start_element_sax_func, [:pointer, :string, :pointer], :void
+    ffi_callback :end_element_sax_func, [:pointer, :string], :void
+    ffi_callback :characters_sax_func, [:pointer, :string, :int], :void
+    ffi_callback :comment_sax_func, [:pointer, :string], :void
+    ffi_callback :warning_sax_func, [:pointer, :string], :void
+    ffi_callback :error_sax_func, [:pointer, :string], :void
+    ffi_callback :cdata_block_sax_func, [:pointer, :string, :int], :void
+
+    ffi_attach 'libxml2', :xmlSAXUserParseMemory, [:pointer, :pointer, :pointer, :int], :int
   end
 end
 
@@ -128,6 +141,7 @@ Nokogiri::LIBXML_VERSION = Nokogiri::LibXML.__xmlParserVersion()
   "structs/xml_attr.rb",
   "structs/xml_ns.rb",
   "structs/xml_text_reader.rb",
+  "structs/xml_sax_handler.rb",
   "structs/xslt_stylesheet.rb",
   "xml/document.rb",
   "xml/node.rb",
@@ -140,6 +154,7 @@ Nokogiri::LIBXML_VERSION = Nokogiri::LibXML.__xmlParserVersion()
   "xml/xpath_context.rb",
   "xml/syntax_error.rb",
   "xml/reader.rb",
+  "xml/sax/parser.rb",
   "html/document.rb",
   "xslt/stylesheet.rb",
 ].each do |file|
