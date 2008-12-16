@@ -35,7 +35,7 @@ else # ruby-ffi
       end
       
       def ffi_callback(*args)
-        self.callback *args
+        self.callback(*args)
       end
       
     end
