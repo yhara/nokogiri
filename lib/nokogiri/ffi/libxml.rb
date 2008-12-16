@@ -77,6 +77,7 @@ module Nokogiri
     ffi_callback :io_close_callback, [:pointer], :int
     ffi_attach nil, :memcpy, [:pointer, :pointer, :int], :pointer
     ffi_attach 'libxml2', :xmlReadIO, [:io_read_callback, :io_close_callback, :pointer, :string, :string, :int], :pointer
+    ffi_attach 'libxml2', :xmlCreateIOParserCtxt, [:pointer, :pointer, :io_read_callback, :io_close_callback, :pointer, :int], :pointer
 
     # dtd
     ffi_callback :hash_copier_callback, [:pointer, :pointer, :string], :void
@@ -121,8 +122,12 @@ module Nokogiri
     ffi_callback :warning_sax_func, [:pointer, :string], :void
     ffi_callback :error_sax_func, [:pointer, :string], :void
     ffi_callback :cdata_block_sax_func, [:pointer, :string, :int], :void
-
     ffi_attach 'libxml2', :xmlSAXUserParseMemory, [:pointer, :pointer, :pointer, :int], :int
+    ffi_attach 'libxml2', :xmlSAXUserParseFile, [:pointer, :pointer, :string], :int
+    ffi_attach 'libxml2', :xmlParseDocument, [:pointer], :int
+    ffi_attach 'libxml2', :xmlFreeParserCtxt, [:pointer], :void
+    ffi_attach 'libxml2', :htmlSAXParseFile, [:pointer, :pointer, :pointer, :pointer], :pointer
+    ffi_attach 'libxml2', :htmlSAXParseDoc, [:pointer, :pointer, :pointer, :pointer], :pointer
   end
 end
 
@@ -156,6 +161,7 @@ Nokogiri::LIBXML_VERSION = Nokogiri::LibXML.__xmlParserVersion()
   "xml/reader.rb",
   "xml/sax/parser.rb",
   "html/document.rb",
+  "html/sax/parser.rb",
   "xslt/stylesheet.rb",
 ].each do |file|
   require File.join(File.dirname(__FILE__), file)
