@@ -5,7 +5,7 @@ module Nokogiri
       attr_accessor :cstruct
 
       def self.parse_stylesheet_doc document
-        ss = LibXML.xsltParseStylesheetDoc(LibXML::xmlCopyDoc(document.cstruct, 1)) # 1 => recursive
+        ss = LibXML.xsltParseStylesheetDoc(LibXML.xmlCopyDoc(document.cstruct, 1)) # 1 => recursive
 
         obj = allocate
         obj.cstruct = LibXML::XsltStylesheet.new(ss)
