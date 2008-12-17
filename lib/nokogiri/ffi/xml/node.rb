@@ -197,7 +197,7 @@ module Nokogiri
         val
       end
 
-      def replace(new_node)
+      def replace_with_node(new_node)
         LibXML.xmlReplaceNode(cstruct, new_node.cstruct)
         self
       end
