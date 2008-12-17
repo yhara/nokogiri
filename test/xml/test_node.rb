@@ -11,6 +11,28 @@ module Nokogiri
           address.ancestors.map { |x| x.name }
       end
 
+      def test_add_child
+        xml = Nokogiri::XML(<<-eoxml)
+        <root>
+          <a>Hello world</a>
+        </root>
+        eoxml
+        text_node = Nokogiri::XML::Text.new('hello', xml)
+        xml.root.add_child text_node
+        assert_match 'hello', xml.to_s
+      end
+
+      def test_chevron_works_as_add_child
+        xml = Nokogiri::XML(<<-eoxml)
+        <root>
+          <a>Hello world</a>
+        </root>
+        eoxml
+        text_node = Nokogiri::XML::Text.new('hello', xml)
+        xml.root << text_node
+        assert_match 'hello', xml.to_s
+      end
+
       def test_add_previous_sibling
         xml = Nokogiri::XML(<<-eoxml)
         <root>
@@ -201,6 +223,13 @@ module Nokogiri
         assert_equal set[0].to_xml, second.to_xml
         assert_equal set[0].to_xml(5), second.to_xml(5)
         assert_not_equal set[0].to_xml, set[0].to_xml(5)
+      end
+
+      def test_illegal_replace_of_node_with_doc
+        xml = Nokogiri::XML.parse(File.read(XML_FILE))
+        new_node = Nokogiri::XML.parse('<foo>bar</foo>')
+        old_node = xml.at('//employee')
+        assert_raises(ArgumentError){ old_node.replace new_node }
       end
 
       def test_namespace_as_hash

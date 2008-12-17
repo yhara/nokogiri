@@ -198,6 +198,17 @@ module Nokogiri
         self.native_content = encode_special_chars(string)
       end
 
+      ###
+      # Set the parent Node for this Node
+      def parent= parent_node
+        parent_node.add_child(self)
+        parent_node
+      end
+
+      def << child
+        add_child child
+      end
+
       def comment?
         type == COMMENT_NODE
       end
@@ -256,6 +267,18 @@ module Nokogiri
       def traverse(&block)
         children.each{|j| j.traverse(&block) }
         block.call(self)
+      end
+
+      ####
+      #  replace node with the new node in the document.
+      def replace(new_node)
+        if new_node.is_a?(Document)
+          raise ArgumentError, <<-EOERR
+Node.replace requires a Node argument, and cannot accept a Document.
+(You probably want to select a node from the Document with at() or search(), or create a new Node via Node.new().)
+          EOERR
+        end
+        replace_with_node new_node
       end
     end
   end
