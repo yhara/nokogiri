@@ -116,11 +116,6 @@ module Nokogiri
         val.null? ? nil : Node.wrap(val)
       end
       
-      def parent=(parent_node)
-        LibXML.xmlAddChild(parent_node.cstruct, cstruct)
-        parent_node
-      end
-
       def internal_subset
         return nil if cstruct[:doc].null?
         doc = cstruct.document
