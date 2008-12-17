@@ -207,6 +207,23 @@ module Nokogiri
         self
       end
 
+      def add_child(child)
+        new_child = LibXML.xmlAddChild(cstruct, child.cstruct)
+        raise(RuntimeError, "Could not add new child") if new_child.null?
+        Node.wrap(new_child)
+      end
+
+      def dup(deep = 1)
+        dup_ptr = LibXML.xmlCopyNode(cstruct, deep)
+        return nil if dup_ptr.null?
+
+        dup_cstruct = LibXML::XmlNode.new(dup_ptr)
+        dup_cstruct[:doc] = cstruct[:doc]
+        LibXML.xmlAddChild(dup_cstruct[:parent], dup_cstruct)
+
+        Node.wrap(dup_cstruct)
+      end
+
     end
   end
 end
