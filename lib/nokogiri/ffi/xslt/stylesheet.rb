@@ -5,6 +5,7 @@ module Nokogiri
       attr_accessor :cstruct
 
       def self.parse_stylesheet_doc document
+        LibXML.exsltRegisterAll
         ss = LibXML.xsltParseStylesheetDoc(LibXML.xmlCopyDoc(document.cstruct, 1)) # 1 => recursive
 
         obj = allocate
@@ -20,7 +21,7 @@ module Nokogiri
         buf.pointer.read_string(buf_len.read_int)
       end
 
-      def apply_to document, params=[]
+      def transform document, params=[]
         param_arr = MemoryPointer.new(:pointer, params.length + 1)
         params.each_with_index do |param, j|
           param_arr[j].put_pointer(0, MemoryPointer.from_string(param))
@@ -28,8 +29,11 @@ module Nokogiri
         param_arr[params.length].put_pointer(0,0)
 
         ptr = LibXML.xsltApplyStylesheet(cstruct, document.cstruct, param_arr)
-        newdoc = XML::Document.wrap(ptr)
-        self.serialize(newdoc)
+        XML::Document.wrap(ptr)
+      end
+
+      def apply_to document, params=[]
+        serialize(transform(document, params))
       end
 
     end

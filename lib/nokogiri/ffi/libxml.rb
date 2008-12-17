@@ -111,6 +111,7 @@ module Nokogiri
     ffi_attach 'libxslt', :xsltFreeStylesheet, [:pointer], :void
     ffi_attach 'libxslt', :xsltApplyStylesheet, [:pointer, :pointer, :pointer], :pointer
     ffi_attach 'libxslt', :xsltSaveResultToString, [:pointer, :pointer, :pointer, :pointer], :void
+    ffi_attach 'libexslt', :exsltRegisterAll, [], :void
 
     # sax
     ffi_callback :start_document_sax_func, [:pointer], :void
