@@ -14,6 +14,8 @@ module Nokogiri
     ASSETS_DIR = File.join(File.dirname(__FILE__), 'files')
     XML_FILE = File.join(ASSETS_DIR, 'staff.xml')
     XSLT_FILE = File.join(ASSETS_DIR, 'staff.xslt')
+    EXSLT_FILE = File.join(ASSETS_DIR, 'exslt.xslt')
+    EXML_FILE = File.join(ASSETS_DIR, 'exslt.xml')
     HTML_FILE = File.join(ASSETS_DIR, 'tlm.html')
 
     unless RUBY_VERSION >= '1.9'
