@@ -13,10 +13,10 @@ ENV['PATH'] = [File.expand_path(
 ), ENV['PATH']].compact.join(';') if RUBY_PLATFORM =~ /mswin/i
 
 
-if ENV['NOKOGIRI_FFI']
+if ENV['NOKOGIRI_FFI'] || RUBY_PLATFORM =~ /java/
   require 'nokogiri/ffi/libxml'
 else
-  require 'nokogiri/native' unless RUBY_PLATFORM =~ /java/
+  require 'nokogiri/native'
 end
 
 module Nokogiri

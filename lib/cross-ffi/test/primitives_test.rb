@@ -16,6 +16,11 @@ class PrimitivesTest < Test::Unit::TestCase
 
     require "#{File.dirname(__FILE__)}/ffi_helper"
 
+    setup do
+      @loop_count = 30
+      @wiggle_room = (RUBY_PLATFORM =~ /java/) ? (@loop_count - 5) : 2 # jruby is conservative
+    end
+
     should "have sensible default pointer value" do
       p = MemoryPointer.new :pointer
       assert_equal 0, p.read_pointer.address
@@ -23,8 +28,9 @@ class PrimitivesTest < Test::Unit::TestCase
     end
 
     should "be able to pass values and pointers" do
-      p = TestFFI::Primitives.prim1_create(1, 2.2, 3.3, "foobar", FFI::MemoryPointer.new(:pointer))
-      assert_equal FFI::Pointer, p.class
+      p0 = FFI::MemoryPointer.new(:pointer)
+      p = TestFFI::Primitives.prim1_create(1, 2.2, 3.3, "foobar", p0)
+      assert_equal CrossFFI::Pointer, p.class
 
       s = TestFFI::Prim1Ordinary.new(p)
       assert_equal 1, s[:i]
@@ -38,11 +44,11 @@ class PrimitivesTest < Test::Unit::TestCase
     end    
 
     should "be able to use AutoPointer to invoke a custom release method" do
-      ExampleFreeMethodWrapper.expects(:free_method).at_least(28) # allow some wiggle room
+      ExampleFreeMethodWrapper.expects(:free_method).at_least(@loop_count - @wiggle_room)
 
-      30.times do
+      @loop_count.times do
         p1 = TestFFI::Primitives.prim1_create(1, 2.2, 3.3, "foobar", FFI::MemoryPointer.new(:pointer))
-        assert_equal FFI::Pointer, p1.class
+        assert_equal CrossFFI::Pointer, p1.class
 
         free_proc = ExampleFreeMethodWrapper.create_finalizer(ExampleFreeMethodWrapper, :free_method)
         p2 = FFI::AutoPointer.new(p1, free_proc)
