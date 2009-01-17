@@ -40,9 +40,9 @@ module Nokogiri
         first = self.child
         return list unless first # Empty list
 
-        list << first unless first.blank?
+        list << first
         while first = first.next
-          list << first unless first.blank?
+          list << first
         end
         list
       end
@@ -54,6 +54,7 @@ module Nokogiri
       def search *paths
         ns = paths.last.is_a?(Hash) ? paths.pop : {}
         xpath(*(paths.map { |path|
+          path = path.to_s
           path =~ /^(\.\/|\/)/ ? path : CSS.xpath_for(path, :prefix => ".//")
         }.flatten.uniq) + [ns])
       end
@@ -68,17 +69,21 @@ module Nokogiri
       #   node.xpath('.//xmlns:name', node.root.namespaces)
       #
       # Custom XPath functions may also be defined.  To define custom functions
-      # create a class which subclasses XPathHandler and implement the
-      # function you want to define.  For example:
+      # create a class and implement the # function you want to define.
+      # For example:
       #
-      #   node.xpath('.//title[regex(., "\w+")]', Class.new(XPathHandler) {
+      #   node.xpath('.//title[regex(., "\w+")]', Class.new {
       #     def regex node_set, regex
       #       node_set.find_all { |node| node['some_attribute'] =~ /#{regex}/ }
       #     end
       #   })
       #
       def xpath *paths
-        handler = paths.last.is_a?(XPathHandler) ? paths.pop : nil
+        # Pop off our custom function handler if it exists
+        handler = ![
+          Hash, String, Symbol
+        ].include?(paths.last.class) ? paths.pop : nil
+
         ns = paths.last.is_a?(Hash) ? paths.pop : {}
 
         return NodeSet.new(document) unless document.root
@@ -112,19 +117,23 @@ module Nokogiri
       #   node.css('div + p.green', 'div#one')
       #
       # Custom CSS pseudo classes may also be defined.  To define custom pseudo
-      # classes, create a class which subclasses SelectorHandler and implement
-      # the the custom pseudo class you want defined.  The first argument to
-      # the method will be the current matching NodeSet.  Any other arguments
-      # are ones that you pass in.  For example:
+      # classes, create a class and implement the custom pseudo class you
+      # want defined.  The first argument to the method will be the current
+      # matching NodeSet.  Any other arguments are ones that you pass in.
+      # For example:
       #
-      #   node.css('title:regex("\w+")', Class.new(SelectorHandler) {
+      #   node.css('title:regex("\w+")', Class.new {
       #     def regex node_set, regex
       #       node_set.find_all { |node| node['some_attribute'] =~ /#{regex}/ }
       #     end
       #   })
       #
       def css *rules
-        handler = rules.last.is_a?(XPathHandler) ? rules.pop : nil
+        # Pop off our custom function handler if it exists
+        handler = ![
+          Hash, String, Symbol
+        ].include?(rules.last.class) ? rules.pop : nil
+
         ns = rules.last.is_a?(Hash) ? rules.pop : {}
 
         rules = rules.map { |rule|
@@ -135,7 +144,7 @@ module Nokogiri
       end
 
       def at path, ns = {}
-        search("#{path}", ns).first
+        search(path, ns).first
       end
 
       def [](property)
@@ -147,9 +156,29 @@ module Nokogiri
         next_sibling
       end
 
+      def previous
+        previous_sibling
+      end
+
       def remove
         unlink
       end
+
+      ####
+      # Returns a hash containing the node's attributes.  The key is the
+      # attribute name, the value is the string value of the attribute.
+      def attributes
+        Hash[*(attribute_nodes.map { |node|
+          [node.name, node]
+        }.flatten)]
+      end
+
+      ###
+      # Remove the attribute named +name+
+      def remove_attribute name
+        attributes[name].remove if key? name
+      end
+      alias :delete :remove_attribute
 
       ####
       # Create nodes from +data+ and insert them before this node
@@ -225,10 +254,23 @@ module Nokogiri
         type == HTML_DOCUMENT_NODE
       end
 
-      def to_html
-        to_xml
+      def text?
+        type == TEXT_NODE
       end
-      alias :to_s :to_html
+
+      def read_only?
+        # According to gdome2, these are read-only node types
+        [NOTATION_NODE, ENTITY_NODE, ENTITY_DECL].include?(type)
+      end
+
+      def element?
+        type == ELEMENT_NODE
+      end
+      alias :elem? :element?
+
+      def to_s
+        document.xml? ? to_xml : to_html
+      end
 
       def inner_html
         children.map { |x| x.to_html }.join
@@ -279,6 +321,16 @@ Node.replace requires a Node argument, and cannot accept a Document.
           EOERR
         end
         replace_with_node new_node
+      end
+
+      def to_str
+        text
+      end
+
+      def == other
+        return false unless other
+        return false unless other.respond_to?(:pointer_id)
+        pointer_id == other.pointer_id
       end
     end
   end
