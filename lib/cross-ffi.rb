@@ -1,5 +1,3 @@
-
-
 if defined? Rubinius::VM
   
   puts "cross-ffi: initializing for rubinius"
@@ -23,7 +21,7 @@ else # ruby-ffi
 
   module CrossFFI
 
-    Pointer = RUBY_PLATFORM =~ /java/ ? FFI::JNAPointer : FFI::Pointer
+    Pointer = FFI::Pointer
 
     module ModuleMixin
 
