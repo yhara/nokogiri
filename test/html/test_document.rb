@@ -124,6 +124,7 @@ module Nokogiri
             <b>Hello World</b>
           </div>
         eohtml
+        assert node_set
         assert_equal 1, node_set.length
         assert_equal 'div', node_set.first.name
         assert_match(/Hello World/, node_set.to_html)

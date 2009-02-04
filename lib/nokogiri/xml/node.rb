@@ -329,8 +329,13 @@ Node.replace requires a Node argument, and cannot accept a Document.
 
       def == other
         return false unless other
-        return false unless other.respond_to?(:pointer_id)
-        pointer_id == other.pointer_id
+        if self.respond_to?(:cstruct) # RUBY_PLATFORM =~ /java/
+          return false unless other.respond_to?(:cstruct)
+          cstruct == other.cstruct
+        else
+          return false unless other.respond_to?(:pointer_id)
+          pointer_id == other.pointer_id
+        end
       end
     end
   end

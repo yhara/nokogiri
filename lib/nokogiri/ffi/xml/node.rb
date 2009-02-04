@@ -55,6 +55,13 @@ module Nokogiri
         cstruct[:type]
       end
 
+      def to_html
+        return to_xml if type == DOCUMENT_NODE
+        buffer = LibXML::XmlBuffer.new(LibXML.xmlBufferCreate())
+        LibXML.htmlNodeDump(buffer, cstruct[:doc], cstruct)
+        buffer[:content]
+      end
+
       def to_xml(level = 1)
         buffer = LibXML::XmlBuffer.new(LibXML.xmlBufferCreate())
         LibXML.xmlNodeDump(buffer, cstruct[:doc], cstruct, 2, level)

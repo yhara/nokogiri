@@ -40,7 +40,7 @@ module Nokogiri
       # Parse a fragment from +string+ in to a NodeSet.
       def fragment string
         doc = parse(string)
-        finder = lambda { |children, f|
+        finder = Proc.new { |children, f|
           children.each do |child|
             return children if string =~ /<#{child.name}/
             finder.call(child.children, f)
