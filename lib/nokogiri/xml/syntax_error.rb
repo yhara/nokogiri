@@ -1,6 +1,7 @@
+require 'nokogiri/syntax_error'
 module Nokogiri
   module XML
-    class SyntaxError < SyntaxError
+    class SyntaxError < ::Nokogiri::SyntaxError
       def none?
         level == 0
       end
