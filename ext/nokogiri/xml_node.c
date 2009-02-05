@@ -207,8 +207,12 @@ static VALUE set(VALUE self, VALUE property, VALUE value)
 {
   xmlNodePtr node;
   Data_Get_Struct(self, xmlNode, node);
-  xmlSetProp(node, (xmlChar *)StringValuePtr(property),
+
+  xmlChar *buffer = xmlEncodeEntitiesReentrant(node->doc,
       (xmlChar *)StringValuePtr(value));
+
+  xmlSetProp(node, (xmlChar *)StringValuePtr(property), buffer);
+  xmlFree(buffer);
 
   return value;
 }
@@ -225,10 +229,33 @@ static VALUE get(VALUE self, VALUE attribute)
   xmlChar* propstr ;
   VALUE rval ;
   Data_Get_Struct(self, xmlNode, node);
+
+  if(attribute == Qnil) return Qnil;
+
   propstr = xmlGetProp(node, (xmlChar *)StringValuePtr(attribute));
+
+  if(NULL == propstr) return Qnil;
+
   rval = rb_str_new2((char *)propstr) ;
   xmlFree(propstr);
   return rval ;
+}
+
+/*
+ * call-seq:
+ *   attribute(name)
+ *
+ * Get the attribute node with +name+
+ */
+static VALUE attr(VALUE self, VALUE name)
+{
+  xmlNodePtr node;
+  xmlAttrPtr prop;
+  Data_Get_Struct(self, xmlNode, node);
+  prop = xmlHasProp(node, (xmlChar *)StringValuePtr(name));
+
+  if(! prop) return Qnil;
+  return Nokogiri_wrap_xml_node((xmlNodePtr)prop);
 }
 
 /*
@@ -289,11 +316,11 @@ static VALUE namespaces(VALUE self)
 
 /*
  * call-seq:
- *  type
+ *  node_type
  *
- * Get the type for this node
+ * Get the type for this Node
  */
-static VALUE type(VALUE self)
+static VALUE node_type(VALUE self)
 {
   xmlNodePtr node;
   Data_Get_Struct(self, xmlNode, node);
@@ -546,32 +573,6 @@ static VALUE new(VALUE klass, VALUE name, VALUE document)
   return rb_node;
 }
 
-
-/*
- * call-seq:
- *   new_from_str(string)
- *
- * Create a new node by parsing +string+
- */
-static VALUE new_from_str(VALUE klass, VALUE xml)
-{
-    /*
-     *  I couldn't find a more efficient way to do this. So we create a new
-     *  document and copy (recursively) the root node.
-     */
-    VALUE rb_doc ;
-    xmlDocPtr doc ;
-    xmlNodePtr node ;
-
-    rb_doc = rb_funcall(cNokogiriXmlDocument, rb_intern("read_memory"), 4,
-                        xml, Qnil, Qnil, INT2NUM(0));
-    Data_Get_Struct(rb_doc, xmlDoc, doc);
-    node = xmlCopyNode(xmlDocGetRootElement(doc), 1); /* 1 => recursive */
-    node->doc = doc;
-
-    return Nokogiri_wrap_xml_node(node);
-}
-
 VALUE Nokogiri_wrap_xml_node(xmlNodePtr node)
 {
   assert(node);
@@ -594,6 +595,10 @@ VALUE Nokogiri_wrap_xml_node(xmlNodePtr node)
       klass = rb_const_get(mNokogiriXml, rb_intern("Text"));
       rb_node = Data_Wrap_Struct(klass, 0, debug_node_dealloc, node) ;
       break;
+    case XML_ENTITY_REF_NODE:
+      klass = cNokogiriXmlEntityReference;
+      rb_node = Data_Wrap_Struct(klass, 0, debug_node_dealloc, node) ;
+      break;
     case XML_COMMENT_NODE:
       klass = cNokogiriXmlComment;
       rb_node = Data_Wrap_Struct(klass, 0, debug_node_dealloc, node) ;
@@ -602,12 +607,16 @@ VALUE Nokogiri_wrap_xml_node(xmlNodePtr node)
       klass = cNokogiriXmlDocumentFragment;
       rb_node = Data_Wrap_Struct(klass, 0, debug_node_dealloc, node) ;
       break;
+    case XML_PI_NODE:
+      klass = cNokogiriXmlProcessingInstruction;
+      rb_node = Data_Wrap_Struct(klass, 0, debug_node_dealloc, node) ;
+      break;
     case XML_ELEMENT_NODE:
       klass = rb_const_get(mNokogiriXml, rb_intern("Element"));
       rb_node = Data_Wrap_Struct(klass, 0, debug_node_dealloc, node) ;
       break;
     case XML_ATTRIBUTE_NODE:
-      klass = rb_const_get(mNokogiriXml, rb_intern("Attr"));
+      klass = cNokogiriXmlAttr;
       rb_node = Data_Wrap_Struct(klass, 0, debug_node_dealloc, node) ;
       break;
     case XML_ENTITY_DECL:
@@ -693,22 +702,22 @@ void init_xml_node()
   VALUE klass = cNokogiriXmlNode = rb_const_get(mNokogiriXml, rb_intern("Node"));
 
   rb_define_singleton_method(klass, "new", new, 2);
-  rb_define_singleton_method(klass, "new_from_str", new_from_str, 1);
 
-  rb_define_method(klass, "name", get_name, 0);
-  rb_define_method(klass, "name=", set_name, 1);
+  rb_define_method(klass, "node_name", get_name, 0);
+  rb_define_method(klass, "node_name=", set_name, 1);
   rb_define_method(klass, "add_child", add_child, 1);
   rb_define_method(klass, "parent", get_parent, 0);
   rb_define_method(klass, "child", child, 0);
   rb_define_method(klass, "next_sibling", next_sibling, 0);
   rb_define_method(klass, "previous_sibling", previous_sibling, 0);
-  rb_define_method(klass, "type", type, 0);
+  rb_define_method(klass, "node_type", node_type, 0);
   rb_define_method(klass, "content", get_content, 0);
   rb_define_method(klass, "path", path, 0);
   rb_define_method(klass, "key?", key_eh, 1);
   rb_define_method(klass, "blank?", blank_eh, 0);
   rb_define_method(klass, "[]=", set, 2);
   rb_define_method(klass, "attribute_nodes", attribute_nodes, 0);
+  rb_define_method(klass, "attribute", attr, 1);
   rb_define_method(klass, "namespace", namespace, 0);
   rb_define_method(klass, "namespaces", namespaces, 0);
   rb_define_method(klass, "add_previous_sibling", add_previous_sibling, 1);

@@ -76,7 +76,7 @@ module Nokogiri
       #     def regex node_set, regex
       #       node_set.find_all { |node| node['some_attribute'] =~ /#{regex}/ }
       #     end
-      #   })
+      #   }.new)
       #
       def xpath *paths
         # Pop off our custom function handler if it exists
@@ -169,8 +169,22 @@ module Nokogiri
       # attribute name, the value is the string value of the attribute.
       def attributes
         Hash[*(attribute_nodes.map { |node|
-          [node.name, node]
+          [node.node_name, node]
         }.flatten)]
+      end
+
+      def values
+        attribute_nodes.map { |node| node.value }
+      end
+
+      def keys
+        attribute_nodes.map { |node| node.node_name }
+      end
+
+      def each &block
+        attribute_nodes.each { |node|
+          block.call(node.node_name, node.value)
+        }
       end
 
       ###
@@ -323,6 +337,20 @@ Node.replace requires a Node argument, and cannot accept a Document.
         replace_with_node new_node
       end
 
+      def name
+        node_name
+      end
+
+      def name= new_name
+        self.node_name = new_name
+      end
+
+      ###
+      # Get the type for this Node
+      def type
+        node_type
+      end
+
       def to_str
         text
       end
@@ -336,6 +364,11 @@ Node.replace requires a Node argument, and cannot accept a Document.
           return false unless other.respond_to?(:pointer_id)
           pointer_id == other.pointer_id
         end
+      end
+
+      def self.new_from_str string
+        $stderr.puts("This method is deprecated and will be removed in 1.2.0 or by March 1, 2009. Instead, use Nokogiri::HTML.fragment()")
+        Nokogiri::HTML.fragment(string).first
       end
     end
   end

@@ -2,11 +2,24 @@
 
 * New features
 
+  * XML::SAX::PushParser for all your push parsing needs.
   * XML::Node#to_str
+  * XML::Document#url get the document url
+  * XML::Document#encoding get encoding used for this document
+  * XML::Node#keys get all attribute names
+  * XML::Node#values get all attribute values
+  * XML::Node#each iterate over attribute name, value pairs
+  * XML::ProcessingInstrunction.new
 
 * Bugfixes
 
   * Fixed XML::Document#dup
+  * Fixed header detection. Thanks rubikitch!
+  * Fixed a problem where invalid CSS would cause the parser to hang
+
+* Deprecations
+
+  * Nokogiri::XML::Node.new_from_str will be deprecated in 1.2.0 or March 1
 
 === 1.1.1
 

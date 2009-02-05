@@ -10,6 +10,23 @@ static void dealloc(xmlDocPtr doc)
 
 /*
  * call-seq:
+ *  url
+ *
+ * Get the url name for this document.
+ */
+static VALUE url(VALUE self)
+{
+  xmlDocPtr doc;
+  Data_Get_Struct(self, xmlDoc, doc);
+
+  if(doc->URL)
+    return rb_str_new2((const char *)doc->URL);
+
+  return Qnil;
+}
+
+/*
+ * call-seq:
  *  serialize
  *
  * Serialize this document
@@ -60,6 +77,21 @@ static VALUE root(VALUE self)
 
   if(!root) return Qnil;
   return Nokogiri_wrap_xml_node(root) ;
+}
+
+/*
+ * call-seq:
+ *  encoding
+ *
+ * Get the encoding for this Document
+ */
+static VALUE encoding(VALUE self)
+{
+  xmlDocPtr doc;
+  Data_Get_Struct(self, xmlDoc, doc);
+
+  if(!doc->encoding) return Qnil;
+  return rb_str_new2((const char *)doc->encoding);
 }
 
 /*
@@ -212,7 +244,9 @@ void init_xml_document()
   rb_define_method(klass, "root", root, 0);
   rb_define_method(klass, "root=", set_root, 1);
   rb_define_method(klass, "serialize", serialize, 0);
+  rb_define_method(klass, "encoding", encoding, 0);
   rb_define_method(klass, "dup", duplicate_node, -1);
+  rb_define_method(klass, "url", url, 0);
   rb_undef_method(klass, "parent");
 }
 
