@@ -210,8 +210,15 @@ module Nokogiri
       end
 
       def add_child(child)
+        LibXML.xmlUnlinkNode(cstruct)
         new_child = LibXML.xmlAddChild(cstruct, child.cstruct)
         raise(RuntimeError, "Could not add new child") if new_child.null?
+
+        # the child was a text node that was coalesced. we need to have the object
+        # point at SOMETHING, or we'll totally bomb out.
+        if new_child != child.cstruct
+          child.cstruct = new_child
+
         Node.wrap(new_child)
       end
 
