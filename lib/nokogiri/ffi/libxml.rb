@@ -115,21 +115,21 @@ module Nokogiri
     ffi_attach 'libexslt', :exsltRegisterAll, [], :void
 
     # sax
-#     ffi_callback :start_document_sax_func, [:pointer], :void
-#     ffi_callback :end_document_sax_func, [:pointer], :void
-#     ffi_callback :start_element_sax_func, [:pointer, :string, :pointer], :void
-#     ffi_callback :end_element_sax_func, [:pointer, :string], :void
-#     ffi_callback :characters_sax_func, [:pointer, :string, :int], :void
-#     ffi_callback :comment_sax_func, [:pointer, :string], :void
-#     ffi_callback :warning_sax_func, [:pointer, :string], :void
-#     ffi_callback :error_sax_func, [:pointer, :string], :void
-#     ffi_callback :cdata_block_sax_func, [:pointer, :string, :int], :void
-#     ffi_attach 'libxml2', :xmlSAXUserParseMemory, [:pointer, :pointer, :pointer, :int], :int
-#     ffi_attach 'libxml2', :xmlSAXUserParseFile, [:pointer, :pointer, :string], :int
-#     ffi_attach 'libxml2', :xmlParseDocument, [:pointer], :int
-#     ffi_attach 'libxml2', :xmlFreeParserCtxt, [:pointer], :void
-#     ffi_attach 'libxml2', :htmlSAXParseFile, [:pointer, :pointer, :pointer, :pointer], :pointer
-#     ffi_attach 'libxml2', :htmlSAXParseDoc, [:pointer, :pointer, :pointer, :pointer], :pointer
+    ffi_callback :start_document_sax_func, [:pointer], :void
+    ffi_callback :end_document_sax_func, [:pointer], :void
+    ffi_callback :start_element_sax_func, [:pointer, :string, :pointer], :void
+    ffi_callback :end_element_sax_func, [:pointer, :string], :void
+    ffi_callback :characters_sax_func, [:pointer, :string, :int], :void
+    ffi_callback :comment_sax_func, [:pointer, :string], :void
+    ffi_callback :warning_sax_func, [:pointer, :string], :void
+    ffi_callback :error_sax_func, [:pointer, :string], :void
+    ffi_callback :cdata_block_sax_func, [:pointer, :string, :int], :void
+    ffi_attach 'libxml2', :xmlSAXUserParseMemory, [:pointer, :pointer, :pointer, :int], :int
+    ffi_attach 'libxml2', :xmlSAXUserParseFile, [:pointer, :pointer, :string], :int
+    ffi_attach 'libxml2', :xmlParseDocument, [:pointer], :int
+    ffi_attach 'libxml2', :xmlFreeParserCtxt, [:pointer], :void
+    ffi_attach 'libxml2', :htmlSAXParseFile, [:pointer, :pointer, :pointer, :pointer], :pointer
+    ffi_attach 'libxml2', :htmlSAXParseDoc, [:pointer, :pointer, :pointer, :pointer], :pointer
   end
 end
 
@@ -148,7 +148,7 @@ Nokogiri::LIBXML_VERSION = Nokogiri::LibXML.__xmlParserVersion()
   "structs/xml_attr.rb",
   "structs/xml_ns.rb",
   "structs/xml_text_reader.rb",
-#  "structs/xml_sax_handler.rb",
+  "structs/xml_sax_handler.rb",
   "structs/xslt_stylesheet.rb",
   "xml/document.rb",
   "xml/node.rb",
