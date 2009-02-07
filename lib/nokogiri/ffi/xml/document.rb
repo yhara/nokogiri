@@ -61,6 +61,14 @@ module Nokogiri
         node
       end
 
+      def encoding
+        cstruct[:encoding]
+      end
+
+      def url
+        cstruct[:URL]
+      end
+
     end
   end
 end

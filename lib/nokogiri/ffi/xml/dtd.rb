@@ -3,7 +3,7 @@ module Nokogiri
     class DTD
       
       def attributes
-        things :attributes
+        nil
       end
 
       def elements

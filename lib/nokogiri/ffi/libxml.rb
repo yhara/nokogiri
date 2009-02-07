@@ -11,6 +11,7 @@ module Nokogiri
 
     # xml documents
     ffi_attach 'libxml2', :xmlNewDoc, [:string], :pointer
+    ffi_attach 'libxml2', :xmlNewDocFragment, [:pointer], :pointer
     ffi_attach 'libxml2', :xmlReadMemory, [:string, :int, :string, :string, :int], :pointer
     ffi_attach 'libxml2', :xmlDocDumpMemory, [:pointer, :pointer, :pointer], :void
     ffi_attach 'libxml2', :xmlDocGetRootElement, [:pointer], :pointer
@@ -41,7 +42,10 @@ module Nokogiri
     ffi_attach 'libxml2', :xmlNewCDataBlock, [:pointer, :pointer, :int], :pointer
     ffi_attach 'libxml2', :xmlNewDocComment, [:pointer, :pointer], :pointer
     ffi_attach 'libxml2', :xmlNewText, [:pointer], :pointer
+    ffi_attach 'libxml2', :xmlFreeNodeList, [:pointer], :void
     ffi_attach 'libxml2', :htmlNodeDump, [:pointer, :pointer, :pointer], :int
+    ffi_attach 'libxml2', :xmlEncodeEntitiesReentrant, [:pointer, :string], :string
+    ffi_attach 'libxml2', :xmlStringGetNodeList, [:pointer, :string], :pointer
 
     # buffer
     ffi_attach 'libxml2', :xmlBufferCreate, [], :pointer
@@ -150,7 +154,9 @@ Nokogiri::LIBXML_VERSION = Nokogiri::LibXML.__xmlParserVersion()
   "structs/xml_text_reader.rb",
   "structs/xml_sax_handler.rb",
   "structs/xslt_stylesheet.rb",
+  "xml/attr.rb",
   "xml/document.rb",
+  "xml/document_fragment.rb",
   "xml/node.rb",
   "xml/text.rb",
   "xml/cdata.rb",

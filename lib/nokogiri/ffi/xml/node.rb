@@ -42,6 +42,7 @@ module Nokogiri
                   when CDATA_SECTION_NODE then [XML::CDATA]
                   when DTD_NODE then [XML::DTD, LibXML::XmlDtd]
                   when ATTRIBUTE_NODE then [XML::Attr]
+                  when DOCUMENT_FRAG_NODE then [XML::DocumentFragment]
                   else [XML::Node]
                   end
         node = klasses.first.allocate
@@ -117,7 +118,8 @@ module Nokogiri
       end
 
       def []=(property, value)
-        LibXML.xmlSetProp(cstruct, property, value)
+        buffer = LibXML.xmlEncodeEntitiesReentrant(cstruct[:doc], value)
+        LibXML.xmlSetProp(cstruct, property, buffer)
         value
       end
 
