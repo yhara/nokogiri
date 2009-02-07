@@ -41,6 +41,7 @@ module Nokogiri
                   when ENTITY_DECL then [XML::EntityDeclaration]
                   when CDATA_SECTION_NODE then [XML::CDATA]
                   when DTD_NODE then [XML::DTD, LibXML::XmlDtd]
+                  when ATTRIBUTE_NODE then [XML::Attr]
                   else [XML::Node]
                   end
         node = klasses.first.allocate
@@ -54,6 +55,7 @@ module Nokogiri
       def type
         cstruct[:type]
       end
+      alias_method :node_type, :type
 
       def to_html
         return to_xml if type == DOCUMENT_NODE
@@ -71,6 +73,7 @@ module Nokogiri
       def name
         cstruct[:name]
       end
+      alias_method :node_name, :name
 
       def name=(string)
         LibXML.xmlNodeSetName(cstruct, string)
@@ -144,34 +147,30 @@ module Nokogiri
         val.null? ? nil : Node.wrap(val)
       end
 
-      def add_next_sibling new_sibling
-        LibXML.xmlAddNextSibling(cstruct, new_sibling.cstruct)
-        new_sibling.decorate!
-        new_sibling
-      end
-
-      def add_previous_sibling new_sibling
-        LibXML.xmlAddPrevSibling(cstruct, new_sibling.cstruct)
-        new_sibling.decorate!
-        new_sibling
-      end
-
-      def attributes
-        ahash = {}
-        prop = cstruct[:properties]
-        while ! prop.null?
-          prop_cstruct = LibXML::XmlAttr.new(prop)
-          name = prop_cstruct[:name]
-          prop_str = LibXML.xmlGetProp(cstruct, name)
-          ahash[name] = prop_str.read_string unless prop_str.null?
-          prop = prop_cstruct[:next]
+      def attribute_nodes
+        prop_array = []
+        prop_cstruct = cstruct[:properties]
+        while ! prop_cstruct.null?
+          prop = Node.wrap(prop_cstruct)
+          prop_array << prop
+          prop_cstruct = prop.cstruct[:next]
         end
-        ahash
+        prop_array
       end
 
       def remove_attribute(prop)
         prop_ptr = LibXML.xmlHasProp(cstruct, prop)
         LibXML.xmlRemoveProp(prop_ptr) unless prop_ptr.null?
+      end
+      alias_method :delete, :remove_attribute
+
+      def namespace
+        return nil if cstruct[:ns].null?
+
+        prefix = LibXML::XmlNs.new(cstruct[:ns])[:prefix]
+        return prefix if prefix
+
+        nil
       end
 
       def namespaces
@@ -210,7 +209,8 @@ module Nokogiri
       end
 
       def add_child(child)
-        LibXML.xmlUnlinkNode(cstruct)
+        LibXML.xmlUnlinkNode(child.cstruct)
+
         new_child_struct = LibXML.xmlAddChild(cstruct, child.cstruct)
         raise(RuntimeError, "Could not add new child") if new_child_struct.null?
 
@@ -222,6 +222,44 @@ module Nokogiri
           child.cstruct = new_child.cstruct
         end
 
+        child.decorate!
+        child
+      end
+
+      def add_next_sibling(next_sibling)
+        LibXML.xmlUnlinkNode(next_sibling.cstruct)
+
+        new_next_sibling_struct = LibXML.xmlAddNextSibling(cstruct, next_sibling.cstruct)
+        raise(RuntimeError, "Could not add next sibling") if new_next_sibling_struct.null?
+
+        new_next_sibling = Node.wrap(new_next_sibling_struct)
+
+        # the next_sibling was a text node that was coalesced. we need to have the object
+        # point at SOMETHING, or we'll totally bomb out.
+        if new_next_sibling_struct != next_sibling.cstruct.pointer
+          next_sibling.cstruct = new_next_sibling.cstruct
+        end
+
+        next_sibling.decorate!
+        next_sibling
+      end
+
+      def add_previous_sibling(prev_sibling)
+        LibXML.xmlUnlinkNode(prev_sibling.cstruct)
+
+        new_prev_sibling_struct = LibXML.xmlAddPrevSibling(cstruct, prev_sibling.cstruct)
+        raise(RuntimeError, "Could not add previous sibling") if new_prev_sibling_struct.null?
+
+        new_prev_sibling = Node.wrap(new_prev_sibling_struct)
+
+        # the prev_sibling was a text node that was coalesced. we need to have the object
+        # point at SOMETHING, or we'll totally bomb out.
+        if new_prev_sibling_struct != prev_sibling.cstruct.pointer
+          prev_sibling.cstruct = new_prev_sibling.cstruct
+        end
+
+        prev_sibling.decorate!
+        prev_sibling
       end
 
       def dup(deep = 1)

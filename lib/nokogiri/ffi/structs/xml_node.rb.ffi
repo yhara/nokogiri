@@ -16,6 +16,7 @@ module Nokogiri
         s.field :prev, :pointer
         s.field :doc, :pointer
         s.field :properties, :pointer
+        s.field :ns, :pointer
         s.field :nsDef, :pointer
       end
       @@@
