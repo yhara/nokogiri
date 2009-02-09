@@ -22,8 +22,6 @@ end
 
 module Nokogiri
   class << self
-    attr_accessor :error_handler
-
     ###
     # Parse an HTML or XML document.  +string+ contains the document.
     def parse string, url = nil, encoding = nil, options = nil
@@ -39,7 +37,7 @@ module Nokogiri
 
     def make input = nil, opts = {}, &blk
       if input
-        Nokogiri::HTML.fragment(input).first
+        Nokogiri::HTML.fragment(input).children.first
       else
         Nokogiri(&blk)
       end
@@ -64,8 +62,6 @@ module Nokogiri
       Nokogiri(*args, &block).slop!
     end
   end
-
-  self.error_handler = lambda { |syntax_error| }  
 end
 
 def Nokogiri(*args, &block)
