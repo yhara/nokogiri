@@ -6,8 +6,6 @@ ROOT = File.expand_path(File.join(File.dirname(__FILE__), '..', '..'))
 LIBDIR = Config::CONFIG['libdir']
 INCLUDEDIR = Config::CONFIG['includedir']
 
-use_macports = !(defined?(RUBY_ENGINE) && RUBY_ENGINE != 'ruby')
-
 if defined?(RUBY_ENGINE) && RUBY_ENGINE == 'macruby'
   $LIBRUBYARG_STATIC.gsub!(/-static/, '')
 end
@@ -19,70 +17,50 @@ else
   $CFLAGS << " -g -DXP_UNIX"
 end
 
-$LIBPATH << "/opt/local/lib" if use_macports
-
 $CFLAGS << " -O3 -Wall -Wcast-qual -Wwrite-strings -Wconversion -Wmissing-noreturn -Winline"
 
+HEADER_DIRS = [
+  File.join(INCLUDEDIR, "libxml2"),
+  INCLUDEDIR,
+  '/usr/local/include/libxml2',
+  '/usr/include/libxml2',
+]
+
+LIB_DIRS = [
+  LIBDIR,
+  '/opt/local/lib',
+  '/usr/local/lib',
+  '/usr/lib'
+]
+
 if Config::CONFIG['target_os'] == 'mingw32'
-  header = File.join(ROOT, 'cross', 'libxml2-2.7.2.win32', 'include')
-  unless find_header('libxml/xmlversion.h', header)
-    abort "need libxml"
-  end
-
-  header = File.join(ROOT, 'cross', 'libxslt-1.1.24.win32', 'include')
-  unless find_header('libxslt/libxslt.h', header)
-    abort "need libxslt"
-  end
-  unless find_header('libexslt/libexslt.h', header)
-    abort "need libexslt"
-  end
-
   header = File.join(ROOT, 'cross', 'iconv-1.9.2.win32', 'include')
   unless find_header('iconv.h', header)
     abort "need iconv"
   end
-else
-  HEADER_DIRS = [
-    File.join(INCLUDEDIR, "libxml2"),
-    INCLUDEDIR,
-    '/usr/local/include/libxml2',
-    '/usr/include/libxml2',
-  ]
+end
 
-  LIB_DIRS = [
-    LIBDIR,
-    '/opt/local/lib',
-    '/usr/local/lib',
-    '/usr/lib'
-  ]
+xml2_dirs = dir_config('xml2', '/opt/local/include/libxml2', '/opt/local/lib')
+unless [nil, nil] == xml2_dirs
+  HEADER_DIRS.unshift xml2_dirs.first
+  LIB_DIRS.unshift xml2_dirs[1]
+end
 
-  [
-    '/opt/local/include/libxml2',
-    '/opt/local/include',
-  ].each { |x| HEADER_DIRS.unshift(x) } if use_macports
+xslt_dirs = dir_config('xslt', '/opt/local/include/', '/opt/local/lib')
+unless [nil, nil] == xslt_dirs
+  HEADER_DIRS.unshift xslt_dirs.first
+  LIB_DIRS.unshift xslt_dirs[1]
+end
 
-  xml2_dirs = dir_config('xml2')
-  unless [nil, nil] == xml2_dirs
-    HEADER_DIRS.unshift xml2_dirs.first
-    LIB_DIRS.unshift xml2_dirs[1]
-  end
+unless find_header('libxml/parser.h', *HEADER_DIRS)
+  abort "libxml2 is missing.  try 'port install libxml2' or 'yum install libxml2'"
+end
 
-  xslt_dirs = dir_config('xslt')
-  unless [nil, nil] == xslt_dirs
-    HEADER_DIRS.unshift xslt_dirs.first
-    LIB_DIRS.unshift xslt_dirs[1]
-  end
-
-  unless find_header('libxml/parser.h', *HEADER_DIRS)
-    abort "need libxml"
-  end
-
-  unless find_header('libxslt/xslt.h', *HEADER_DIRS)
-    abort "need libxslt"
-  end
-  unless find_header('libexslt/exslt.h', *HEADER_DIRS)
-    abort "need libxslt"
-  end
+unless find_header('libxslt/xslt.h', *HEADER_DIRS)
+  abort "libxslt is missing.  try 'port install libxslt' or 'yum install libxslt'"
+end
+unless find_header('libexslt/exslt.h', *HEADER_DIRS)
+  abort "libxslt is missing.  try 'port install libxslt' or 'yum install libxslt'"
 end
 
 if Config::CONFIG['target_os'] == 'mingw32'
@@ -94,15 +72,15 @@ if Config::CONFIG['target_os'] == 'mingw32'
                File.join(ROOT, 'cross', 'libxslt-1.1.24.win32', 'bin'))
 else
   unless find_library('xml2', 'xmlParseDoc', *LIB_DIRS)
-    abort "need libxml2"
+    abort "libxml2 is missing.  try 'port install libxml2' or 'yum install libxml2'"
   end
 
   unless find_library('xslt', 'xsltParseStylesheetDoc', *LIB_DIRS)
-    abort "need libxslt"
+    abort "libxslt is missing.  try 'port install libxslt' or 'yum install libxslt'"
   end
 
   unless find_library('exslt', 'exsltFuncRegister', *LIB_DIRS)
-    abort "need libxslt"
+    abort "libxslt is missing.  try 'port install libxslt' or 'yum install libxslt'"
   end
 end
 

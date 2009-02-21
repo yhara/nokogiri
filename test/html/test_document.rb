@@ -12,6 +12,27 @@ module Nokogiri
         assert html.html?
       end
 
+      def test_parse_io
+        assert doc = File.open(HTML_FILE, 'rb') { |f|
+          Document.read_io(f, nil, 'UTF-8', PARSE_NOERROR | PARSE_NOWARNING)
+        }
+      end
+
+      def test_to_xhtml
+        assert_match 'XHTML', @html.to_xhtml
+        assert_match 'XHTML', @html.to_xhtml('UTF-8')
+        assert_match 'UTF-8', @html.to_xhtml('UTF-8')
+      end
+
+      def test_no_xml_header
+        html = Nokogiri::HTML(<<-eohtml)
+        <html>
+        </html>
+        eohtml
+        assert html.to_html.length > 0, 'html length is too short'
+        assert_no_match(/^<\?xml/, html.to_html)
+      end
+
       def test_document_has_error
         html = Nokogiri::HTML(<<-eohtml)
         <html>
@@ -130,6 +151,10 @@ module Nokogiri
         eohtml
         node = html.xpath('//div').first
         assert_equal('<p>Helloworld!</p>', node.inner_html.gsub(/\s/, ''))
+      end
+
+      def test_fragment_includes_two_tags
+        assert_equal 2, Nokogiri::HTML.fragment("<br/><hr/>").children.length
       end
 
       def test_fragment

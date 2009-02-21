@@ -12,14 +12,6 @@ module Nokogiri
         alias :cache_on? :cache_on
         alias :set_cache :cache_on=
 
-        def parse string
-          new.parse(string)
-        end
-
-        def xpath_for string, options={}
-          new.xpath_for(string, options)
-        end
-
         def [] string
           return unless @cache_on
           @mutex.synchronize { @cache[string] }
@@ -40,6 +32,17 @@ module Nokogiri
           block.call
           @cache_on = tmp
         end
+
+        ###
+        # Parse this CSS selector in +selector+.  Returns an AST.
+        def parse selector
+          new.parse selector
+        end
+      end
+
+      def initialize namespaces = {}
+        @namespaces = namespaces
+        super()
       end
       alias :parse :scan_str
 
@@ -47,7 +50,10 @@ module Nokogiri
         v = self.class[string]
         return v if v
 
-        args = [options[:prefix], options[:visitor]].compact
+        args = [
+          options[:prefix] || '//',
+          options[:visitor] || XPathVisitor.new
+        ]
         self.class[string] = parse(string).map { |ast|
           ast.to_xpath(*args)
         }

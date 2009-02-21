@@ -1,10 +1,60 @@
 require File.expand_path(File.join(File.dirname(__FILE__), '..', "helper"))
 
+require 'stringio'
+
 module Nokogiri
   module XML
     class TestNode < Nokogiri::TestCase
       def setup
         @xml = Nokogiri::XML.parse(File.read(XML_FILE), XML_FILE)
+      end
+
+      def test_add_namespace
+        node = @xml.at('address')
+        node.add_namespace('foo', 'http://tenderlovemaking.com')
+        assert_equal 'http://tenderlovemaking.com', node.namespaces['xmlns:foo']
+      end
+
+      def test_write_to
+        io = StringIO.new
+        @xml.write_to io
+        io.rewind
+        assert_equal @xml.to_xml, io.read
+      end
+
+      def test_write_to_with_block
+        called = false
+        io = StringIO.new
+        conf = nil
+        @xml.write_to io do |config|
+          called = true
+          conf = config
+          config.format.as_html.no_empty_tags
+        end
+        io.rewind
+        assert called
+        assert_equal @xml.serialize(nil, conf.options), io.read
+      end
+
+      %w{ xml html xhtml }.each do |type|
+        define_method(:"test_write_#{type}_to") do
+          io = StringIO.new
+          assert @xml.send(:"write_#{type}_to", io)
+          io.rewind
+          assert_match @xml.send(:"to_#{type}"), io.read
+        end
+      end
+
+      def test_serialize_with_block
+        called = false
+        conf = nil
+        string = @xml.serialize do |config|
+          called = true
+          conf = config
+          config.format.as_html.no_empty_tags
+        end
+        assert called
+        assert_equal @xml.serialize(nil, conf.options), string
       end
 
       def test_values
@@ -293,8 +343,6 @@ module Nokogiri
         assert 1, @xml.search('//form').length
 
         assert_equal set[0].to_xml, second.to_xml
-        assert_equal set[0].to_xml(5), second.to_xml(5)
-        assert_not_equal set[0].to_xml, set[0].to_xml(5)
       end
 
       def test_illegal_replace_of_node_with_doc
@@ -395,6 +443,21 @@ EOF
         assert_equal "c", set[2].namespace
         assert_equal nil, set[3].namespace
       end
+
+      def test_line
+        xml = Nokogiri::XML(<<-eoxml)
+        <root>
+          <a>
+            Hello world
+          </a>
+        </root>
+        eoxml
+
+        set = xml.search("//a")
+        node = set.first
+        assert_equal 2, node.line
+      end
+
     end
   end
 end

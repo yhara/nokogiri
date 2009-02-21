@@ -41,11 +41,7 @@ module Nokogiri
         last.after datum
       end
 
-      ###
-      # Append +node+ to the NodeSet.
-      def << node
-        push(node)
-      end
+      alias :<< :push
 
       ###
       # Unlink this NodeSet and all Node objects it contains from their
@@ -173,21 +169,20 @@ module Nokogiri
         map { |x| x.to_s }.join
       end
 
-      def to_html
-        map { |x| x.to_html }.join('')
+      def to_html *args
+        map { |x| x.to_html(*args) }.join('')
+      end
+
+      def to_xhtml *args
+        map { |x| x.to_xhtml(*args) }.join('')
       end
 
       def to_xml *args
         map { |x| x.to_xml(*args) }.join('')
       end
 
-      def size
-        length
-      end
-
-      def to_ary
-        to_a
-      end
+      alias :size :length
+      alias :to_ary :to_a
     end
   end
 end

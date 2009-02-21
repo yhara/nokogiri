@@ -1,10 +1,25 @@
 require File.expand_path(File.join(File.dirname(__FILE__), '..', "helper"))
 
+require 'uri'
+
 module Nokogiri
   module XML
     class TestDocument < Nokogiri::TestCase
       def setup
         @xml = Nokogiri::XML.parse(File.read(XML_FILE), XML_FILE)
+      end
+
+      def test_xmlns_is_automatically_registered
+        doc = Nokogiri::XML(<<-eoxml)
+          <root xmlns="http://tenderlovemaking.com/">
+            <foo>
+              bar
+            </foo>
+          </root>
+        eoxml
+        assert_equal 1, doc.css('xmlns|foo').length
+        assert_equal 1, doc.css('foo').length
+        assert_equal 0, doc.css('|foo').length
       end
 
       # wtf...  osx's libxml sucks.
@@ -39,7 +54,7 @@ module Nokogiri
 
       def test_url
         assert @xml.url
-        assert_equal XML_FILE, @xml.url
+        assert_equal XML_FILE, URI.unescape(@xml.url).sub('file:///', '')
       end
 
       def test_document_parent

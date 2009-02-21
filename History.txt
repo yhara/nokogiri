@@ -2,15 +2,23 @@
 
 * New features
 
-  * XML::SAX::PushParser for all your push parsing needs.
-  * XML::Node#to_str
-  * XML::Document#url get the document url
-  * XML::Document#encoding get encoding used for this document
-  * XML::Node#keys get all attribute names
-  * XML::Node#values get all attribute values
-  * XML::Node#each iterate over attribute name, value pairs
-  * XML::ProcessingInstrunction.new
   * CSS search now supports CSS3 namespace queries
+  * Namespaces on the root node are automatically registered
+  * CSS queries use the default namespace
+  * XML::Document#encoding get encoding used for this document
+  * XML::Document#url get the document url
+  * XML::Node#add_namespace add a namespace to the node LH#38
+  * XML::Node#each iterate over attribute name, value pairs
+  * XML::Node#keys get all attribute names
+  * XML::Node#line get the line number for a node (Thanks Dirkjan Bussink!)
+  * XML::Node#serialize now takes an optional encoding parameter
+  * XML::Node#to_html, to_xml, and to_xhtml take an optional encoding
+  * XML::Node#to_str
+  * XML::Node#to_xhtml to produce XHTML documents
+  * XML::Node#values get all attribute values
+  * XML::Node#write_to writes the node to an IO object with optional encoding
+  * XML::ProcessingInstrunction.new
+  * XML::SAX::PushParser for all your push parsing needs.
 
 * Bugfixes
 

@@ -30,7 +30,7 @@ module Nokogiri
       def parse string_or_io, url = nil, encoding = nil, options = 2145
         if string_or_io.respond_to?(:read)
           url ||= string_or_io.respond_to?(:path) ? string_or_io.path : nil
-          string_or_io = string_or_io.read
+          return Document.read_io(string_or_io, url, encoding, options)
         end
 
         Document.read_memory(string_or_io, url, encoding, options)
@@ -40,19 +40,19 @@ module Nokogiri
       # Parse a fragment from +string+ in to a NodeSet.
       def fragment string
         doc = parse(string)
-        frag = nil
-        finder = lambda { |c, fragment, f|
+        fragment = XML::DocumentFragment.new(doc)
+        finder = lambda { |c, f|
           c.each do |child|
-            if string =~ /<#{child.name}/
-              fragment.add_child(child)
-              frag = fragment
-              return frag
-            end
-            finder.call(child.children, fragment, f)
+            fragment.add_child(child) if string =~ /<#{child.name}/
+          end
+          return fragment if fragment.children.length > 0
+
+          c.each do |child|
+            finder.call(child.children, f)
           end
         }
-        finder.call(doc.children, XML::DocumentFragment.new(doc), finder)
-        frag
+        finder.call(doc.children, finder)
+        fragment
       end
     end
 

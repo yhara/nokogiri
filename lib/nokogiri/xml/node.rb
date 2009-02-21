@@ -1,3 +1,6 @@
+require 'stringio'
+require 'nokogiri/xml/node/save_options'
+
 module Nokogiri
   module XML
     class Node
@@ -23,6 +26,7 @@ module Nokogiri
       XINCLUDE_END =       20
       DOCB_DOCUMENT_NODE = 21
 
+      # The Document associated with this Node.
       attr_accessor :document
 
       ###
@@ -84,7 +88,7 @@ module Nokogiri
           Hash, String, Symbol
         ].include?(paths.last.class) ? paths.pop : nil
 
-        ns = paths.last.is_a?(Hash) ? paths.pop : {}
+        ns = paths.last.is_a?(Hash) ? paths.pop : document.root.namespaces
 
         return NodeSet.new(document) unless document.root
 
@@ -134,35 +138,42 @@ module Nokogiri
           Hash, String, Symbol
         ].include?(rules.last.class) ? rules.pop : nil
 
-        ns = rules.last.is_a?(Hash) ? rules.pop : {}
+        ns = rules.last.is_a?(Hash) ? rules.pop : document.root.namespaces
 
         rules = rules.map { |rule|
-          CSS.xpath_for(rule, :prefix => ".//")
+          CSS.xpath_for(rule, :prefix => ".//", :ns => ns)
         }.flatten.uniq + [ns, handler].compact
 
         xpath(*rules)
       end
 
-      def at path, ns = {}
+      ###
+      # Search for the first occurrence of +path+.
+      # Returns nil if nothing is found, otherwise a Node.
+      def at path, ns = document.root.namespaces
         search(path, ns).first
       end
 
-      def [](property)
-        return nil unless key?(property)
-        get(property)
+      ###
+      # Get the attribute value for the attribute +name+
+      def [](name)
+        return nil unless key?(name)
+        get(name)
       end
 
-      def next
-        next_sibling
-      end
-
-      def previous
-        previous_sibling
-      end
-
-      def remove
-        unlink
-      end
+      alias :next           :next_sibling
+      alias :previous       :previous_sibling
+      alias :remove         :unlink
+      alias :get_attribute  :[]
+      alias :set_attribute  :[]=
+      alias :text           :content
+      alias :inner_text     :content
+      alias :has_attribute? :key?
+      alias :<<             :add_child
+      alias :name           :node_name
+      alias :name=          :node_name=
+      alias :type           :node_type
+      alias :to_str         :text
 
       ####
       # Returns a hash containing the node's attributes.  The key is the
@@ -173,14 +184,20 @@ module Nokogiri
         }.flatten)]
       end
 
+      ###
+      # Get the attribute values for this Node.
       def values
         attribute_nodes.map { |node| node.value }
       end
 
+      ###
+      # Get the attribute names for this Node.
       def keys
         attribute_nodes.map { |node| node.node_name }
       end
 
+      ###
+      # Iterate over each attribute name and value pair for this Node.
       def each &block
         attribute_nodes.each { |node|
           block.call(node.node_name, node.value)
@@ -220,20 +237,6 @@ module Nokogiri
         end
       end
 
-      def has_attribute?(property)
-        key? property
-      end
-
-      alias :get_attribute :[]
-      def set_attribute(name, value)
-        self[name] = value
-      end
-
-      def text
-        content
-      end
-      alias :inner_text :text
-
       ####
       # Set the content to +string+.
       # If +encode+, encode any special characters first.
@@ -246,10 +249,6 @@ module Nokogiri
       def parent= parent_node
         parent_node.add_child(self)
         parent_node
-      end
-
-      def << child
-        add_child child
       end
 
       def comment?
@@ -337,24 +336,8 @@ Node.replace requires a Node argument, and cannot accept a Document.
         replace_with_node new_node
       end
 
-      def name
-        node_name
-      end
-
-      def name= new_name
-        self.node_name = new_name
-      end
-
       ###
-      # Get the type for this Node
-      def type
-        node_type
-      end
-
-      def to_str
-        text
-      end
-
+      # Test to see if this Node is equal to +other+
       def == other
         return false unless other
         if self.respond_to?(:cstruct) # RUBY_PLATFORM =~ /java/
@@ -364,6 +347,91 @@ Node.replace requires a Node argument, and cannot accept a Document.
           return false unless other.respond_to?(:pointer_id)
           pointer_id == other.pointer_id
         end
+      end
+
+      ###
+      # Serialize Node using +encoding+ and +save_options+.  Save options 
+      # can also be set using a block. See SaveOptions.
+      #
+      # These two statements are equivalent:
+      #
+      #  node.serialize('UTF-8', FORMAT | AS_XML)
+      #
+      # or
+      #
+      #   node.serialize('UTF-8') do |config|
+      #     config.format.as_xml
+      #   end
+      #
+      def serialize encoding = nil, save_options = SaveOptions::FORMAT, &block
+        io = StringIO.new
+        write_to io, encoding, save_options, &block
+        io.rewind
+        io.read
+      end
+
+      ###
+      # Serialize this Node to HTML using +encoding+
+      def to_html encoding = nil
+        doc = serialize(encoding, SaveOptions::FORMAT |
+                            SaveOptions::NO_DECLARATION |
+                            SaveOptions::NO_EMPTY_TAGS |
+                            SaveOptions::AS_HTML)
+
+        return doc unless LIBXML_VERSION =~ /^2\.6\./
+        # FIXME: this is a hack around broken libxml versions
+        if Range.new(16, 20) === LIBXML_VERSION.split('.').last.to_i
+          return doc.sub(/^<\?xml[^>]*>/, '')
+        end
+        doc
+      end
+
+      ###
+      # Serialize this Node to XML using +encoding+
+      def to_xml encoding = nil
+        serialize(encoding, SaveOptions::FORMAT | SaveOptions::AS_XML)
+      end
+
+      ###
+      # Serialize this Node to XML using +encoding+
+      def to_xhtml encoding = nil
+        serialize(encoding, SaveOptions::FORMAT |
+                            SaveOptions::NO_DECLARATION |
+                            SaveOptions::NO_EMPTY_TAGS |
+                            SaveOptions::AS_XHTML)
+      end
+
+      ###
+      # Write Node to +io+ with +encoding+ and +save_options+
+      def write_to io, encoding = nil, save_options = SaveOptions::FORMAT
+        config = SaveOptions.new(save_options)
+        yield config if block_given?
+
+        native_write_to(io, encoding, config.options)
+      end
+
+      ###
+      # Write Node as HTML to +io+ with +encoding+
+      def write_html_to io, encoding = nil
+        write_to io, encoding, SaveOptions::FORMAT |
+          SaveOptions::NO_DECLARATION |
+          SaveOptions::NO_EMPTY_TAGS |
+          SaveOptions::AS_HTML
+      end
+
+      ###
+      # Write Node as XHTML to +io+ with +encoding+
+      def write_xhtml_to io, encoding = nil
+        write_to io, encoding, SaveOptions::FORMAT |
+          SaveOptions::NO_DECLARATION |
+          SaveOptions::NO_EMPTY_TAGS |
+          SaveOptions::AS_XHTML
+      end
+
+      ###
+      # Write Node as XML to +io+ with +encoding+
+      def write_xml_to io, encoding = nil
+        write_to io, encoding, SaveOptions::FORMAT | SaveOptions::AS_XML
       end
 
       def self.new_from_str string

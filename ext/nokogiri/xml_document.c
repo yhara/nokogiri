@@ -27,25 +27,6 @@ static VALUE url(VALUE self)
 
 /*
  * call-seq:
- *  serialize
- *
- * Serialize this document
- */
-static VALUE serialize(VALUE self)
-{
-  xmlDocPtr doc;
-  xmlChar *buf;
-  int size;
-  Data_Get_Struct(self, xmlDoc, doc);
-
-  xmlDocDumpMemory(doc, &buf, &size);
-  VALUE rb_str = rb_str_new((char *)buf, (long)size);
-  xmlFree(buf);
-  return rb_str;
-}
-
-/*
- * call-seq:
  *  root=
  *
  * Set the root element on this document
@@ -252,9 +233,9 @@ static VALUE load_external_subsets_set(VALUE klass, VALUE value)
 VALUE cNokogiriXmlDocument ;
 void init_xml_document()
 {
-  VALUE nokogiri = rb_define_module("Nokogiri");
-  VALUE xml = rb_define_module_under(nokogiri, "XML");
-  VALUE node = rb_define_class_under(xml, "Node", rb_cObject);
+  VALUE nokogiri  = rb_define_module("Nokogiri");
+  VALUE xml       = rb_define_module_under(nokogiri, "XML");
+  VALUE node      = rb_define_class_under(xml, "Node", rb_cObject);
 
   /*
    * Nokogiri::XML::Document wraps an xml document.
@@ -271,7 +252,6 @@ void init_xml_document()
 
   rb_define_method(klass, "root", root, 0);
   rb_define_method(klass, "root=", set_root, 1);
-  rb_define_method(klass, "serialize", serialize, 0);
   rb_define_method(klass, "encoding", encoding, 0);
   rb_define_method(klass, "dup", duplicate_node, -1);
   rb_define_method(klass, "url", url, 0);

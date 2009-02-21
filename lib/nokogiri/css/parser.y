@@ -66,10 +66,15 @@ rule
     : '.' IDENT { result = Node.new(:CLASS_CONDITION, [val[1]]) }
     ;
   element_name
-    : namespace '|' element_name {
-        result = Node.new(:NAMESPACE, [val.first, val.last])
+    : namespace '|' IDENT {
+        result = Node.new(:ELEMENT_NAME,
+          [[val.first, val.last].compact.join(':')]
+        )
       }
-    | IDENT { result = Node.new(:ELEMENT_NAME, val) }
+    | IDENT {
+        name = @namespaces.key?('xmlns') ? "xmlns:#{val.first}" : val.first
+        result = Node.new(:ELEMENT_NAME, [name])
+      }
     | '*' { result = Node.new(:ELEMENT_NAME, val) }
     ;
   namespace

@@ -1,3 +1,14 @@
+# Modify the PATH on windows so that the external DLLs will get loaded.
+ENV['PATH'] = [File.expand_path(
+  File.join(File.dirname(__FILE__), "..", "ext", "nokogiri")
+), ENV['PATH']].compact.join(';') if RUBY_PLATFORM =~ /mswin/i
+
+if ENV['NOKOGIRI_FFI'] || RUBY_PLATFORM =~ /java/
+  require 'nokogiri/ffi/libxml'
+else
+  require 'nokogiri/native'
+end
+
 require 'nokogiri/version'
 require 'nokogiri/syntax_error'
 require 'nokogiri/xml'
@@ -7,18 +18,6 @@ require 'nokogiri/decorators'
 require 'nokogiri/css'
 require 'nokogiri/html/builder'
 require 'nokogiri/hpricot'
-
-# Modify the PATH on windows so that the external DLLs will get loaded.
-ENV['PATH'] = [File.expand_path(
-  File.join(File.dirname(__FILE__), "..", "ext", "nokogiri")
-), ENV['PATH']].compact.join(';') if RUBY_PLATFORM =~ /mswin/i
-
-
-if ENV['NOKOGIRI_FFI'] || RUBY_PLATFORM =~ /java/
-  require 'nokogiri/ffi/libxml'
-else
-  require 'nokogiri/native'
-end
 
 module Nokogiri
   class << self
@@ -67,7 +66,7 @@ end
 def Nokogiri(*args, &block)
   if block_given?
     builder = Nokogiri::HTML::Builder.new(&block)
-    return builder.doc
+    return builder.doc.root
   else
     Nokogiri.parse(*args)
   end

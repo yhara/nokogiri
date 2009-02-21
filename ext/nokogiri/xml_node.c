@@ -502,54 +502,71 @@ static VALUE add_previous_sibling(VALUE self, VALUE rb_node)
 
 /*
  * call-seq:
- *  to_html
+ *  native_write_to(io, encoding, options)
  *
- * Returns this node as HTML
+ * Write this Node to +io+ with +encoding+ and +options+
  */
-static VALUE to_html(VALUE self)
+static VALUE native_write_to(VALUE self, VALUE io, VALUE encoding, VALUE options)
 {
-  xmlBufferPtr buf ;
-  xmlNodePtr node ;
+  xmlNodePtr node;
+
   Data_Get_Struct(self, xmlNode, node);
 
-  VALUE html;
+  xmlSaveCtxtPtr savectx = xmlSaveToIO(
+      (xmlOutputWriteCallback)io_write_callback,
+      (xmlOutputCloseCallback)io_close_callback,
+      (void *)io,
+      RTEST(encoding) ? StringValuePtr(encoding) : NULL,
+      NUM2INT(options)
+  );
 
-  if(node->doc->type == XML_DOCUMENT_NODE)
-    return rb_funcall(self, rb_intern("to_xml"), 0);
-
-  buf = xmlBufferCreate() ;
-  htmlNodeDump(buf, node->doc, node);
-  html = rb_str_new2((char*)buf->content);
-  xmlBufferFree(buf);
-  return html ;
+  xmlSaveTree(savectx, node);
+  xmlSaveClose(savectx);
+  return io;
 }
 
 /*
  * call-seq:
- *  to_xml
+ *  line
  *
- * Returns this node as XML
+ * Returns the line for this Node
  */
-static VALUE to_xml(int argc, VALUE *argv, VALUE self)
+static VALUE line(VALUE self)
 {
-  xmlBufferPtr buf ;
-  xmlNodePtr node ;
-  VALUE xml, level;
-
-  if(rb_scan_args(argc, argv, "01", &level) == 0)
-    level = INT2NUM(1);
-
-  Check_Type(level, T_FIXNUM);
-
+  xmlNodePtr node;
   Data_Get_Struct(self, xmlNode, node);
 
-  buf = xmlBufferCreate() ;
-  xmlNodeDump(buf, node->doc, node, 2, NUM2INT(level));
-  xml = rb_str_new2((char*)buf->content);
-  xmlBufferFree(buf);
-  return xml ;
+  return INT2NUM(node->line);
 }
 
+/*
+ * call-seq:
+ *  add_namespace(prefix, href)
+ *
+ * Add a namespace with +prefix+ using +href+
+ */
+static VALUE add_namespace(VALUE self, VALUE prefix, VALUE href)
+{
+  xmlNodePtr node;
+  Data_Get_Struct(self, xmlNode, node);
+
+  xmlNsPtr ns = xmlNewNs(
+      node,
+      (const xmlChar *)StringValuePtr(href),
+      (const xmlChar *)StringValuePtr(prefix)
+  );
+
+  if(NULL == ns) return self;
+
+  xmlNewNsProp(
+      node,
+      ns,
+      (const xmlChar *)StringValuePtr(href),
+      (const xmlChar *)StringValuePtr(prefix)
+  );
+
+  return self;
+}
 
 /*
  * call-seq:
@@ -693,16 +710,15 @@ void Nokogiri_xml_node_namespaces(xmlNodePtr node, VALUE attr_hash)
 VALUE cNokogiriXmlNode ;
 void init_xml_node()
 {
-  /*
   VALUE nokogiri = rb_define_module("Nokogiri");
   VALUE xml = rb_define_module_under(nokogiri, "XML");
   VALUE klass = rb_define_class_under(xml, "Node", rb_cObject);
-  */
 
-  VALUE klass = cNokogiriXmlNode = rb_const_get(mNokogiriXml, rb_intern("Node"));
+  cNokogiriXmlNode = klass;
 
   rb_define_singleton_method(klass, "new", new, 2);
 
+  rb_define_method(klass, "add_namespace", add_namespace, 2);
   rb_define_method(klass, "node_name", get_name, 0);
   rb_define_method(klass, "node_name=", set_name, 1);
   rb_define_method(klass, "add_child", add_child, 1);
@@ -723,13 +739,13 @@ void init_xml_node()
   rb_define_method(klass, "add_previous_sibling", add_previous_sibling, 1);
   rb_define_method(klass, "add_next_sibling", add_next_sibling, 1);
   rb_define_method(klass, "encode_special_chars", encode_special_chars, 1);
-  rb_define_method(klass, "to_xml", to_xml, -1);
-  rb_define_method(klass, "to_html", to_html, 0);
   rb_define_method(klass, "dup", duplicate_node, -1);
   rb_define_method(klass, "unlink", unlink_node, 0);
   rb_define_method(klass, "internal_subset", internal_subset, 0);
   rb_define_method(klass, "pointer_id", pointer_id, 0);
+  rb_define_method(klass, "line", line, 0);
 
+  rb_define_private_method(klass, "native_write_to", native_write_to, 3);
   rb_define_private_method(klass, "replace_with_node", replace, 1);
   rb_define_private_method(klass, "native_content=", set_content, 1);
   rb_define_private_method(klass, "get", get, 1);
