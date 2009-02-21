@@ -49,17 +49,27 @@ module Nokogiri
       end
       alias_method :int2, :column
 
+      class << self
+        def error_array_pusher(array, error)
+          array << SyntaxError.wrap(error)
+        end
+
+        def error_array_pusher_to_proc(array)
+          Proc.new do |_ignored_, error|
+            error_array_pusher(array, error)
+          end
+        end
+
+        def wrap(error_ptr)
+          error_struct = Nokogiri::LibXML::XmlSyntaxError.new(error_ptr)
+          LibXML.xmlCopyError(error_ptr, error_struct)
+          error = Nokogiri::XML::SyntaxError.new
+          error.cstruct = error_struct
+          error
+        end
+      end
+
     end
   end
-
-  # TODO: what to do about error handling? play catch up with aaron and jmhodges.
-  # the lambda needs to be permanently referenced to avoid being GC'd
-#   Nokogiri::ErrorHandlerWrapper = lambda do |context, error_ptr|
-#     error_struct = Nokogiri::LibXML::XmlSyntaxError.new(error_ptr)
-#     error = Nokogiri::XML::SyntaxError.new
-#     error.cstruct = error_struct
-#     Nokogiri.error_handler.call(error)
-#   end
-#   Nokogiri::LibXML.xmlSetStructuredErrorFunc(nil, Nokogiri::ErrorHandlerWrapper)
 
 end

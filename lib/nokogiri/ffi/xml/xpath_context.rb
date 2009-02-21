@@ -16,8 +16,16 @@ module Nokogiri
       end
 
       def evaluate(search_path, xpath_handler = nil)
+        error_list = []
+        LibXML.xmlResetLastError
+        LibXML.xmlSetStructuredErrorFunc(nil, SyntaxError.error_array_pusher_to_proc(error_list))
         ptr = LibXML.xmlXPathEvalExpression(search_path, cstruct)
-        raise(XPath::SyntaxError, "Couldn't evaluate expression '#{search_path}'") if ptr.null?
+        LibXML.xmlSetStructuredErrorFunc(nil, nil)
+
+        if ptr.null?
+          error = LibXML.xmlGetLastError
+          raise XPath::SyntaxError, error
+        end
 
         xpath = XML::XPath.new
         xpath.cstruct = LibXML::XmlXpath.new(ptr)

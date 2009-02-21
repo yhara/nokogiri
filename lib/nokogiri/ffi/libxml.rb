@@ -76,6 +76,9 @@ module Nokogiri
     # syntax error handler
     ffi_callback :syntax_error_handler, [:pointer, :pointer], :void
     ffi_attach 'libxml2', :xmlSetStructuredErrorFunc, [:pointer, :syntax_error_handler], :void
+    ffi_attach 'libxml2', :xmlResetLastError, [], :void
+    ffi_attach 'libxml2', :xmlCopyError, [:pointer, :pointer], :int
+    ffi_attach 'libxml2', :xmlGetLastError, [], :pointer
 
     # IO
     ffi_callback :io_read_callback, [:pointer, :pointer, :int], :int
@@ -134,6 +137,7 @@ module Nokogiri
     ffi_attach 'libxml2', :xmlFreeParserCtxt, [:pointer], :void
     ffi_attach 'libxml2', :htmlSAXParseFile, [:pointer, :pointer, :pointer, :pointer], :pointer
     ffi_attach 'libxml2', :htmlSAXParseDoc, [:pointer, :pointer, :pointer, :pointer], :pointer
+
   end
 end
 
