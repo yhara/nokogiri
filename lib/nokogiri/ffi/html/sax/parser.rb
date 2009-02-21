@@ -1,7 +1,7 @@
 module Nokogiri
   module HTML
     module SAX
-      class Parser
+      class Parser < XML::SAX::Parser
         
         def native_parse_file data, encoding
           docptr = LibXML.htmlSAXParseFile(data, encoding, cstruct, nil)

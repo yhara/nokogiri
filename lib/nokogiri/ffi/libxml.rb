@@ -139,6 +139,9 @@ end
 
 Nokogiri::LIBXML_VERSION = Nokogiri::LibXML.__xmlParserVersion()
 
+require 'nokogiri/syntax_error'
+require 'nokogiri/xml/syntax_error'
+
 [ "structs/xml_alloc",
   "structs/xml_document",
   "structs/xml_node",
@@ -154,13 +157,13 @@ Nokogiri::LIBXML_VERSION = Nokogiri::LibXML.__xmlParserVersion()
   "structs/xml_text_reader.rb",
   "structs/xml_sax_handler.rb",
   "structs/xslt_stylesheet.rb",
+  "xml/node.rb",
+  "xml/dtd.rb",
   "xml/attr.rb",
   "xml/document.rb",
   "xml/document_fragment.rb",
-  "xml/node.rb",
   "xml/text.rb",
   "xml/cdata.rb",
-  "xml/dtd.rb",
   "xml/comment.rb",
   "xml/node_set.rb",
   "xml/xpath.rb",

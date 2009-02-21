@@ -1,6 +1,6 @@
 module Nokogiri
   module XML
-    class Attr
+    class Attr < Node
 
       def value=(content)
         unless cstruct[:children].null?

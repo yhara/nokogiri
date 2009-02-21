@@ -1,6 +1,6 @@
 module Nokogiri
   module XML
-    class Text
+    class Text < Node
 
       def self.new(string, document)
         node_cstruct = LibXML.xmlNewText(string)

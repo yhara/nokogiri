@@ -1,6 +1,6 @@
 module Nokogiri
   module HTML
-    class Document
+    class Document < XML::Document
 
       attr_accessor :cstruct
 

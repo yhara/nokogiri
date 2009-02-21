@@ -80,6 +80,7 @@ module Nokogiri
         LibXML.xmlNodeSetName(cstruct, string)
         string
       end
+      alias_method :node_name=, :name=
 
       def child
         val = cstruct[:children]

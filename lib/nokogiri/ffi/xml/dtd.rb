@@ -1,6 +1,6 @@
 module Nokogiri
   module XML
-    class DTD
+    class DTD < Node
       
       def attributes
         nil

@@ -1,6 +1,6 @@
 module Nokogiri
   module XML
-    class SyntaxError
+    class SyntaxError < ::Nokogiri::SyntaxError
 
       attr_accessor :cstruct
 

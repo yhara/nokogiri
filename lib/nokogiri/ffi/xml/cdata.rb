@@ -1,6 +1,6 @@
 module Nokogiri
   module XML
-    class CDATA
+    class CDATA < Text
       
       def self.new(document, content, &block)
         node_ptr = LibXML.xmlNewCDataBlock(document.cstruct, content, content.length)

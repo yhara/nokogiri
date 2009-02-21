@@ -1,6 +1,6 @@
 module Nokogiri
   module XML
-    class Comment
+    class Comment < Node
       
       def self.new(document, content, &block)
         node_ptr = LibXML.xmlNewDocComment(document.cstruct, content)

@@ -1,6 +1,6 @@
 module Nokogiri
   module XML
-    class Document
+    class Document < Node
 
       attr_accessor :cstruct
 
