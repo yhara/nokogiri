@@ -13,7 +13,12 @@ module Nokogiri
       end
 
       def self.read_memory(string, url, encoding, options)
+        error_list = []
+        LibXML.xmlInitParser()
+        LibXML.xmlResetLastError()
+        LibXML.xmlSetStructuredErrorFunc(nil, SyntaxError.error_array_pusher(error_list))
         ptr = LibXML.xmlReadMemory(string, string.length, url, encoding, options)
+        LibXML.xmlSetStructuredErrorFunc(nil, nil)
         raise(RuntimeError, "Couldn't create a document") if ptr.null?
         wrap(ptr)
       end

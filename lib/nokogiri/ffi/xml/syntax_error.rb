@@ -52,7 +52,6 @@ module Nokogiri
       class << self
         def error_array_pusher(array)
           Proc.new do |_ignored_, error|
-            STDERR.puts "MIKE: pusher proc invoked!"
             array << SyntaxError.wrap(error)
           end
         end
