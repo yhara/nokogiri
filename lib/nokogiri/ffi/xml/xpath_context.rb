@@ -18,7 +18,7 @@ module Nokogiri
       def evaluate(search_path, xpath_handler = nil)
         error_list = []
         LibXML.xmlResetLastError
-        LibXML.xmlSetStructuredErrorFunc(nil, SyntaxError.error_array_pusher_to_proc(error_list))
+        LibXML.xmlSetStructuredErrorFunc(nil, SyntaxError.error_array_pusher(error_list))
         ptr = LibXML.xmlXPathEvalExpression(search_path, cstruct)
         LibXML.xmlSetStructuredErrorFunc(nil, nil)
 

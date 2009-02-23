@@ -50,13 +50,10 @@ module Nokogiri
       alias_method :int2, :column
 
       class << self
-        def error_array_pusher(array, error)
-          array << SyntaxError.wrap(error)
-        end
-
-        def error_array_pusher_to_proc(array)
+        def error_array_pusher(array)
           Proc.new do |_ignored_, error|
-            error_array_pusher(array, error)
+            STDERR.puts "MIKE: pusher proc invoked!"
+            array << SyntaxError.wrap(error)
           end
         end
 
