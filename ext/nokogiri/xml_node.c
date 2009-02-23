@@ -39,7 +39,7 @@ static VALUE encode_special_chars(VALUE self, VALUE string)
       (const xmlChar *)StringValuePtr(string)
   );
 
-  VALUE encoded_str = rb_str_new2((const char *)encoded);
+  VALUE encoded_str = NOKOGIRI_WRAP_CSTR(encoded, node->doc);
   xmlFree(encoded);
 
   return encoded_str;
@@ -236,7 +236,8 @@ static VALUE get(VALUE self, VALUE attribute)
 
   if(NULL == propstr) return Qnil;
 
-  rval = rb_str_new2((char *)propstr) ;
+  rval = NOKOGIRI_WRAP_CSTR(propstr, node->doc);
+
   xmlFree(propstr);
   return rval ;
 }
@@ -289,8 +290,9 @@ static VALUE namespace(VALUE self)
 {
   xmlNodePtr node ;
   Data_Get_Struct(self, xmlNode, node);
-  if (node->ns && node->ns->prefix)
-    return rb_str_new2((const char *)node->ns->prefix) ;
+  if (node->ns && node->ns->prefix) {
+    return NOKOGIRI_WRAP_CSTR(node->ns->prefix, node->doc);
+  }
   return Qnil ;
 }
 
@@ -354,7 +356,7 @@ static VALUE get_content(VALUE self)
 
   xmlChar * content = xmlNodeGetContent(node);
   if(content) {
-    VALUE rval = rb_str_new2((char *)content);
+    VALUE rval = NOKOGIRI_WRAP_CSTR(content, node->doc);
     xmlFree(content);
     return rval;
   }
@@ -427,7 +429,8 @@ static VALUE get_name(VALUE self)
 {
   xmlNodePtr node;
   Data_Get_Struct(self, xmlNode, node);
-  if(node->name) return rb_str_new2((const char *)node->name);
+  if(node->name)
+    return NOKOGIRI_WRAP_CSTR(node->name, node->doc);
   return Qnil;
 }
 
@@ -441,11 +444,10 @@ static VALUE path(VALUE self)
 {
   xmlNodePtr node;
   xmlChar *path ;
-  VALUE rval ;
   Data_Get_Struct(self, xmlNode, node);
   
   path = xmlGetNodePath(node);
-  rval = rb_str_new2((char *)path);
+  VALUE rval = NOKOGIRI_WRAP_CSTR(path, node->doc);
   xmlFree(path);
   return rval ;
 }
@@ -590,6 +592,28 @@ static VALUE new(VALUE klass, VALUE name, VALUE document)
   return rb_node;
 }
 
+/*
+ * call-seq:
+ *  dump_html
+ *
+ * Returns the Node as html.
+ */
+static VALUE dump_html(VALUE self)
+{
+  xmlBufferPtr buf ;
+  xmlNodePtr node ;
+  Data_Get_Struct(self, xmlNode, node);
+
+  if(node->doc->type == XML_DOCUMENT_NODE)
+    return rb_funcall(self, rb_intern("to_xml"), 0);
+
+  buf = xmlBufferCreate() ;
+  htmlNodeDump(buf, node->doc, node);
+  VALUE html = NOKOGIRI_WRAP_CSTR(buf->content, node->doc);
+  xmlBufferFree(buf);
+  return html ;
+}
+
 VALUE Nokogiri_wrap_xml_node(xmlNodePtr node)
 {
   assert(node);
@@ -698,7 +722,10 @@ void Nokogiri_xml_node_namespaces(xmlNodePtr node, VALUE attr_hash)
       sprintf(key, "%s", XMLNS_PREFIX);
     }
 
-    rb_hash_aset(attr_hash, rb_str_new2(key), rb_str_new2((const char*)ns->href)) ;
+    rb_hash_aset(attr_hash,
+        NOKOGIRI_WRAP_CSTR(key, node->doc),
+        NOKOGIRI_WRAP_CSTR(ns->href, node->doc)
+    );
     if (key != buffer) {
       free(key);
     }
@@ -745,6 +772,7 @@ void init_xml_node()
   rb_define_method(klass, "pointer_id", pointer_id, 0);
   rb_define_method(klass, "line", line, 0);
 
+  rb_define_private_method(klass, "dump_html", dump_html, 0);
   rb_define_private_method(klass, "native_write_to", native_write_to, 3);
   rb_define_private_method(klass, "replace_with_node", replace, 1);
   rb_define_private_method(klass, "native_content=", set_content, 1);

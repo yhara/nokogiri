@@ -13,6 +13,7 @@ module Nokogiri
         </body></html>
         EOH
         nokogiri = Nokogiri::HTML.parse(html)
+
         assert_equal "<p>testparagraph\r\nfoobar</p>",
           nokogiri.at("p").to_html.gsub(/ /, '')
       end
