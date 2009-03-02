@@ -3,6 +3,15 @@ require File.expand_path(File.join(File.dirname(__FILE__), '..', "helper"))
 module Nokogiri
   module HTML
     class TestBuilder < Nokogiri::TestCase
+      def test_hash_as_attributes_for_attribute_method
+        html = Nokogiri::HTML::Builder.new {
+          div.slide(:class => 'another_class') {
+            span 'Slide 1'
+          }
+        }.to_html
+        assert_match 'class="slide another_class"', html
+      end
+
       def test_hash_as_attributes
         builder = Nokogiri::HTML::Builder.new do
           div(:id => 'awesome') {
@@ -11,6 +20,18 @@ module Nokogiri
         end
         assert_equal('<div id="awesome"><h1>america</h1></div>',
                      builder.doc.root.to_html.gsub(/\n/, '').gsub(/>\s*</, '><'))
+      end
+
+      def test_tag_nesting
+        builder = Nokogiri::HTML::Builder.new do
+          span.left ''
+          span.middle {
+            div.icon ''
+          }
+          span.right ''
+        end
+        assert node = builder.doc.css('span.right').first
+        assert_equal 'middle', node.previous_sibling['class']
       end
 
       def test_has_ampersand

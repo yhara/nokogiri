@@ -22,6 +22,10 @@ module Nokogiri
         assert_equal @xml.to_xml, io.read
       end
 
+      def test_attribute_with_symbol
+        assert_equal 'Yes', @xml.css('address').first[:domestic]
+      end
+
       def test_write_to_with_block
         called = false
         io = StringIO.new
@@ -310,6 +314,11 @@ module Nokogiri
         node = Nokogiri::XML::Node.new('form', @xml)
         assert_equal('form', node.name)
         assert(node.document)
+      end
+
+      def test_encode_special_chars
+        foo = @xml.css('employee').first.encode_special_chars('&')
+        assert_equal '&amp;', foo
       end
 
       def test_content

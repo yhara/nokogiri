@@ -131,6 +131,16 @@ static VALUE attribute_nodes(VALUE self)
     rb_iv_set(rb_doc, "@decorators", Qnil);
     ptr->doc->_private = (void *)rb_doc;
   }
+  VALUE enc = rb_iv_get(self, "@encoding");
+
+  if(enc != Qnil && NULL == ptr->doc->encoding) {
+    ptr->doc->encoding = calloc((size_t)RSTRING_LEN(enc), sizeof(char));
+    strncpy(
+      (char *)ptr->doc->encoding,
+      StringValuePtr(enc),
+      (size_t)RSTRING_LEN(enc)
+    );
+  }
 
   Nokogiri_xml_node_properties(ptr, attr);
 
@@ -157,7 +167,9 @@ static VALUE attribute_at(VALUE self, VALUE index)
   );
   if(value == NULL) return Qnil;
 
-  VALUE rb_value = rb_str_new2((const char *)value);
+  VALUE MAYBE_UNUSED(enc) = rb_iv_get(self, "@encoding");
+  VALUE rb_value = NOKOGIRI_STR_NEW2(value,
+      RTEST(enc) ? StringValuePtr(enc) : NULL);
   xmlFree(value);
   return rb_value;
 }
@@ -193,7 +205,9 @@ static VALUE reader_attribute(VALUE self, VALUE name)
   }
   if(value == NULL) return Qnil;
 
-  VALUE rb_value = rb_str_new2((const char *)value);
+  VALUE MAYBE_UNUSED(enc) = rb_iv_get(self, "@encoding");
+  VALUE rb_value = NOKOGIRI_STR_NEW2(value,
+      RTEST(enc) ? StringValuePtr(enc) : NULL);
   xmlFree(value);
   return rb_value;
 }
@@ -232,22 +246,6 @@ static VALUE depth(VALUE self)
 
 /*
  * call-seq:
- *   encoding
- *
- * Get the encoding for the document
- */
-static VALUE encoding(VALUE self)
-{
-  xmlTextReaderPtr reader;
-  Data_Get_Struct(self, xmlTextReader, reader);
-  const char * encoding = (const char *)xmlTextReaderConstEncoding(reader);
-  if(encoding == NULL) return Qnil;
-
-  return rb_str_new2(encoding);
-}
-
-/*
- * call-seq:
  *   xml_version
  *
  * Get the XML version of the document being read
@@ -259,7 +257,7 @@ static VALUE xml_version(VALUE self)
   const char * version = (const char *)xmlTextReaderConstXmlVersion(reader);
   if(version == NULL) return Qnil;
 
-  return rb_str_new2(version);
+  return NOKOGIRI_STR_NEW2(version, "UTF-8");
 }
 
 /*
@@ -275,7 +273,9 @@ static VALUE lang(VALUE self)
   const char * lang = (const char *)xmlTextReaderConstXmlLang(reader);
   if(lang == NULL) return Qnil;
 
-  return rb_str_new2(lang);
+  VALUE MAYBE_UNUSED(enc) = rb_iv_get(self, "@encoding");
+  return NOKOGIRI_STR_NEW2(lang,
+      RTEST(enc) ? StringValuePtr(enc) : NULL);
 }
 
 /*
@@ -291,7 +291,9 @@ static VALUE value(VALUE self)
   const char * value = (const char *)xmlTextReaderConstValue(reader);
   if(value == NULL) return Qnil;
 
-  return rb_str_new2(value);
+  VALUE MAYBE_UNUSED(enc) = rb_iv_get(self, "@encoding");
+  return NOKOGIRI_STR_NEW2(value,
+      RTEST(enc) ? StringValuePtr(enc) : NULL);
 }
 
 /*
@@ -307,7 +309,9 @@ static VALUE prefix(VALUE self)
   const char * prefix = (const char *)xmlTextReaderConstPrefix(reader);
   if(prefix == NULL) return Qnil;
 
-  return rb_str_new2(prefix);
+  VALUE MAYBE_UNUSED(enc) = rb_iv_get(self, "@encoding");
+  return NOKOGIRI_STR_NEW2(prefix,
+      RTEST(enc) ? StringValuePtr(enc) : NULL);
 }
 
 /*
@@ -323,7 +327,9 @@ static VALUE namespace_uri(VALUE self)
   const char * uri = (const char *)xmlTextReaderConstNamespaceUri(reader);
   if(uri == NULL) return Qnil;
 
-  return rb_str_new2(uri);
+  VALUE MAYBE_UNUSED(enc) = rb_iv_get(self, "@encoding");
+  return NOKOGIRI_STR_NEW2(uri,
+      RTEST(enc) ? StringValuePtr(enc) : NULL);
 }
 
 /*
@@ -339,7 +345,9 @@ static VALUE local_name(VALUE self)
   const char * name = (const char *)xmlTextReaderConstLocalName(reader);
   if(name == NULL) return Qnil;
 
-  return rb_str_new2(name);
+  VALUE MAYBE_UNUSED(enc) = rb_iv_get(self, "@encoding");
+  return NOKOGIRI_STR_NEW2(name,
+      RTEST(enc) ? StringValuePtr(enc) : NULL);
 }
 
 /*
@@ -355,7 +363,9 @@ static VALUE name(VALUE self)
   const char * name = (const char *)xmlTextReaderConstName(reader);
   if(name == NULL) return Qnil;
 
-  return rb_str_new2(name);
+  VALUE MAYBE_UNUSED(enc) = rb_iv_get(self, "@encoding");
+  return NOKOGIRI_STR_NEW2(name,
+      RTEST(enc) ? StringValuePtr(enc) : NULL);
 }
 
 /*
@@ -437,7 +447,7 @@ static VALUE from_memory(int argc, VALUE *argv, VALUE klass)
   }
 
   VALUE rb_reader = Data_Wrap_Struct(klass, NULL, dealloc, reader);
-  rb_funcall(rb_reader, rb_intern("initialize"), 0);
+  rb_funcall(rb_reader, rb_intern("initialize"), 2, rb_url, encoding);
 
   return rb_reader;
 }
@@ -468,7 +478,6 @@ void init_xml_reader()
   rb_define_method(klass, "value", value, 0);
   rb_define_method(klass, "lang", lang, 0);
   rb_define_method(klass, "xml_version", xml_version, 0);
-  rb_define_method(klass, "encoding", encoding, 0);
   rb_define_method(klass, "depth", depth, 0);
   rb_define_method(klass, "attribute_count", attribute_count, 0);
   rb_define_method(klass, "attribute", reader_attribute, 1);

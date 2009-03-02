@@ -20,6 +20,26 @@ module Nokogiri
         assert_equal 1, doc.css('xmlns|foo').length
         assert_equal 1, doc.css('foo').length
         assert_equal 0, doc.css('|foo').length
+        assert_equal 1, doc.xpath('//xmlns:foo').length
+        assert_equal 1, doc.search('xmlns|foo').length
+        assert_equal 1, doc.search('//xmlns:foo').length
+      end
+
+      def test_xmlns_is_registered_for_nodesets
+        doc = Nokogiri::XML(<<-eoxml)
+          <root xmlns="http://tenderlovemaking.com/">
+            <foo>
+              <bar>
+                baz
+              </bar>
+            </foo>
+          </root>
+        eoxml
+        assert_equal 1, doc.css('xmlns|foo').css('xmlns|bar').length
+        assert_equal 1, doc.css('foo').css('bar').length
+        assert_equal 1, doc.xpath('//xmlns:foo').xpath('./xmlns:bar').length
+        assert_equal 1, doc.search('xmlns|foo').search('xmlns|bar').length
+        assert_equal 1, doc.search('//xmlns:foo').search('./xmlns:bar').length
       end
 
       # wtf...  osx's libxml sucks.
@@ -82,6 +102,12 @@ module Nokogiri
       def test_search_on_empty_documents
         doc = Nokogiri::XML::Document.new
         ns = doc.search('//foo')
+        assert_equal 0, ns.length
+
+        ns = doc.css('foo')
+        assert_equal 0, ns.length
+
+        ns = doc.xpath('//foo')
         assert_equal 0, ns.length
       end
 

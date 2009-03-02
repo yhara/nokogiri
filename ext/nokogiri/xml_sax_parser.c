@@ -81,11 +81,14 @@ static void start_element(void * ctx, const xmlChar *name, const xmlChar **atts)
   VALUE self = (VALUE)ctx;
   VALUE doc = rb_funcall(self, rb_intern("document"), 0);
   VALUE attributes = rb_ary_new();
+  VALUE MAYBE_UNUSED(enc) = rb_iv_get(self, "@encoding");
   const xmlChar * attr;
   int i = 0;
   if(atts) {
     while((attr = atts[i]) != NULL) {
-      rb_funcall(attributes, rb_intern("<<"), 1, rb_str_new2((const char *)attr));
+      rb_funcall(attributes, rb_intern("<<"), 1,
+          NOKOGIRI_STR_NEW2(attr, RTEST(enc) ? StringValuePtr(enc) : NULL)
+      );
       i++;
     }
   }
@@ -93,7 +96,7 @@ static void start_element(void * ctx, const xmlChar *name, const xmlChar **atts)
   rb_funcall( doc,
               rb_intern("start_element"),
               2,
-              rb_str_new2((const char *)name),
+              NOKOGIRI_STR_NEW2(name, RTEST(enc) ? StringValuePtr(enc) : NULL),
               attributes
   );
 }
@@ -101,60 +104,44 @@ static void start_element(void * ctx, const xmlChar *name, const xmlChar **atts)
 static void end_element(void * ctx, const xmlChar *name)
 {
   VALUE self = (VALUE)ctx;
+  VALUE MAYBE_UNUSED(enc) = rb_iv_get(self, "@encoding");
   VALUE doc = rb_funcall(self, rb_intern("document"), 0);
-  rb_funcall(doc, rb_intern("end_element"), 1, rb_str_new2((const char *)name));
+  rb_funcall(doc, rb_intern("end_element"), 1,
+      NOKOGIRI_STR_NEW2(name, RTEST(enc) ? StringValuePtr(enc) : NULL)
+  );
 }
 
 static void characters_func(void * ctx, const xmlChar * ch, int len)
 {
   VALUE self = (VALUE)ctx;
+  VALUE MAYBE_UNUSED(enc) = rb_iv_get(self, "@encoding");
   VALUE doc = rb_funcall(self, rb_intern("document"), 0);
-  VALUE str = rb_str_new((const char *)ch, (long)len);
+  VALUE str = NOKOGIRI_STR_NEW(ch, len, RTEST(enc) ? StringValuePtr(enc):NULL);
   rb_funcall(doc, rb_intern("characters"), 1, str);
 }
 
 static void comment_func(void * ctx, const xmlChar * value)
 {
   VALUE self = (VALUE)ctx;
+  VALUE MAYBE_UNUSED(enc) = rb_iv_get(self, "@encoding");
   VALUE doc = rb_funcall(self, rb_intern("document"), 0);
-  VALUE str = rb_str_new2((const char *)value);
+  VALUE str = NOKOGIRI_STR_NEW2(value, RTEST(enc) ? StringValuePtr(enc):NULL);
   rb_funcall(doc, rb_intern("comment"), 1, str);
 }
 
 #ifdef XP_WIN
 /*
  * I srsly hate windows.  it doesn't have vasprintf.
- * This is stolen from here:
- *   http://eleves.ec-lille.fr/~couprieg/index.php?2008/06/17/39-first-issues-when-porting-an-application-on-windows-ce
- * and slightly modified
+ * Thank you Geoffroy Couprie for this implementation of vasprintf!
  */
-static inline int vasprintf(char **strp, const char *fmt, va_list ap) {
-  int n;
-  size_t size = 4096;
-  char *res, *np;
-
-  if ( (res = (char *) malloc(size)) == NULL )
-    return -1;
-
-  while (1) {
-    n = vsnprintf (res, size, fmt, ap);
-    /* If that worked, return the string. */
-    if (n > -1 && n < size) {
-      *strp = res;
-      return n;
-    }
-
-    /* Else try again with more space. */
-    if (n == -1)
-      size *= 2; /* twice the old size */
-
-    if ( (np = (char *) realloc(res, size)) == NULL ) {
-      free(res);
+static int vasprintf (char **strp, const char *fmt, va_list ap)
+{
+  int len = vsnprintf (NULL, 0, fmt, ap) + 1;
+  char *res = (char *)malloc((unsigned int)len);
+  if (res == NULL)
       return -1;
-    } else {
-      res = np;
-    }
-  }
+  *strp = res;
+  return vsnprintf(res, (unsigned int)len, fmt, ap);
 }
 #endif
 
@@ -162,6 +149,7 @@ static void warning_func(void * ctx, const char *msg, ...)
 {
   VALUE self = (VALUE)ctx;
   VALUE doc = rb_funcall(self, rb_intern("document"), 0);
+  VALUE MAYBE_UNUSED(enc) = rb_iv_get(self, "@encoding");
   char * message;
 
   va_list args;
@@ -169,13 +157,16 @@ static void warning_func(void * ctx, const char *msg, ...)
   vasprintf(&message, msg, args);
   va_end(args);
 
-  rb_funcall(doc, rb_intern("warning"), 1, rb_str_new2(message));
+  rb_funcall(doc, rb_intern("warning"), 1,
+      NOKOGIRI_STR_NEW2(message, RTEST(enc) ? StringValuePtr(enc) : NULL)
+  );
   free(message);
 }
 
 static void error_func(void * ctx, const char *msg, ...)
 {
   VALUE self = (VALUE)ctx;
+  VALUE MAYBE_UNUSED(enc) = rb_iv_get(self, "@encoding");
   VALUE doc = rb_funcall(self, rb_intern("document"), 0);
   char * message;
 
@@ -184,15 +175,19 @@ static void error_func(void * ctx, const char *msg, ...)
   vasprintf(&message, msg, args);
   va_end(args);
 
-  rb_funcall(doc, rb_intern("error"), 1, rb_str_new2(message));
+  rb_funcall(doc, rb_intern("error"), 1,
+      NOKOGIRI_STR_NEW2(message, RTEST(enc) ? StringValuePtr(enc) : NULL)
+  );
   free(message);
 }
 
 static void cdata_block(void * ctx, const xmlChar * value, int len)
 {
   VALUE self = (VALUE)ctx;
+  VALUE MAYBE_UNUSED(enc) = rb_iv_get(self, "@encoding");
   VALUE doc = rb_funcall(self, rb_intern("document"), 0);
-  VALUE string = rb_str_new((const char *)value, (long)len);
+  VALUE string =
+    NOKOGIRI_STR_NEW(value, len, RTEST(enc) ? StringValuePtr(enc) : NULL);
   rb_funcall(doc, rb_intern("cdata_block"), 1, string);
 }
 

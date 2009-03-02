@@ -25,7 +25,7 @@ void Init_native()
 
   rb_const_set( mNokogiri,
                 rb_intern("LIBXML_VERSION"),
-                NOKOGIRI_WRAP_CSTR(LIBXML_DOTTED_VERSION, "UTF-8")
+                NOKOGIRI_STR_NEW2(LIBXML_DOTTED_VERSION, "UTF-8")
               );
 
   init_xml_document();
@@ -48,4 +48,5 @@ void Init_native()
   init_html_sax_parser();
   init_xslt_stylesheet();
   init_xml_syntax_error();
+  init_html_entity_lookup();
 }

@@ -12,21 +12,49 @@
 #include <libxml/HTMLparser.h>
 #include <libxml/HTMLtree.h>
 
+
+#ifndef UNUSED
+# if defined(__GNUC__)
+#  define MAYBE_UNUSED(name) name __attribute__((unused))
+#  define UNUSED(name) MAYBE_UNUSED(UNUSED_ ## name)
+# else
+#  define MAYBE_UNUSED(name) name
+#  define UNUSED(name) name
+# endif
+#endif
+
 #ifdef HAVE_RUBY_ENCODING_H
-#define NOKOGIRI_WRAP_CSTR(str, encoding) \
+
+#include <ruby/encoding.h>
+
+#define NOKOGIRI_STR_NEW2(str, encoding) \
   ({ \
     VALUE _string = rb_str_new2((const char *)str); \
     if(NULL != encoding) \
       rb_enc_associate_index(_string, rb_enc_find_index(encoding)); \
     _string; \
   })
+
+#define NOKOGIRI_STR_NEW(str, len, encoding) \
+  ({ \
+    VALUE _string = rb_str_new((const char *)str, (long)len); \
+    if(NULL != encoding) \
+      rb_enc_associate_index(_string, rb_enc_find_index(encoding)); \
+    _string; \
+  })
+
 #else
-#define NOKOGIRI_WRAP_CSTR(str, doc) \
+
+#define NOKOGIRI_STR_NEW2(str, doc) \
   rb_str_new2((const char *)str)
+
+#define NOKOGIRI_STR_NEW(str, len, doc) \
+  rb_str_new((const char *)str, (long)len)
 #endif
 
 #include <xml_io.h>
 #include <xml_document.h>
+#include <html_entity_lookup.h>
 #include <html_document.h>
 #include <xml_node.h>
 #include <xml_text.h>

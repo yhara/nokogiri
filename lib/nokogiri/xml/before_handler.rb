@@ -5,6 +5,7 @@ module Nokogiri
         @original_html = original_html
         @node = node
         @document = node.document
+        @direction = 'previous'
         @stack = []
       end
 
@@ -20,6 +21,10 @@ module Nokogiri
 
       def characters string
         node = @stack.last
+        unless node
+          node = Nokogiri::XML::Text.new(string, @document)
+          return @node.send(:"add_#{@direction}_sibling", node)
+        end
         node.content += string
       end
 

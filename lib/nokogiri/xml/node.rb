@@ -56,10 +56,15 @@ module Nokogiri
       # optional hash of namespaces may be appended.
       # See Node#xpath and Node#css.
       def search *paths
-        ns = paths.last.is_a?(Hash) ? paths.pop : {}
+        ns = paths.last.is_a?(Hash) ? paths.pop :
+          (document.root ? document.root.namespaces : {})
         xpath(*(paths.map { |path|
           path = path.to_s
-          path =~ /^(\.\/|\/)/ ? path : CSS.xpath_for(path, :prefix => ".//")
+          path =~ /^(\.\/|\/)/ ? path : CSS.xpath_for(
+            path,
+            :prefix => ".//",
+            :ns     => ns
+          )
         }.flatten.uniq) + [ns])
       end
       alias :/ :search
@@ -88,7 +93,8 @@ module Nokogiri
           Hash, String, Symbol
         ].include?(paths.last.class) ? paths.pop : nil
 
-        ns = paths.last.is_a?(Hash) ? paths.pop : document.root.namespaces
+        ns = paths.last.is_a?(Hash) ? paths.pop :
+          (document.root ? document.root.namespaces : {})
 
         return NodeSet.new(document) unless document.root
 
@@ -138,7 +144,8 @@ module Nokogiri
           Hash, String, Symbol
         ].include?(rules.last.class) ? rules.pop : nil
 
-        ns = rules.last.is_a?(Hash) ? rules.pop : document.root.namespaces
+        ns = rules.last.is_a?(Hash) ? rules.pop :
+          (document.root ? document.root.namespaces : {})
 
         rules = rules.map { |rule|
           CSS.xpath_for(rule, :prefix => ".//", :ns => ns)
@@ -156,9 +163,9 @@ module Nokogiri
 
       ###
       # Get the attribute value for the attribute +name+
-      def [](name)
-        return nil unless key?(name)
-        get(name)
+      def [] name
+        return nil unless key?(name.to_s)
+        get(name.to_s)
       end
 
       alias :next           :next_sibling
@@ -239,8 +246,7 @@ module Nokogiri
 
       ####
       # Set the content to +string+.
-      # If +encode+, encode any special characters first.
-      def content= string, encode = true
+      def content= string
         self.native_content = encode_special_chars(string)
       end
 
@@ -327,7 +333,7 @@ module Nokogiri
       ####
       #  replace node with the new node in the document.
       def replace(new_node)
-        if new_node.is_a?(Document)
+        if new_node.is_a?(Document) || !new_node.is_a?(XML::Node)
           raise ArgumentError, <<-EOERR
 Node.replace requires a Node argument, and cannot accept a Document.
 (You probably want to select a node from the Document with at() or search(), or create a new Node via Node.new().)

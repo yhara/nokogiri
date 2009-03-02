@@ -14,6 +14,11 @@ module Nokogiri
           assert @parser.document.errors.length > 0
         end
 
+        def test_parser_sets_encoding
+          parser = XML::SAX::Parser.new(Doc.new, 'UTF-8')
+          assert_equal 'UTF-8', parser.encoding
+        end
+
         def test_errors_set_after_parsing_bad_dom
           doc = Nokogiri::XML('<foo><bar></foo>')
           assert doc.errors
@@ -21,6 +26,12 @@ module Nokogiri
           @parser.parse('<foo><bar></foo>')
           assert @parser.document.errors
           assert @parser.document.errors.length > 0
+
+          if RUBY_VERSION =~ /^1\.9/
+            doc.errors.each do |error|
+              assert_equal 'UTF-8', error.message.encoding.name
+            end
+          end
 
           assert_equal doc.errors.length, @parser.document.errors.length
         end
@@ -35,9 +46,45 @@ module Nokogiri
 
         def test_parse_io
           File.open(XML_FILE, 'rb') { |f|
-            @parser.parse_io(f)
+            @parser.parse_io(f, 'UTF-8')
           }
           assert(@parser.document.cdata_blocks.length > 0)
+          if RUBY_VERSION =~ /^1\.9/
+            called = false
+            @parser.document.start_elements.flatten.each do |thing|
+              assert_equal 'UTF-8', thing.encoding.name
+              called = true
+            end
+            assert called
+
+            called = false
+            @parser.document.end_elements.flatten.each do |thing|
+              assert_equal 'UTF-8', thing.encoding.name
+              called = true
+            end
+            assert called
+
+            called = false
+            @parser.document.data.each do |thing|
+              assert_equal 'UTF-8', thing.encoding.name
+              called = true
+            end
+            assert called
+
+            called = false
+            @parser.document.comments.flatten.each do |thing|
+              assert_equal 'UTF-8', thing.encoding.name
+              called = true
+            end
+            assert called
+
+            called = false
+            @parser.document.cdata_blocks.flatten.each do |thing|
+              assert_equal 'UTF-8', thing.encoding.name
+              called = true
+            end
+            assert called
+          end
         end
 
         def test_parse_file
