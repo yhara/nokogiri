@@ -23,7 +23,7 @@ module Nokogiri
         LibXML.xmlSetStructuredErrorFunc(nil, nil)
 
         if ptr.null?
-          error = LibXML.xmlGetLastError
+          error = LibXML.xmlGetLastError()
           raise XPath::SyntaxError, error
         end
 

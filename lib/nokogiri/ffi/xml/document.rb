@@ -13,27 +13,23 @@ module Nokogiri
       end
 
       def self.read_memory(string, url, encoding, options)
-        error_list = []
-        LibXML.xmlInitParser()
-        LibXML.xmlResetLastError()
-        LibXML.xmlSetStructuredErrorFunc(nil, SyntaxError.error_array_pusher(error_list))
-        ptr = LibXML.xmlReadMemory(string, string.length, url, encoding, options)
-        LibXML.xmlSetStructuredErrorFunc(nil, nil)
-        raise(RuntimeError, "Couldn't create a document") if ptr.null?
-        wrap(ptr)
+        wrap_with_error_handling do
+          LibXML.xmlReadMemory(string, string.length, url, encoding, options)
+        end
       end
 
       def self.read_io(io, url, encoding, options)
-        LibXML.xmlInitParser
-        read_proc = lambda do |ctx, buffer, len|
-          string = io.read(len)
-          return 0 if string.nil?
-          LibXML.memcpy(buffer, string, string.length)
-          string.length
+        wrap_with_error_handling do
+          read_proc = lambda do |ctx, buffer, len|
+            string = io.read(len)
+            return 0 if string.nil?
+            LibXML.memcpy(buffer, string, string.length)
+            string.length
+          end
+          close_proc = lambda { |ctx| return 0 }
+          
+          LibXML.xmlReadIO(read_proc, close_proc, nil, url, encoding, options)
         end
-        close_proc = lambda { |ctx| return 0 }
-        doc_ptr = LibXML.xmlReadIO(read_proc, close_proc, nil, url, encoding, options)
-        wrap(doc_ptr)
       end
 
       def self.wrap(ptr) # :nodoc:
@@ -72,6 +68,32 @@ module Nokogiri
 
       def url
         cstruct[:URL]
+      end
+
+      private
+      
+      def self.wrap_with_error_handling(&block)
+        error_list = []
+        LibXML.xmlInitParser()
+        LibXML.xmlResetLastError()
+        LibXML.xmlSetStructuredErrorFunc(nil, SyntaxError.error_array_pusher(error_list))
+
+        ptr = yield
+        
+        LibXML.xmlSetStructuredErrorFunc(nil, nil)
+
+        if ptr.null?
+          error = LibXML.xmlGetLastError()
+          if error
+            raise SyntaxError.wrap(error)
+          else
+            raise RuntimeError, "Could not parse document"
+          end
+        end
+
+        document = wrap(ptr)
+        document.errors = error_list
+        return document
       end
 
     end

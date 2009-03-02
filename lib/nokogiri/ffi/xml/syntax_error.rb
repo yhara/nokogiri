@@ -13,8 +13,10 @@ module Nokogiri
       end
 
       def message
-        cstruct[:message].null? ? nil : cstruct[:message]
+        cstruct[:message]
       end
+      alias_method :inspect, :message
+      alias_method :to_s, :message
 
       def level
         cstruct[:level]
@@ -52,15 +54,16 @@ module Nokogiri
       class << self
         def error_array_pusher(array)
           Proc.new do |_ignored_, error|
-            array << SyntaxError.wrap(error)
+            array << wrap(error)
           end
         end
 
         def wrap(error_ptr)
-          error_struct = Nokogiri::LibXML::XmlSyntaxError.new(error_ptr)
+          error_struct = LibXML::XmlSyntaxError.allocate
           LibXML.xmlCopyError(error_ptr, error_struct)
+          error_cstruct = LibXML::XmlSyntaxError.new(error_struct)
           error = Nokogiri::XML::SyntaxError.new
-          error.cstruct = error_struct
+          error.cstruct = error_cstruct
           error
         end
       end
