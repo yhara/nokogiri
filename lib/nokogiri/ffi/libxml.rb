@@ -24,6 +24,7 @@ module Nokogiri
     ffi_attach 'libxml2', :xmlNewNode, [:pointer, :pointer], :pointer
     ffi_attach 'libxml2', :xmlEncodeSpecialChars, [:pointer, :pointer], :pointer
     ffi_attach 'libxml2', :xmlCopyNode, [:pointer, :int], :pointer
+    ffi_attach 'libxml2', :xmlDocCopyNode, [:pointer, :pointer, :int], :pointer
     ffi_attach 'libxml2', :xmlReplaceNode, [:pointer, :pointer], :pointer
     ffi_attach 'libxml2', :xmlUnlinkNode, [:pointer], :void
     ffi_attach 'libxml2', :xmlAddChild, [:pointer, :pointer], :pointer
@@ -42,6 +43,7 @@ module Nokogiri
     ffi_attach 'libxml2', :xmlNewCDataBlock, [:pointer, :pointer, :int], :pointer
     ffi_attach 'libxml2', :xmlNewDocComment, [:pointer, :pointer], :pointer
     ffi_attach 'libxml2', :xmlNewText, [:pointer], :pointer
+    ffi_attach 'libxml2', :xmlFreeNode, [:pointer], :void
     ffi_attach 'libxml2', :xmlFreeNodeList, [:pointer], :void
     ffi_attach 'libxml2', :htmlNodeDump, [:pointer, :pointer, :pointer], :int
     ffi_attach 'libxml2', :xmlEncodeEntitiesReentrant, [:pointer, :string], :string

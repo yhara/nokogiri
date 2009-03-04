@@ -212,57 +212,21 @@ module Nokogiri
       end
 
       def add_child(child)
-        LibXML.xmlUnlinkNode(child.cstruct)
-
-        new_child_struct = LibXML.xmlAddChild(cstruct, child.cstruct)
-        raise(RuntimeError, "Could not add new child") if new_child_struct.null?
-
-        new_child = Node.wrap(new_child_struct)
-
-        # the child was a text node that was coalesced. we need to have the object
-        # point at SOMETHING, or we'll totally bomb out.
-        if new_child_struct != child.cstruct.pointer
-          child.cstruct = new_child.cstruct
+        reparent_node_with(child, self) do |child_cstruct, self_cstruct|
+          LibXML.xmlAddChild(self_cstruct, child_cstruct)
         end
-
-        child.decorate!
-        child
       end
 
       def add_next_sibling(next_sibling)
-        LibXML.xmlUnlinkNode(next_sibling.cstruct)
-
-        new_next_sibling_struct = LibXML.xmlAddNextSibling(cstruct, next_sibling.cstruct)
-        raise(RuntimeError, "Could not add next sibling") if new_next_sibling_struct.null?
-
-        new_next_sibling = Node.wrap(new_next_sibling_struct)
-
-        # the next_sibling was a text node that was coalesced. we need to have the object
-        # point at SOMETHING, or we'll totally bomb out.
-        if new_next_sibling_struct != next_sibling.cstruct.pointer
-          next_sibling.cstruct = new_next_sibling.cstruct
+        reparent_node_with(next_sibling, self) do |sibling_cstruct, self_cstruct|
+          LibXML.xmlAddNextSibling(self_cstruct, sibling_cstruct)
         end
-
-        next_sibling.decorate!
-        next_sibling
       end
 
       def add_previous_sibling(prev_sibling)
-        LibXML.xmlUnlinkNode(prev_sibling.cstruct)
-
-        new_prev_sibling_struct = LibXML.xmlAddPrevSibling(cstruct, prev_sibling.cstruct)
-        raise(RuntimeError, "Could not add previous sibling") if new_prev_sibling_struct.null?
-
-        new_prev_sibling = Node.wrap(new_prev_sibling_struct)
-
-        # the prev_sibling was a text node that was coalesced. we need to have the object
-        # point at SOMETHING, or we'll totally bomb out.
-        if new_prev_sibling_struct != prev_sibling.cstruct.pointer
-          prev_sibling.cstruct = new_prev_sibling.cstruct
+        reparent_node_with(prev_sibling, self) do |sibling_cstruct, self_cstruct|
+          LibXML.xmlAddPrevSibling(self_cstruct, sibling_cstruct)
         end
-
-        prev_sibling.decorate!
-        prev_sibling
       end
 
       def dup(deep = 1)
@@ -274,6 +238,32 @@ module Nokogiri
         LibXML.xmlAddChild(dup_cstruct[:parent], dup_cstruct)
 
         Node.wrap(dup_cstruct)
+      end
+
+      private
+
+      def reparent_node_with(node, other, &block)
+        if node.cstruct[:doc] == other.cstruct[:doc]
+          LibXML.xmlUnlinkNode(node.cstruct)
+          reparented_struct = block.call(node.cstruct, other.cstruct)
+          raise(RuntimeError, "Could not reparent node (1)") unless reparented_struct
+        else
+          duped_node = LibXML.xmlDocCopyNode(node.cstruct, other.cstruct.document, 1)
+          raise(RuntimeError, "Could not reparent node (xmlDocCopyNode)") unless duped_node
+          reparented_struct = block.call(duped_node, other.cstruct)
+          raise(RuntimeError, "Could not reparent node (2)") unless reparented_struct
+          LibXML.xmlUnlinkNode(node.cstruct)
+          LibXML.xmlFreeNode(node.cstruct)
+        end
+        
+        # the child was a text node that was coalesced. we need to have the object
+        # point at SOMETHING, or we'll totally bomb out.
+        if reparented_struct != node.cstruct.pointer
+          node.cstruct = Node.wrap(reparented_struct).cstruct
+        end
+
+        node.decorate!
+        node
       end
 
     end
