@@ -53,7 +53,7 @@ module Nokogiri
 
     # miscellaneous
     ffi_attach 'libxml2', :xmlInitParser, [], :void
-    ffi_attach 'libxml2', :__xmlParserVersion, [], :string
+    ffi_attach 'libxml2', :__xmlParserVersion, [], :pointer
     ffi_attach 'libxml2', :xmlSplitQName2, [:string, :pointer], :pointer
 
     # xpath
@@ -139,9 +139,17 @@ module Nokogiri
     ffi_attach 'libxml2', :htmlSAXParseDoc, [:pointer, :pointer, :pointer, :pointer], :pointer
 
   end
-end
 
-Nokogiri::LIBXML_VERSION = Nokogiri::LibXML.__xmlParserVersion()
+  # initialize constants
+  LIBXML_PARSER_VERSION = LibXML.__xmlParserVersion().read_pointer.read_string
+  LIBXML_VERSION = lambda {
+    LIBXML_PARSER_VERSION =~ /^(\d)(\d{2})(\d{2})$/
+    major = $1.to_i
+    minor = $2.to_i
+    bug   = $3.to_i
+    "#{major}.#{minor}.#{bug}"
+  }.call
+end
 
 require 'nokogiri/syntax_error'
 require 'nokogiri/xml/syntax_error'
