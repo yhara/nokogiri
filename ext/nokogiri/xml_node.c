@@ -208,11 +208,8 @@ static VALUE set(VALUE self, VALUE property, VALUE value)
   xmlNodePtr node;
   Data_Get_Struct(self, xmlNode, node);
 
-  xmlChar *buffer = xmlEncodeEntitiesReentrant(node->doc,
+  xmlSetProp(node, (xmlChar *)StringValuePtr(property),
       (xmlChar *)StringValuePtr(value));
-
-  xmlSetProp(node, (xmlChar *)StringValuePtr(property), buffer);
-  xmlFree(buffer);
 
   return value;
 }
@@ -375,15 +372,30 @@ static VALUE add_child(VALUE self, VALUE child)
   Data_Get_Struct(child, xmlNode, node);
   Data_Get_Struct(self, xmlNode, parent);
 
-  xmlUnlinkNode(node) ;
+  if (node->doc == parent->doc) {
+    xmlUnlinkNode(node) ;
 
-  if(!(new_child = xmlAddChild(parent, node)))
-    rb_raise(rb_eRuntimeError, "Could not add new child");
+    if(!(new_child = xmlAddChild(parent, node)))
+      rb_raise(rb_eRuntimeError, "Could not add new child (xmlAddChild) (1)");
+
+  } else {
+
+    xmlNodePtr duped_node ;
+    // recursively copy to the new document
+    if (!(duped_node = xmlDocCopyNode(node, parent->doc, 1)))
+      rb_raise(rb_eRuntimeError, "Could not add new child (xmlDocCopyNode)");
+
+    if(!(new_child = xmlAddChild(parent, duped_node)))
+      rb_raise(rb_eRuntimeError, "Could not add new child (xmlAddChild) (2)");
+
+
+    xmlUnlinkNode(node);
+    xmlFreeNode(node);
+  }
 
   // the child was a text node that was coalesced. we need to have the object
   // point at SOMETHING, or we'll totally bomb out.
-  if (new_child != node)
-    DATA_PTR(child) = new_child ;
+  if (new_child != node) DATA_PTR(child) = new_child ;
 
   return Nokogiri_wrap_xml_node(new_child);
 }

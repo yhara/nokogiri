@@ -222,26 +222,46 @@ module Nokogiri
       # Create nodes from +data+ and insert them before this node
       # (as a sibling).
       def before data
-        classes = document.class.name.split('::')
-        classes[-1] = 'SAX::Parser'
-
-        parser = eval(classes.join('::')).new(BeforeHandler.new(self, data))
-        parser.parse(data)
+        fragment(data).children.each do |node|
+          add_previous_sibling node
+        end
+        self
       end
 
       ####
       # Create nodes from +data+ and insert them after this node
       # (as a sibling).
       def after data
+        fragment(data).children.to_a.reverse.each do |node|
+          add_next_sibling node
+        end
+        self
+      end
+
+      ####
+      # Set the inner_html for this Node to +tags+
+      def inner_html= tags
+        children.each { |x| x.remove}
+
+        fragment(tags).children.to_a.reverse.each do |node|
+          add_child node
+        end
+        self
+      end
+
+      ####
+      # Create a Nokogiri::XML::DocumentFragment from +tags+
+      def fragment tags
         classes = document.class.name.split('::')
         classes[-1] = 'SAX::Parser'
 
-        handler = AfterHandler.new(self, data)
-        parser = eval(classes.join('::')).new(handler)
-        parser.parse(data)
-        handler.after_nodes.reverse.each do |sibling|
-          self.add_next_sibling sibling
-        end
+
+        fragment = DocumentFragment.new(self.document)
+        parser = eval(classes.join('::')).new(
+          FragmentHandler.new(fragment, tags)
+        )
+        parser.parse(tags)
+        fragment
       end
 
       ####
