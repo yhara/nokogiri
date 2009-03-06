@@ -30,8 +30,8 @@ module Nokogiri
           return nil if node_struct.null?
           node_struct = LibXML::XmlNode.new(node_struct) 
         end
-        doc = LibXML::XmlDocumentCast.new(node_struct[:doc]).private
-        node = doc.node_cache[node_struct.pointer.address] if doc
+        document = node_struct[:doc].null? ? nil : LibXML::XmlDocumentCast.new(node_struct[:doc]).private
+        node = document.node_cache[node_struct.pointer.address] if document
         return node if node
 
         klasses = case node_struct[:type]
@@ -47,8 +47,8 @@ module Nokogiri
                   end
         node = klasses.first.allocate
         node.cstruct = klasses[1] ? klasses[1].new(node_struct.pointer) : node_struct
-        doc.node_cache[node_struct.pointer.address] = node if doc
-        node.document = doc
+        document.node_cache[node_struct.pointer.address] = node if document
+        node.document = document
         node.decorate!
         node
       end
@@ -207,24 +207,51 @@ module Nokogiri
       end
 
       def unlink
-        LibXML.xmlUnlinkNode(cstruct)
+        #
+        #  a few words of explanation are probably needed here.
+        #
+        #  because a node that was created in conjunction with its parent document
+        #  (as opposed to being created bare and inserted into an existing document)
+        #  will always contain references to the document (e.g., in the form of
+        #  strings that were allocated from the document's dictionary), it's
+        #  dangerous for us to unlink a node from the parent document without
+        #  explicitly and immediately freeing the node.
+        #
+        #  the danger is that the node might be GC'ed after the document has been
+        #  GC'ed, which will cause illegal memory access at best, and segfault at
+        #  worst.
+        #
+        #  so, we take the strategy you see here, which is:
+        #  - unlink the node
+        #  - dup the node
+        #  - free the original node
+        #  - return the dup'd node, which no longer contains references to the
+        #    original node's document
+        #
+        #  carry on.
+        #
+        LibXML.xmlUnlinkNode(self.cstruct)
+        duped_node = LibXML.xmlCopyNode(self.cstruct, 1)
+        LibXML.xmlFreeNode(self.cstruct)
+        self.cstruct = Node.wrap(duped_node).cstruct
+        self.document = nil
         self
       end
 
       def add_child(child)
-        reparent_node_with(child, self) do |child_cstruct, self_cstruct|
+        Node.reparent_node_with(child, self) do |child_cstruct, self_cstruct|
           LibXML.xmlAddChild(self_cstruct, child_cstruct)
         end
       end
 
       def add_next_sibling(next_sibling)
-        reparent_node_with(next_sibling, self) do |sibling_cstruct, self_cstruct|
+        Node.reparent_node_with(next_sibling, self) do |sibling_cstruct, self_cstruct|
           LibXML.xmlAddNextSibling(self_cstruct, sibling_cstruct)
         end
       end
 
       def add_previous_sibling(prev_sibling)
-        reparent_node_with(prev_sibling, self) do |sibling_cstruct, self_cstruct|
+        Node.reparent_node_with(prev_sibling, self) do |sibling_cstruct, self_cstruct|
           LibXML.xmlAddPrevSibling(self_cstruct, sibling_cstruct)
         end
       end
@@ -242,7 +269,7 @@ module Nokogiri
 
       private
 
-      def reparent_node_with(node, other, &block)
+      def self.reparent_node_with(node, other, &block)
         if node.cstruct[:doc] == other.cstruct[:doc]
           LibXML.xmlUnlinkNode(node.cstruct)
           reparented_struct = block.call(node.cstruct, other.cstruct)
