@@ -30,14 +30,13 @@ module Nokogiri
       end
 
       def unlink
-        raise "unimplemented"
         nodetab = cstruct.nodeTab
         cstruct[:nodeNr].times do |j|
           node = Node.wrap(nodetab[j])
           node.unlink
           nodetab[j] = node.cstruct.pointer
         end
-        cstruct[:nodeTab].put_array_of_uint(0, nodetab) # need array_of_pointer here. no? dammit.
+        cstruct.nodeTab = nodetab
         self
       end
 

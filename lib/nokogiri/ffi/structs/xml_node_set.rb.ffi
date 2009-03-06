@@ -20,7 +20,11 @@ module Nokogiri
       end
 
       def nodeTab
-        self[:nodeTab].read_array_of_type(:pointer, :read_pointer, self[:nodeNr])
+        self[:nodeTab].read_array_of_pointer(self[:nodeNr])
+      end
+
+      def nodeTab=(array)
+        self[:nodeTab].write_array_of_pointer(array)
       end
 
     end

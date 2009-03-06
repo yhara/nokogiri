@@ -12,7 +12,7 @@ if defined? Rubinius::VM
 
   end
 
-else # ruby-ffi
+else # ruby-ffi or jruby
     
   puts "cross-ffi: initializing for ruby-ffi"
 
@@ -52,4 +52,19 @@ else # ruby-ffi
 
   end
 
+  module FFI
+    class Pointer
+      def write_pointer(ptr)
+        put_pointer(0, ptr)
+      end
+
+      def read_array_of_pointer(length)
+        read_array_of_type(:pointer, :read_pointer, length)
+      end
+
+      def write_array_of_pointer(ary)
+        write_array_of_type(:pointer, :write_pointer, ary)
+      end
+    end
+  end
 end
