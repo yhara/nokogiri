@@ -19,6 +19,7 @@ module Nokogiri
     ffi_attach 'libxml2', :xmlSubstituteEntitiesDefault, [:int], :int
     ffi_attach 'libxml2', :xmlCopyDoc, [:pointer, :int], :pointer
     ffi_attach 'libxml2', :xmlFreeDoc, [:pointer], :void
+    ffi_attach 'libxml2', :xmlSetTreeDoc, [:pointer, :pointer], :void
 
     # nodes
     ffi_attach 'libxml2', :xmlNewNode, [:pointer, :pointer], :pointer
