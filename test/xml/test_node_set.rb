@@ -4,7 +4,27 @@ module Nokogiri
   module XML
     class TestNodeSet < Nokogiri::TestCase
       def setup
+        super
         @xml = Nokogiri::XML.parse(File.read(XML_FILE), XML_FILE)
+      end
+
+      def test_xmlns_is_automatically_registered
+        doc = Nokogiri::XML(<<-eoxml)
+          <root xmlns="http://tenderlovemaking.com/">
+            <foo>
+              <bar/>
+            </foo>
+          </root>
+        eoxml
+        set = doc.css('foo')
+        assert_equal 1, set.css('xmlns|bar').length
+        assert_equal 0, set.css('|bar').length
+        assert_equal 1, set.xpath('//xmlns:bar').length
+        assert_equal 1, set.search('xmlns|bar').length
+        assert_equal 1, set.search('//xmlns:bar').length
+        assert set.at('//xmlns:bar')
+        assert set.at('xmlns|bar')
+        assert set.at('bar')
       end
 
       def test_length_size
@@ -72,7 +92,7 @@ module Nokogiri
         set.unlink
         set.each do |node|
           assert !node.parent
-          assert !node.document
+          #assert !node.document
           assert !node.previous_sibling
           assert !node.next_sibling
         end

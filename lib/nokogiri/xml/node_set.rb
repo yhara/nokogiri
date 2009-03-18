@@ -1,10 +1,16 @@
 module Nokogiri
   module XML
+    ####
+    # A NodeSet contains a list of Nokogiri::XML::Node objects.  Typically
+    # a NodeSet is return as a result of searching a Document via
+    # Nokogiri::XML::Node#css or Nokogiri::XML::Node#xpath
     class NodeSet
       include Enumerable
 
+      # The Document this NodeSet is associated with
       attr_accessor :document
 
+      # Create a NodeSet with +document+ defaulting to +list+
       def initialize document, list = []
         @document = document
         list.each { |x| self << x }
@@ -46,6 +52,9 @@ module Nokogiri
 
       ###
       # Search this document for +paths+
+      #
+      # For more information see Nokogiri::XML::Node#css and
+      # Nokogiri::XML::Node#xpath
       def search *paths
         ns = paths.last.is_a?(Hash) ? paths.pop : document.root.namespaces
         sub_set = NodeSet.new(document)
@@ -64,7 +73,7 @@ module Nokogiri
       ###
       # If path is a string, search this document for +path+ returning the
       # first Node.  Otherwise, index in to the array with +path+.
-      def at path, ns = {}
+      def at path, ns = document.root ? document.root.namespaces : {}
         return self[path] if path.is_a?(Numeric)
         search(path, ns).first
       end

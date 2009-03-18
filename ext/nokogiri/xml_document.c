@@ -3,8 +3,23 @@
 static void dealloc(xmlDocPtr doc)
 {
   NOKOGIRI_DEBUG_START(doc);
+
+  nokogiriTuplePtr tuple = doc->_private;
+  xmlNodeSetPtr node_set = tuple->unlinkedNodes;
+
+  int i;
+  for(i = 0; i < node_set->nodeNr; i++) {
+    xmlAddChild((xmlNodePtr)doc, node_set->nodeTab[i]);
+  }
+
+  if (node_set->nodeTab != NULL)
+    xmlFree(node_set->nodeTab);
+  xmlFree(node_set);
+
+  free(doc->_private);
   doc->_private = NULL;
   xmlFreeDoc(doc);
+
   NOKOGIRI_DEBUG_END(doc);
 }
 
@@ -187,7 +202,11 @@ static VALUE duplicate_node(int argc, VALUE *argv, VALUE self)
   dup = xmlCopyDoc(doc, NUM2INT(level));
   if(dup == NULL) return Qnil;
 
-  return Nokogiri_wrap_xml_document(cNokogiriXmlDocument, dup);
+  dup->type = doc->type;
+  if(dup->type == XML_DOCUMENT_NODE)
+    return Nokogiri_wrap_xml_document(cNokogiriXmlDocument, dup);
+  else
+    return Nokogiri_wrap_xml_document(cNokogiriHtmlDocument, dup);
 }
 
 /*
@@ -255,7 +274,6 @@ void init_xml_document()
   rb_define_method(klass, "encoding", encoding, 0);
   rb_define_method(klass, "dup", duplicate_node, -1);
   rb_define_method(klass, "url", url, 0);
-  rb_undef_method(klass, "parent");
 }
 
 
@@ -263,10 +281,19 @@ void init_xml_document()
 VALUE Nokogiri_wrap_xml_document(VALUE klass, xmlDocPtr doc)
 {
   VALUE rb_doc = Qnil;
+  nokogiriTuplePtr tuple = (nokogiriTuplePtr)malloc(sizeof(nokogiriTuple));
 
-  rb_doc = Data_Wrap_Struct(klass ? klass : cNokogiriXmlDocument, 0, dealloc, doc) ;
+  rb_doc = Data_Wrap_Struct(
+      klass ? klass : cNokogiriXmlDocument,
+      0,
+      dealloc,
+      doc
+  );
   rb_iv_set(rb_doc, "@decorators", Qnil);
-  doc->_private = (void *)rb_doc;
+
+  tuple->doc = (void *)rb_doc;
+  tuple->unlinkedNodes = xmlXPathNodeSetCreate(NULL);
+  doc->_private = tuple ;
 
   return rb_doc ;
 }

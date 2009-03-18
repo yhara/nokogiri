@@ -4,7 +4,33 @@ module Nokogiri
   module HTML
     class TestDocument < Nokogiri::TestCase
       def setup
+        super
         @html = Nokogiri::HTML.parse(File.read(HTML_FILE))
+      end
+
+      def test_swap_should_not_exist
+        assert_raises(NoMethodError) {
+          @html.swap
+        }
+      end
+
+      def test_namespace_should_not_exist
+        assert_raises(NoMethodError) {
+          @html.namespace
+        }
+      end
+
+      def test_root_node_parent_is_document
+        parent = @html.root.parent
+        assert_equal @html, parent
+        assert_instance_of Nokogiri::HTML::Document, parent
+      end
+
+      def test_parse_empty_document
+        doc = Nokogiri::HTML("\n")
+        assert_equal 0, doc.css('a').length
+        assert_equal 0, doc.xpath('//a').length
+        assert_equal 0, doc.search('//a').length
       end
 
       def test_HTML_function
@@ -136,6 +162,10 @@ module Nokogiri
       def test_dup_document
         assert dup = @html.dup
         assert_not_equal dup, @html
+        assert @html.html?
+        assert_instance_of Nokogiri::HTML::Document, dup
+        assert dup.html?, 'duplicate should be html'
+        assert_equal @html.to_s, dup.to_s
       end
 
       def test_dup_document_shallow

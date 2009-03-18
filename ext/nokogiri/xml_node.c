@@ -10,7 +10,6 @@ static void debug_node_dealloc(xmlNodePtr x)
 #  define debug_node_dealloc 0
 #endif
 
-
 /* :nodoc: */
 typedef xmlNodePtr (*node_other_func)(xmlNodePtr, xmlNodePtr);
 
@@ -39,7 +38,7 @@ static VALUE reparent_node_with(VALUE node_obj, VALUE other_obj, node_other_func
       rb_raise(rb_eRuntimeError, "Could not reparent node (2)");
     }
     xmlUnlinkNode(node);
-    xmlFreeNode(node);
+    NOKOGIRI_ROOT_NODE(node);
   }
 
   // the child was a text node that was coalesced. we need to have the object
@@ -47,6 +46,10 @@ static VALUE reparent_node_with(VALUE node_obj, VALUE other_obj, node_other_func
   if (reparented != node) {
     DATA_PTR(node_obj) = reparented ;
   }
+
+  // Make sure that our reparented node has the correct namespaces
+  if(reparented->doc != reparented->parent)
+    reparented->ns = reparented->parent->ns;
 
   reparented_obj = Nokogiri_wrap_xml_node(reparented);
 
@@ -144,39 +147,11 @@ static VALUE duplicate_node(int argc, VALUE *argv, VALUE self)
  */
 static VALUE unlink_node(VALUE self)
 {
-  /*
-   *  a few words of explanation are probably needed here.
-   *
-   *  because a node that was created in conjunction with its parent document
-   *  (as opposed to being created bare and inserted into an existing document)
-   *  will always contain references to the document (e.g., in the form of
-   *  strings that were allocated from the document's dictionary), it's
-   *  dangerous for us to unlink a node from the parent document without
-   *  explicitly and immediately freeing the node.
-   *
-   *  the danger is that the node might be GC'ed after the document has been
-   *  GC'ed, which will cause illegal memory access at best, and segfault at
-   *  worst.
-   *
-   *  so, we take the strategy you see here, which is:
-   *  - unlink the node
-   *  - dup the node
-   *  - free the original node
-   *  - return the dup'd node, which no longer contains references to the
-   *    original node's document
-   *
-   *  carry on.
-   */
-  xmlNodePtr node, dup;
+  xmlNodePtr node;
   Data_Get_Struct(self, xmlNode, node);
-
   xmlUnlinkNode(node);
-  dup = xmlCopyNode(node, 1);
-  xmlFreeNode(node);
-
-  DATA_PTR(self) = dup ;
-  rb_iv_set(self, "@document", Qnil);
-  return Nokogiri_wrap_xml_node(dup);
+  NOKOGIRI_ROOT_NODE(node);
+  return self;
 }
 
 /*
@@ -590,12 +565,14 @@ static VALUE add_namespace(VALUE self, VALUE prefix, VALUE href)
 
   if(NULL == ns) return self;
 
+  /*
   xmlNewNsProp(
       node,
       ns,
       (const xmlChar *)StringValuePtr(href),
       (const xmlChar *)StringValuePtr(prefix)
   );
+  */
 
   return self;
 }
@@ -613,7 +590,7 @@ static VALUE new(VALUE klass, VALUE name, VALUE document)
   Data_Get_Struct(document, xmlDoc, doc);
 
   xmlNodePtr node = xmlNewNode(NULL, (xmlChar *)StringValuePtr(name));
-  node->doc = doc;
+  node->doc = doc->doc;
 
   VALUE rb_node = Nokogiri_wrap_xml_node(node);
 
@@ -653,19 +630,21 @@ VALUE Nokogiri_wrap_xml_node(xmlNodePtr node)
   VALUE node_cache = Qnil ;
   VALUE rb_node = Qnil ;
 
-  if (node->doc && node->doc->_private) {
-    document = (VALUE)node->doc->_private;
-    node_cache = rb_funcall(document, rb_intern("node_cache"), 0);
-    rb_node = rb_hash_aref(node_cache, index);
-    if(rb_node != Qnil) return rb_node;
-  }
+  if(node->type == XML_DOCUMENT_NODE || node->type == XML_HTML_DOCUMENT_NODE)
+      return DOC_RUBY_OBJECT(node->doc);
+
+  if(NULL != node->_private) return (VALUE)node->_private;
 
   switch(node->type)
   {
     VALUE klass;
 
+    case XML_ELEMENT_NODE:
+      klass = cNokogiriXmlElement;
+      rb_node = Data_Wrap_Struct(klass, 0, debug_node_dealloc, node) ;
+      break;
     case XML_TEXT_NODE:
-      klass = rb_const_get(mNokogiriXml, rb_intern("Text"));
+      klass = cNokogiriXmlText;
       rb_node = Data_Wrap_Struct(klass, 0, debug_node_dealloc, node) ;
       break;
     case XML_ENTITY_REF_NODE:
@@ -682,10 +661,6 @@ VALUE Nokogiri_wrap_xml_node(xmlNodePtr node)
       break;
     case XML_PI_NODE:
       klass = cNokogiriXmlProcessingInstruction;
-      rb_node = Data_Wrap_Struct(klass, 0, debug_node_dealloc, node) ;
-      break;
-    case XML_ELEMENT_NODE:
-      klass = rb_const_get(mNokogiriXml, rb_intern("Element"));
       rb_node = Data_Wrap_Struct(klass, 0, debug_node_dealloc, node) ;
       break;
     case XML_ATTRIBUTE_NODE:
@@ -708,9 +683,17 @@ VALUE Nokogiri_wrap_xml_node(xmlNodePtr node)
       rb_node = Data_Wrap_Struct(cNokogiriXmlNode, 0, debug_node_dealloc, node) ;
   }
 
+  node->_private = (void *)rb_node;
+
+  if (DOC_RUBY_OBJECT_TEST(node->doc) && DOC_RUBY_OBJECT(node->doc)) {
+    document = DOC_RUBY_OBJECT(node->doc);
+    node_cache = rb_funcall(document, rb_intern("node_cache"), 0);
+  }
+
   if (node_cache != Qnil) rb_hash_aset(node_cache, index, rb_node);
   rb_iv_set(rb_node, "@document", document);
   rb_funcall(rb_node, rb_intern("decorate!"), 0);
+
   return rb_node ;
 }
 
@@ -767,6 +750,8 @@ void Nokogiri_xml_node_namespaces(xmlNodePtr node, VALUE attr_hash)
 
 
 VALUE cNokogiriXmlNode ;
+VALUE cNokogiriXmlElement ;
+
 void init_xml_node()
 {
   VALUE nokogiri = rb_define_module("Nokogiri");
@@ -774,6 +759,8 @@ void init_xml_node()
   VALUE klass = rb_define_class_under(xml, "Node", rb_cObject);
 
   cNokogiriXmlNode = klass;
+
+  cNokogiriXmlElement = rb_define_class_under(xml, "Element", klass);
 
   rb_define_singleton_method(klass, "new", new, 2);
 

@@ -34,12 +34,12 @@ static void ruby_funcall(xmlXPathParserContextPtr ctx, int nargs)
   assert(ctx->context);
   assert(ctx->context->userData);
   assert(ctx->context->doc);
-  assert(ctx->context->doc->_private);
+  assert(DOC_RUBY_OBJECT_TEST(ctx->context->doc));
 
   xpath_handler = (VALUE)(ctx->context->userData);
 
   VALUE * argv = (VALUE *)calloc((unsigned int)nargs, sizeof(VALUE));
-  VALUE doc = (VALUE)ctx->context->doc->_private;
+  VALUE doc = DOC_RUBY_OBJECT(ctx->context->doc);
 
   int i = nargs - 1;
   do {
@@ -130,6 +130,28 @@ static xmlXPathFunction lookup( void *ctx,
   return NULL;
 }
 
+static void xpath_exception_handler(void * ctx, xmlErrorPtr error)
+{
+  VALUE xpath = rb_const_get(mNokogiriXml, rb_intern("XPath"));
+  VALUE klass = rb_const_get(xpath, rb_intern("SyntaxError"));
+
+  rb_funcall(rb_mKernel, rb_intern("raise"), 1,
+    Nokogiri_wrap_xml_syntax_error(klass, error)
+  );
+}
+
+static void xpath_generic_exception_handler(void * ctx, const char *msg, ...)
+{
+  char * message;
+
+  va_list args;
+  va_start(args, msg);
+  vasprintf(&message, msg, args);
+  va_end(args);
+
+  rb_raise(rb_eRuntimeError, message);
+}
+
 /*
  * call-seq:
  *  evaluate(search_path)
@@ -141,7 +163,6 @@ static VALUE evaluate(int argc, VALUE *argv, VALUE self)
   VALUE search_path, xpath_handler;
   xmlXPathContextPtr ctx;
   Data_Get_Struct(self, xmlXPathContext, ctx);
-  VALUE error_list      = rb_ary_new();
 
   if(rb_scan_args(argc, argv, "11", &search_path, &xpath_handler) == 1)
     xpath_handler = Qnil;
@@ -155,9 +176,15 @@ static VALUE evaluate(int argc, VALUE *argv, VALUE self)
   }
 
   xmlResetLastError();
-  xmlSetStructuredErrorFunc((void *)error_list, Nokogiri_error_array_pusher);
+  xmlSetStructuredErrorFunc(NULL, xpath_exception_handler);
+
+  // For some reason, xmlXPathEvalExpression will blow up with a generic error
+  // when there is a non existent function.
+  xmlSetGenericErrorFunc(NULL, xpath_generic_exception_handler);
+
   xmlXPathObjectPtr xpath = xmlXPathEvalExpression(query, ctx);
   xmlSetStructuredErrorFunc(NULL, NULL);
+  xmlSetGenericErrorFunc(NULL, NULL);
 
   if(xpath == NULL) {
     VALUE xpath = rb_const_get(mNokogiriXml, rb_intern("XPath"));
@@ -172,13 +199,13 @@ static VALUE evaluate(int argc, VALUE *argv, VALUE self)
   VALUE xpath_object = Nokogiri_wrap_xml_xpath(xpath);
 
   assert(ctx->doc);
-  assert(ctx->doc->_private);
+  assert(DOC_RUBY_OBJECT_TEST(ctx->doc));
 
   rb_funcall( xpath_object,
               rb_intern("document="),
               1,
-              (VALUE)ctx->doc->_private
-    );
+              DOC_RUBY_OBJECT(ctx->doc)
+   );
   return xpath_object;
 }
 

@@ -30,16 +30,26 @@
 #define NOKOGIRI_STR_NEW2(str, encoding) \
   ({ \
     VALUE _string = rb_str_new2((const char *)str); \
-    if(NULL != encoding) \
-      rb_enc_associate_index(_string, rb_enc_find_index(encoding)); \
+    if(NULL != encoding) { \
+      int _enc = rb_enc_find_index(encoding); \
+      if(_enc == -1) \
+        rb_enc_associate_index(_string, rb_enc_find_index("ASCII")); \
+      else \
+        rb_enc_associate_index(_string, _enc); \
+    } \
     _string; \
   })
 
 #define NOKOGIRI_STR_NEW(str, len, encoding) \
   ({ \
     VALUE _string = rb_str_new((const char *)str, (long)len); \
-    if(NULL != encoding) \
-      rb_enc_associate_index(_string, rb_enc_find_index(encoding)); \
+    if(NULL != encoding) { \
+      int _enc = rb_enc_find_index(encoding); \
+      if(_enc == -1) \
+        rb_enc_associate_index(_string, rb_enc_find_index("ASCII")); \
+      else \
+        rb_enc_associate_index(_string, _enc); \
+    } \
     _string; \
   })
 
@@ -50,6 +60,10 @@
 
 #define NOKOGIRI_STR_NEW(str, len, doc) \
   rb_str_new((const char *)str, (long)len)
+#endif
+
+#ifdef XP_WIN
+int vasprintf (char **strp, const char *fmt, va_list ap);
 #endif
 
 #include <xml_io.h>
@@ -81,6 +95,14 @@ extern VALUE mNokogiriXmlSax ;
 extern VALUE mNokogiriHtml ;
 extern VALUE mNokogiriHtmlSax ;
 extern VALUE mNokogiriXslt ;
+
+#define NOKOGIRI_ROOT_NODE(_node) \
+  ({ \
+    nokogiriTuplePtr tuple = (nokogiriTuplePtr)(_node->doc->_private);       \
+    xmlNodeSetPtr node_set = (xmlNodeSetPtr)(tuple->unlinkedNodes);     \
+    xmlXPathNodeSetAdd(node_set, _node); \
+    _node; \
+  })
 
 #ifdef DEBUG
 

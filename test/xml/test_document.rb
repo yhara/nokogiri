@@ -6,7 +6,30 @@ module Nokogiri
   module XML
     class TestDocument < Nokogiri::TestCase
       def setup
+        super
         @xml = Nokogiri::XML.parse(File.read(XML_FILE), XML_FILE)
+      end
+
+      def test_namespace_should_not_exist
+        assert_raises(NoMethodError) {
+          @xml.namespace
+        }
+      end
+
+      def test_non_existant_function
+        assert_raises(RuntimeError) {
+          @xml.xpath('//name[foo()]')
+        }
+      end
+
+      def test_ancestors
+        assert_equal [], @xml.ancestors
+      end
+
+      def test_root_node_parent_is_document
+        parent = @xml.root.parent
+        assert_equal @xml, parent
+        assert_instance_of Nokogiri::XML::Document, parent
       end
 
       def test_xmlns_is_automatically_registered
@@ -23,6 +46,9 @@ module Nokogiri
         assert_equal 1, doc.xpath('//xmlns:foo').length
         assert_equal 1, doc.search('xmlns|foo').length
         assert_equal 1, doc.search('//xmlns:foo').length
+        assert doc.at('xmlns|foo')
+        assert doc.at('//xmlns:foo')
+        assert doc.at('foo')
       end
 
       def test_xmlns_is_registered_for_nodesets
@@ -196,6 +222,12 @@ module Nokogiri
       def test_dump
         assert @xml.serialize
         assert @xml.to_xml
+      end
+
+      def test_dup
+        dup = @xml.dup
+        assert_instance_of Nokogiri::XML::Document, dup
+        assert dup.xml?, 'duplicate should be xml'
       end
 
       def test_subset_is_decorated
