@@ -15,9 +15,11 @@ module Nokogiri
         s.field :next, :pointer
         s.field :prev, :pointer
         s.field :doc, :pointer
-        s.field :properties, :pointer
         s.field :ns, :pointer
+        s.field :content, :string
+        s.field :properties, :pointer
         s.field :nsDef, :pointer
+        s.field :line, :short
       end
       @@@
 

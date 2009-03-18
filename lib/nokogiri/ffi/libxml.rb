@@ -49,6 +49,15 @@ module Nokogiri
     ffi_attach 'libxml2', :htmlNodeDump, [:pointer, :pointer, :pointer], :int
     ffi_attach 'libxml2', :xmlEncodeEntitiesReentrant, [:pointer, :string], :string
     ffi_attach 'libxml2', :xmlStringGetNodeList, [:pointer, :string], :pointer
+    ffi_attach 'libxml2', :xmlNewNs, [:pointer, :string, :string], :pointer
+    ffi_attach 'libxml2', :xmlNewNsProp, [:pointer, :pointer, :string, :string], :pointer
+
+    ffi_callback :io_write_callback, [:pointer, :string, :int], :int
+    ffi_callback :io_read_callback, [:pointer, :string, :int], :int
+    ffi_callback :io_close_callback, [:pointer], :int
+    ffi_attach 'libxml2', :xmlSaveToIO, [:io_write_callback, :io_close_callback, :pointer, :string, :int], :pointer
+    ffi_attach 'libxml2', :xmlSaveTree, [:pointer, :pointer], :int
+    ffi_attach 'libxml2', :xmlSaveClose, [:pointer], :int
 
     # buffer
     ffi_attach 'libxml2', :xmlBufferCreate, [], :pointer

@@ -10,14 +10,6 @@ module Nokogiri
         wrap(ptr)
       end
 
-      def serialize
-        buf_ptr = MemoryPointer.new :pointer
-        size = MemoryPointer.new :int
-        LibXML.htmlDocDumpMemory(cstruct, buf_ptr, size)
-        buf = Nokogiri::LibXML::XmlAlloc.new(buf_ptr.read_pointer)
-        buf.pointer.read_string(size.read_int)
-      end
-
       def type
         cstruct[:type]
       end

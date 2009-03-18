@@ -4,9 +4,6 @@ module Nokogiri
 
       attr_accessor :cstruct
 
-      def parent ; end ; undef_method :parent
-      def parent= ; end ; undef_method :parent=
-
       def self.new(*args)
         version = args.first || "1.0"
         wrap(LibXML.xmlNewDoc(version))
@@ -38,14 +35,6 @@ module Nokogiri
         doc.cstruct.private = doc
         doc.instance_eval { @decorators = nil }
         doc
-      end
-
-      def serialize
-        buf_ptr = MemoryPointer.new :pointer
-        size = MemoryPointer.new :int
-        LibXML.xmlDocDumpMemory(cstruct, buf_ptr, size)
-        buf = Nokogiri::LibXML::XmlAlloc.new(buf_ptr.read_pointer)
-        buf.pointer.read_string(size.read_int)
       end
 
       def type

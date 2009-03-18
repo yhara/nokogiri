@@ -30,7 +30,13 @@ module Nokogiri
           return nil if node_struct.null?
           node_struct = LibXML::XmlNode.new(node_struct) 
         end
+
         document = node_struct[:doc].null? ? nil : LibXML::XmlDocumentCast.new(node_struct[:doc]).private
+
+        if node_struct[:type] == DOCUMENT_NODE || node_struct[:type] == HTML_DOCUMENT_NODE
+          return document
+        end
+
         node = document.node_cache[node_struct.pointer.address] if document
         return node if node
 
@@ -68,6 +74,13 @@ module Nokogiri
       def to_xml(level = 1)
         buffer = LibXML::XmlBuffer.new(LibXML.xmlBufferCreate())
         LibXML.xmlNodeDump(buffer, cstruct[:doc], cstruct, 2, level)
+        buffer[:content]
+      end
+
+      def dump_html
+        return to_xml if type == DOCUMENT_NODE
+        buffer = LibXML::XmlBuffer.new(LibXML.xmlBufferCreate())
+        LibXML.htmlNodeDump(buffer, cstruct[:doc], cstruct)
         buffer[:content]
       end
 
@@ -267,6 +280,29 @@ module Nokogiri
         Node.wrap(dup_cstruct)
       end
 
+      def add_namespace(prefix, href)
+        ns = LibXML.xmlNewNs(cstruct, href, prefix)
+        return self if ns.nil?
+        LibXML.xmlNewNsProp(cstruct, ns, href, prefix)
+        self
+      end
+
+      def line
+        cstruct[:line]
+      end
+
+      def native_write_to(io, encoding, options)
+        writer = lambda do |context, buffer, len|
+          io.write buffer
+          len
+        end
+        closer = lambda { 0 }
+        savectx = LibXML.xmlSaveToIO(writer, closer, nil, encoding, options)
+        LibXML.xmlSaveTree(savectx, cstruct)
+        LibXML.xmlSaveClose(savectx)
+        io
+      end
+
       private
 
       def self.reparent_node_with(node, other, &block)
@@ -280,13 +316,17 @@ module Nokogiri
           reparented_struct = block.call(duped_node, other.cstruct)
           raise(RuntimeError, "Could not reparent node (2)") unless reparented_struct
           LibXML.xmlUnlinkNode(node.cstruct)
-          LibXML.xmlFreeNode(node.cstruct)
+          # TODO NOKOGIRI_ROOT_NODE()
         end
         
         # the child was a text node that was coalesced. we need to have the object
         # point at SOMETHING, or we'll totally bomb out.
         if reparented_struct != node.cstruct.pointer
           node.cstruct = Node.wrap(reparented_struct).cstruct
+        end
+
+        if node.cstruct[:doc] != node.cstruct[:parent]
+          node.cstruct[:ns] = LibXML::XmlNode.new(node.cstruct[:parent])[:ns]
         end
 
         node.decorate!
