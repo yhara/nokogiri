@@ -10,13 +10,13 @@ module Nokogiri
       end
 
       def self.read_memory(string, url, encoding, options)
-        wrap_with_error_handling do
+        wrap_with_error_handling(DOCUMENT_NODE) do
           LibXML.xmlReadMemory(string, string.length, url, encoding, options)
         end
       end
 
       def self.read_io(io, url, encoding, options)
-        wrap_with_error_handling do
+        wrap_with_error_handling(DOCUMENT_NODE) do
           reader = lambda do |ctx, buffer, len|
             string = io.read(len)
             return 0 if string.nil?
@@ -29,9 +29,16 @@ module Nokogiri
         end
       end
 
-      def self.wrap(ptr) # :nodoc:
-        doc = allocate
-        doc.cstruct = LibXML::XmlDocument.new(ptr)
+      def self.wrap(ptr, type=DOCUMENT_NODE) # :nodoc:
+        if type == DOCUMENT_NODE
+          doc = allocate
+          doc.cstruct = LibXML::XmlDocument.new(ptr)
+          doc.cstruct[:type] = DOCUMENT_NODE
+        else
+          doc = Nokogiri::HTML::Document.allocate
+          doc.cstruct = LibXML::HtmlDocument.new(ptr)
+          doc.cstruct[:type] = HTML_DOCUMENT_NODE
+        end
         doc.cstruct.ruby_doc = doc
         doc.instance_eval { @decorators = nil }
         doc
@@ -62,12 +69,12 @@ module Nokogiri
       def dup(deep = 1)
         dup_ptr = LibXML.xmlCopyDoc(cstruct, deep)
         return nil if dup_ptr.null?
-        Document.wrap(dup_ptr)
+        Document.wrap(dup_ptr, self.cstruct[:type])
       end
 
       private
       
-      def self.wrap_with_error_handling(&block)
+      def self.wrap_with_error_handling(type, &block)
         error_list = []
         LibXML.xmlInitParser()
         LibXML.xmlResetLastError()
@@ -86,7 +93,7 @@ module Nokogiri
           end
         end
 
-        document = wrap(ptr)
+        document = wrap(ptr, type)
         document.errors = error_list
         return document
       end

@@ -10,6 +10,7 @@ module Nokogiri
 
         reader = allocate
         reader.cstruct = LibXML::XmlTextReader.new(reader_ptr)
+        reader.send(:initialize, url, encoding)
         reader
       end
 
@@ -37,11 +38,23 @@ module Nokogiri
       end
 
       def read
-        case LibXML.xmlTextReaderRead(cstruct)
-        when 1 then self
-        when 0 then nil
-        else raise RuntimeError, "Error pulling: #{ret}"
+        error_list = self.errors
+
+        LibXML.xmlSetStructuredErrorFunc(nil, SyntaxError.error_array_pusher(error_list))
+        ret = LibXML.xmlTextReaderRead(cstruct)
+        LibXML.xmlSetStructuredErrorFunc(nil, nil)
+
+        return self if ret == 1
+        return nil if ret == 0
+
+        error = LibXML.xmlGetLastError()
+        if error
+          raise SyntaxError.wrap(error)
+        else
+          raise RuntimeError, "Error pulling: #{ret}"
         end
+
+        nil
       end
 
       def attribute_at index

@@ -5,13 +5,13 @@ module Nokogiri
       attr_accessor :cstruct
 
       def self.read_memory(string, url, encoding, options)
-        wrap_with_error_handling do
+        wrap_with_error_handling(HTML_DOCUMENT_NODE) do
           LibXML.htmlReadMemory(string, string.length, url, encoding, options)
         end
       end
 
       def self.read_io(io, url, encoding, options)
-        wrap_with_error_handling do
+        wrap_with_error_handling(HTML_DOCUMENT_NODE) do
           reader = lambda do |ctx, buffer, len|
             string = io.read(len)
             return 0 if string.nil?

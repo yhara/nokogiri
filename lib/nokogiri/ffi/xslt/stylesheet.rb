@@ -14,17 +14,17 @@ module Nokogiri
       end
 
       def serialize document
-        buf_ptr = MemoryPointer.new :pointer
-        buf_len = MemoryPointer.new :int
+        buf_ptr = FFI::MemoryPointer.new :pointer
+        buf_len = FFI::MemoryPointer.new :int
         LibXML.xsltSaveResultToString(buf_ptr, buf_len, document.cstruct, cstruct)
         buf = Nokogiri::LibXML::XmlAlloc.new(buf_ptr.read_pointer)
         buf.pointer.read_string(buf_len.read_int)
       end
 
       def transform document, params=[]
-        param_arr = MemoryPointer.new(:pointer, params.length + 1)
+        param_arr = FFI::MemoryPointer.new(:pointer, params.length + 1)
         params.each_with_index do |param, j|
-          param_arr[j].put_pointer(0, MemoryPointer.from_string(param))
+          param_arr[j].put_pointer(0, FFI::MemoryPointer.from_string(param))
         end
         param_arr[params.length].put_pointer(0,0)
 

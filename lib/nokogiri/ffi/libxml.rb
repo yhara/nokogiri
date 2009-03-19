@@ -14,6 +14,7 @@ module Nokogiri
 
     # html documents
     ffi_attach 'libxml2', :htmlReadMemory, [:string, :int, :string, :string, :int], :pointer
+    ffi_attach 'libxml2', :htmlReadIO, [:io_read_callback, :io_close_callback, :pointer, :string, :string, :int], :pointer
     ffi_attach 'libxml2', :htmlDocDumpMemory, [:pointer, :pointer, :pointer], :void
 
     # xml documents
