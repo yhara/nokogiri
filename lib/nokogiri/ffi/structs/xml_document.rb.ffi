@@ -10,7 +10,7 @@ module Nokogiri
           struct do |s|
             s.name "struct _xmlDoc"
             s.include "libxml/tree.h"
-            s.field :_private, :int
+            s.field :_private, :pointer
             s.field :type, :int
             s.field :name, :string
             s.field :children, :pointer
@@ -27,26 +27,51 @@ module Nokogiri
         end
       end
 
-      def private=(object)
-        self[:_private] = object.object_id
-      end
-
-      def private
-        ObjectSpace._id2ref(self[:_private])
-      end
-
       def document
         p = self[:doc]
         p.null? ? nil : LibXML::XmlDocumentCast.new(p)
+      end
+
+      def ruby_doc
+        ObjectSpace._id2ref(self[:_private].get_long(0))
+      end
+
+      def node_set
+        LibXML::XmlNodeSetCast.new(self[:_private].get_pointer(FFI::Pointer.size))
       end
     end
 
     class XmlDocument < CrossFFI::Struct
       include XmlDocumentMixin
 
+      def initialize(ptr)
+        super(ptr)
+        self[:_private] = LibXML.calloc(FFI::Pointer.size, 2)
+        self[:_private].put_pointer(FFI::Pointer.size, LibXML.xmlXPathNodeSetCreate(nil))
+      end
+
       def self.release ptr
+        begin
+          doc = LibXML::XmlDocumentCast.new(ptr)
+
+          ns = LibXML::XmlNodeSetCast.new(doc[:_private].get_pointer(FFI::Pointer.size))
+          ns[:nodeNr].times do |j|
+            node = LibXML::XmlNode.new(ns[:nodeTab].get_pointer(j * FFI::Pointer.size))
+            LibXML.xmlAddChild(doc, node)
+          end
+          LibXML::XmlNodeSet.release(ns.pointer)
+
+          LibXML.free(doc[:_private])
+        rescue
+          puts "Nokogiri::LibXML::XmlDocument.release: exception: '#{$!}'"
+        end
         LibXML.xmlFreeDoc(ptr)
       end
+
+      def ruby_doc=(object)
+        self[:_private].put_long(0, object.object_id)
+      end
+
     end
 
     class XmlDocumentCast < FFI::Struct

@@ -31,7 +31,7 @@ module Nokogiri
           node_struct = LibXML::XmlNode.new(node_struct) 
         end
 
-        document = node_struct[:doc].null? ? nil : LibXML::XmlDocumentCast.new(node_struct[:doc]).private
+        document = node_struct[:doc].null? ? nil : LibXML::XmlDocumentCast.new(node_struct[:doc]).ruby_doc
 
         if node_struct[:type] == DOCUMENT_NODE || node_struct[:type] == HTML_DOCUMENT_NODE
           return document
@@ -220,34 +220,8 @@ module Nokogiri
       end
 
       def unlink
-        #
-        #  a few words of explanation are probably needed here.
-        #
-        #  because a node that was created in conjunction with its parent document
-        #  (as opposed to being created bare and inserted into an existing document)
-        #  will always contain references to the document (e.g., in the form of
-        #  strings that were allocated from the document's dictionary), it's
-        #  dangerous for us to unlink a node from the parent document without
-        #  explicitly and immediately freeing the node.
-        #
-        #  the danger is that the node might be GC'ed after the document has been
-        #  GC'ed, which will cause illegal memory access at best, and segfault at
-        #  worst.
-        #
-        #  so, we take the strategy you see here, which is:
-        #  - unlink the node
-        #  - dup the node
-        #  - free the original node
-        #  - return the dup'd node, which no longer contains references to the
-        #    original node's document
-        #
-        #  carry on.
-        #
-        LibXML.xmlUnlinkNode(self.cstruct)
-        duped_node = LibXML.xmlCopyNode(self.cstruct, 1)
-        LibXML.xmlFreeNode(self.cstruct)
-        self.cstruct = Node.wrap(duped_node).cstruct
-        self.document = nil
+        LibXML.xmlUnlinkNode(cstruct)
+        LibXML.xmlXPathNodeSetAdd(cstruct.document.node_set, cstruct);
         self
       end
 
@@ -311,7 +285,7 @@ module Nokogiri
           reparented_struct = block.call(duped_node, other.cstruct)
           raise(RuntimeError, "Could not reparent node (2)") unless reparented_struct
           LibXML.xmlUnlinkNode(node.cstruct)
-          # TODO NOKOGIRI_ROOT_NODE()
+          LibXML.xmlXPathNodeSetAdd(node.cstruct.document.node_set, node.cstruct);
         end
         
         # the child was a text node that was coalesced. we need to have the object

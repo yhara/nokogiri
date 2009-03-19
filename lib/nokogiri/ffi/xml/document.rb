@@ -32,7 +32,7 @@ module Nokogiri
       def self.wrap(ptr) # :nodoc:
         doc = allocate
         doc.cstruct = LibXML::XmlDocument.new(ptr)
-        doc.cstruct.private = doc
+        doc.cstruct.ruby_doc = doc
         doc.instance_eval { @decorators = nil }
         doc
       end
@@ -57,6 +57,12 @@ module Nokogiri
 
       def url
         cstruct[:URL]
+      end
+
+      def dup(deep = 1)
+        dup_ptr = LibXML.xmlCopyDoc(cstruct, deep)
+        return nil if dup_ptr.null?
+        Document.wrap(dup_ptr)
       end
 
       private
