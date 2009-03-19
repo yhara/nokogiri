@@ -5,6 +5,13 @@ module Nokogiri
   module LibXML
     extend CrossFFI::ModuleMixin
 
+    # useful callback signatures
+    ffi_callback :syntax_error_handler, [:pointer, :pointer], :void
+    ffi_callback :io_write_callback, [:pointer, :string, :int], :int
+    ffi_callback :io_read_callback, [:pointer, :pointer, :int], :int
+    ffi_callback :io_close_callback, [:pointer], :int
+    ffi_callback :hash_copier_callback, [:pointer, :pointer, :string], :void
+
     # html documents
     ffi_attach 'libxml2', :htmlReadMemory, [:string, :int, :string, :string, :int], :pointer
     ffi_attach 'libxml2', :htmlDocDumpMemory, [:pointer, :pointer, :pointer], :void
@@ -52,9 +59,6 @@ module Nokogiri
     ffi_attach 'libxml2', :xmlNewNs, [:pointer, :string, :string], :pointer
     ffi_attach 'libxml2', :xmlNewNsProp, [:pointer, :pointer, :string, :string], :pointer
 
-    ffi_callback :io_write_callback, [:pointer, :string, :int], :int
-    ffi_callback :io_read_callback, [:pointer, :string, :int], :int
-    ffi_callback :io_close_callback, [:pointer], :int
     ffi_attach 'libxml2', :xmlSaveToIO, [:io_write_callback, :io_close_callback, :pointer, :string, :int], :pointer
     ffi_attach 'libxml2', :xmlSaveTree, [:pointer, :pointer], :int
     ffi_attach 'libxml2', :xmlSaveClose, [:pointer], :int
@@ -86,21 +90,17 @@ module Nokogiri
     end
 
     # syntax error handler
-    ffi_callback :syntax_error_handler, [:pointer, :pointer], :void
     ffi_attach 'libxml2', :xmlSetStructuredErrorFunc, [:pointer, :syntax_error_handler], :void
     ffi_attach 'libxml2', :xmlResetLastError, [], :void
     ffi_attach 'libxml2', :xmlCopyError, [:pointer, :pointer], :int
     ffi_attach 'libxml2', :xmlGetLastError, [], :pointer
 
     # IO
-    ffi_callback :io_read_callback, [:pointer, :pointer, :int], :int
-    ffi_callback :io_close_callback, [:pointer], :int
     ffi_attach nil, :memcpy, [:pointer, :pointer, :int], :pointer
     ffi_attach 'libxml2', :xmlReadIO, [:io_read_callback, :io_close_callback, :pointer, :string, :string, :int], :pointer
     ffi_attach 'libxml2', :xmlCreateIOParserCtxt, [:pointer, :pointer, :io_read_callback, :io_close_callback, :pointer, :int], :pointer
 
     # dtd
-    ffi_callback :hash_copier_callback, [:pointer, :pointer, :string], :void
     ffi_attach 'libxml2', :xmlHashScan, [:pointer, :hash_copier_callback, :pointer], :void
 
     # reader

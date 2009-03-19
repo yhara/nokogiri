@@ -17,15 +17,15 @@ module Nokogiri
 
       def self.read_io(io, url, encoding, options)
         wrap_with_error_handling do
-          read_proc = lambda do |ctx, buffer, len|
+          reader = lambda do |ctx, buffer, len|
             string = io.read(len)
             return 0 if string.nil?
             LibXML.memcpy(buffer, string, string.length)
             string.length
           end
-          close_proc = lambda { |ctx| return 0 }
+          closer = lambda { |ctx| 0 } # coffee is for closers.
           
-          LibXML.xmlReadIO(read_proc, close_proc, nil, url, encoding, options)
+          LibXML.xmlReadIO(reader, closer, nil, url, encoding, options)
         end
       end
 

@@ -270,14 +270,9 @@ module Nokogiri
       end
 
       def dup(deep = 1)
-        dup_ptr = LibXML.xmlCopyNode(cstruct, deep)
+        dup_ptr = LibXML.xmlDocCopyNode(cstruct, cstruct.document, deep)
         return nil if dup_ptr.null?
-
-        dup_cstruct = LibXML::XmlNode.new(dup_ptr)
-        dup_cstruct[:doc] = cstruct[:doc]
-        LibXML.xmlAddChild(dup_cstruct[:parent], dup_cstruct)
-
-        Node.wrap(dup_cstruct)
+        Node.wrap(dup_ptr)
       end
 
       def add_namespace(prefix, href)
@@ -296,7 +291,7 @@ module Nokogiri
           io.write buffer
           len
         end
-        closer = lambda { 0 }
+        closer = lambda { |ctx| 0 } # coffee is for closers.
         savectx = LibXML.xmlSaveToIO(writer, closer, nil, encoding, options)
         LibXML.xmlSaveTree(savectx, cstruct)
         LibXML.xmlSaveClose(savectx)
