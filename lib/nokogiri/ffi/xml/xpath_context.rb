@@ -15,10 +15,18 @@ module Nokogiri
         ctx
       end
 
-      def evaluate(search_path, xpath_handler = nil)
-        error_list = []
+      def evaluate(search_path, xpath_handler=nil)
+        if xpath_handler
+          raise "xpath evaluation with custom handlers not implemented"
+#           lookup = lambda do |ctx, name, uri|
+#             puts "MIKE: searching for '#{name}'"
+#             nil
+#           end
+#           LibXML.xmlXPathRegisterFuncLookup(cstruct, lookup, nil);
+        end
+
         LibXML.xmlResetLastError()
-        LibXML.xmlSetStructuredErrorFunc(nil, SyntaxError.error_array_pusher(error_list))
+        LibXML.xmlSetStructuredErrorFunc(nil, SyntaxError.error_array_pusher(nil))
 
         ptr = LibXML.xmlXPathEvalExpression(search_path, cstruct)
 
@@ -26,11 +34,7 @@ module Nokogiri
 
         if ptr.null?
           error = LibXML.xmlGetLastError()
-          if error
-            raise SyntaxError.wrap(error)
-          else
-            raise RuntimeError, "Could not parse document"
-          end
+          raise SyntaxError.wrap(error)
         end
 
         xpath = XML::XPath.new

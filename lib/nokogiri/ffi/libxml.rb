@@ -11,6 +11,8 @@ module Nokogiri
     ffi_callback :io_read_callback, [:pointer, :pointer, :int], :int
     ffi_callback :io_close_callback, [:pointer], :int
     ffi_callback :hash_copier_callback, [:pointer, :pointer, :string], :void
+    ffi_callback :xpath_lookup_callback, [:pointer, :string, :pointer], :pointer
+    ffi_callback :xpath_callback, [:pointer, :int], :void
 
     # html documents
     ffi_attach 'libxml2', :htmlReadMemory, [:string, :int, :string, :string, :int], :pointer
@@ -82,6 +84,7 @@ module Nokogiri
     ffi_attach 'libxml2', :xmlXPathNodeSetAdd, [:pointer, :pointer], :void
     ffi_attach 'libxml2', :xmlXPathNodeSetCreate, [:pointer], :pointer
     ffi_attach 'libxml2', :xmlXPathFreeNodeSetList, [:pointer], :void
+#    ffi_attach 'libxml2', :xmlXPathRegisterFuncLookup, [:pointer, :xpath_lookup_callback, :pointer], :xpath_callback
 
     # xmlFree is a C preprocessor macro, not an actual address.
     ffi_attach nil, :calloc, [:int, :int], :pointer

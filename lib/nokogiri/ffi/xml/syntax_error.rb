@@ -54,7 +54,7 @@ module Nokogiri
       class << self
         def error_array_pusher(array)
           Proc.new do |_ignored_, error|
-            array << wrap(error)
+            array << wrap(error) if array
           end
         end
 
