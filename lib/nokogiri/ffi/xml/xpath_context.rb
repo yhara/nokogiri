@@ -16,13 +16,14 @@ module Nokogiri
       end
 
       def evaluate(search_path, xpath_handler=nil)
+        lookup = nil # to keep lambda in scope long enough to avoid a possible GC tragedy
+
         if xpath_handler
-          raise "xpath evaluation with custom handlers not implemented"
-#           lookup = lambda do |ctx, name, uri|
-#             puts "MIKE: searching for '#{name}'"
-#             nil
-#           end
-#           LibXML.xmlXPathRegisterFuncLookup(cstruct, lookup, nil);
+          lookup = lambda do |ctx, name, uri|
+            return nil unless xpath_handler.respond_to?(name)
+            ruby_funcall name, xpath_handler
+          end
+          LibXML.xmlXPathRegisterFuncLookup(cstruct, lookup, nil);
         end
 
         LibXML.xmlResetLastError()
@@ -45,6 +46,41 @@ module Nokogiri
 
       def register_ns(prefix, uri)
         LibXML.xmlXPathRegisterNs(cstruct, prefix, uri)
+      end
+
+      private
+
+      #
+      #  returns a lambda that will call the handler function with marshalled parameters
+      #
+      def ruby_funcall(name, xpath_handler)
+        lambda do |ctx, nargs|
+          parser_context = LibXML::XmlXpathParserContext.new(ctx)
+          context = parser_context.context
+          doc = context.doc.ruby_doc
+
+          params = []
+
+          nargs.times do |j|
+            obj = LibXML::XmlXpathObject.new(LibXML.valuePop(ctx))
+            case obj[:type]
+            when LibXML::XmlXpathObject::XPATH_STRING
+              params.unshift obj[:stringval]
+            when LibXML::XmlXpathObject::XPATH_BOOLEAN
+              params.unshift obj[:boolval] == 1
+            when LibXML::XmlXpathObject::XPATH_NUMBER
+              params.unshift obj[:floatval]
+            when LibXML::XmlXpathObject::XPATH_NODESET
+              params.unshift LibXML::XmlNodeSet.new(obj[:nodesetval])
+            else
+              params.unshift LibXML.xmlXPathCastToString(obj)
+            end
+            LibXML.xmlXPathFreeNodeSetList(obj)
+          end
+
+          result = xpath_handler.send(name, *params)
+
+        end
       end
 
     end
