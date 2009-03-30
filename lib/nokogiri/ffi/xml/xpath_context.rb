@@ -26,7 +26,7 @@ module Nokogiri
         end
 
         LibXML.xmlResetLastError()
-        LibXML.xmlSetStructuredErrorFunc(nil, SyntaxError.error_array_pusher(nil))
+        LibXML.xmlSetStructuredErrorFunc(nil, XPath::SyntaxError.error_array_pusher(nil))
 
         ptr = LibXML.xmlXPathEvalExpression(search_path, cstruct)
 
@@ -34,7 +34,7 @@ module Nokogiri
 
         if ptr.null?
           error = LibXML.xmlGetLastError()
-          raise SyntaxError.wrap(error)
+          raise XPath::SyntaxError.wrap(error)
         end
 
         xpath = XML::XPath.new
