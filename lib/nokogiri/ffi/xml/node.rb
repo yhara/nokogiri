@@ -100,6 +100,26 @@ module Nokogiri
         val.null? ? nil : XML::Node.wrap(val)
       end
 
+      def children
+        return NodeSet.new(nil) if cstruct[:children].null?
+        child = Node.wrap(cstruct[:children])
+
+        set = NodeSet.new child.document
+        set_ptr = LibXML.xmlXPathNodeSetCreate(child.cstruct)
+        
+        set.cstruct = LibXML::XmlNodeSet.new(set_ptr)
+        return set unless child
+
+        child = child.cstruct[:next]
+        while ! child.null?
+          child = Node.wrap(child)
+          LibXML.xmlXPathNodeSetAdd(set.cstruct, child.cstruct)
+          child = child.cstruct[:next]
+        end
+
+        return set
+      end
+
       def encode_special_chars(string)
         char_ptr = LibXML.xmlEncodeSpecialChars(self[:doc], string)
         encoded = char_ptr.read_string
@@ -270,6 +290,10 @@ module Nokogiri
         LibXML.xmlSaveTree(savectx, cstruct)
         LibXML.xmlSaveClose(savectx)
         io
+      end
+
+      def compare(other)
+        LibXML.xmlXPathCmpNodes(other.cstruct, self.cstruct)
       end
 
       private

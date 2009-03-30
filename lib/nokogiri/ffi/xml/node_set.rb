@@ -4,10 +4,11 @@ module Nokogiri
 
       attr_accessor :cstruct
 
-      def self.new document
+      def self.new document, list = []
         set = allocate
         set.document = document
         set.cstruct = LibXML::XmlNodeSet.new(LibXML.xmlXPathNodeSetCreate(nil))
+        list.each { |x| set << x }
         yield set if block_given?
         set
       end

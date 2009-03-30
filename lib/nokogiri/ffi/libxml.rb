@@ -74,6 +74,7 @@ module Nokogiri
     attach_function :xmlSaveToIO, [:io_write_callback, :io_close_callback, :pointer, :string, :int], :pointer
     attach_function :xmlSaveTree, [:pointer, :pointer], :int
     attach_function :xmlSaveClose, [:pointer], :int
+    attach_function :xmlXPathCmpNodes, [:pointer, :pointer], :int
 
     # buffer
     attach_function :xmlBufferCreate, [], :pointer
@@ -109,7 +110,7 @@ module Nokogiri
     attach_function :xmlGetLastError, [], :pointer
 
     # IO
-    attach_function nil, :memcpy, [:pointer, :pointer, :int], :pointer
+    attach_function :memcpy, [:pointer, :pointer, :int], :pointer
     attach_function :xmlReadIO, [:io_read_callback, :io_close_callback, :pointer, :string, :string, :int], :pointer
     attach_function :xmlCreateIOParserCtxt, [:pointer, :pointer, :io_read_callback, :io_close_callback, :pointer, :int], :pointer
 
