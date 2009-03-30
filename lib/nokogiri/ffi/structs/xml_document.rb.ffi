@@ -41,6 +41,9 @@ module Nokogiri
       end
     end
 
+    #
+    #  use at the point of creation, so we can be sure the document will be GCed properly
+    #
     class XmlDocument < FFI::ManagedStruct
       include XmlDocumentMixin
 
@@ -74,6 +77,9 @@ module Nokogiri
 
     end
 
+    #
+    #  use when we don't want to cause the doc to be GCed
+    #
     class XmlDocumentCast < FFI::Struct
       include XmlDocumentMixin
     end

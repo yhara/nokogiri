@@ -2,26 +2,25 @@
 
 module Nokogiri
   module LibXML
-    class XmlNodeSet < FFI::ManagedStruct
-      @@@
-      struct do |s|
-        s.name "struct _xmlNodeSet"
-        s.include "libxml/xpath.h"
-        s.field :nodeNr, :int
-        s.field :nodeMax, :int
-        s.field :nodeTab, :pointer
+
+    module XmlNodeSetMixin
+      def self.included(base)
+        base.class_eval do
+          @@@
+          struct do |s|
+            s.name "struct _xmlNodeSet"
+            s.include "libxml/xpath.h"
+            s.field :nodeNr, :int
+            s.field :nodeMax, :int
+            s.field :nodeTab, :pointer
+          end
+          @@@
+        end
       end
-      @@@
 
       def document
         p = self[:doc]
         p.null? ? nil : LibXML::XmlDocumentCast.new(p)
-      end
-
-      def self.release ptr
-        ns = XmlNodeSetCast.new(ptr)
-        LibXML.xmlFree ns[:nodeTab] if ns[:nodeTab]
-        LibXML.xmlFree ptr
       end
 
       def nodeTab
@@ -29,21 +28,25 @@ module Nokogiri
       end
 
       def nodeTab=(array)
+        # TODO: do we need to check nodeMax and allocate more memory? probably.
         self[:nodeTab].write_array_of_pointer(array)
       end
-
     end
 
-    class XmlNodeSetCast < FFI::Struct
-      @@@
-      struct do |s|
-        s.name "struct _xmlNodeSet"
-        s.include "libxml/xpath.h"
-        s.field :nodeNr, :int
-        s.field :nodeMax, :int
-        s.field :nodeTab, :pointer
+
+    class XmlNodeSet < FFI::ManagedStruct
+      include XmlNodeSetMixin
+
+      def self.release ptr
+        ns = XmlNodeSetCast.new(ptr)
+        LibXML.xmlFree ns[:nodeTab] if ns[:nodeTab]
+        LibXML.xmlFree ptr
       end
-      @@@
+    end
+
+
+    class XmlNodeSetCast < FFI::Struct
+      include XmlNodeSetMixin
     end
 
   end
