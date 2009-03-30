@@ -26,7 +26,7 @@ module Nokogiri
         params.each_with_index do |param, j|
           param_arr[j].put_pointer(0, FFI::MemoryPointer.from_string(param))
         end
-        param_arr[params.length].put_pointer(0,0)
+        param_arr[params.length].put_pointer(0,nil)
 
         ptr = LibXML.xsltApplyStylesheet(cstruct, document.cstruct, param_arr)
         XML::Document.wrap(ptr)

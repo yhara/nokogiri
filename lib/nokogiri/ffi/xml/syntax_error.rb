@@ -62,7 +62,7 @@ module Nokogiri
           error_struct = LibXML::XmlSyntaxError.allocate
           LibXML.xmlCopyError(error_ptr, error_struct)
           error_cstruct = LibXML::XmlSyntaxError.new(error_struct)
-          error = Nokogiri::XML::SyntaxError.new
+          error = self.new # will generate XML::XPath::SyntaxError or XML::SyntaxError
           error.cstruct = error_cstruct
           error
         end

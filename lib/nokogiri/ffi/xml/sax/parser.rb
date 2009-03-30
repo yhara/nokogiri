@@ -46,7 +46,7 @@ module Nokogiri
                        # eww.
                        attrs = []
                        j = 0
-                       while !attrs_ptr.null? and !(value = attrs_ptr.get_pointer(j * FFI::Pointer.size)).null?
+                       while !attrs_ptr.null? and !(value = attrs_ptr.get_pointer(j * FFI.type_size(:pointer))).null?
                          attrs << value.read_string
                          j += 1
                        end

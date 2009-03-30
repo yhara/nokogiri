@@ -108,7 +108,7 @@ module Nokogiri
     ffi_attach 'libxml2', :xmlHashScan, [:pointer, :hash_copier_callback, :pointer], :void
 
     # reader
-    ffi_attach 'libxml2', :xmlReaderForMemory, [:string, :int, :string, :string, :int], :pointer
+    ffi_attach 'libxml2', :xmlReaderForMemory, [:pointer, :int, :string, :string, :int], :pointer
     ffi_attach 'libxml2', :xmlTextReaderGetAttribute, [:pointer, :string], :pointer
     ffi_attach 'libxml2', :xmlTextReaderGetAttributeNo, [:pointer, :int], :pointer
     ffi_attach 'libxml2', :xmlTextReaderLookupNamespace, [:pointer, :pointer], :pointer
