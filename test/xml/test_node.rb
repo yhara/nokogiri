@@ -10,6 +10,79 @@ module Nokogiri
         @xml = Nokogiri::XML.parse(File.read(XML_FILE), XML_FILE)
       end
 
+      def test_description
+        assert_nil @xml.at('employee').description
+      end
+
+      def test_spaceship
+        nodes = @xml.xpath('//employee')
+        assert_equal(-1, (nodes.first <=> nodes.last))
+        list = [nodes.first, nodes.last].sort
+        assert_equal nodes.first, list.first
+        assert_equal nodes.last, list.last
+      end
+
+      def test_incorrect_spaceship
+        nodes = @xml.xpath('//employee')
+        assert_nil(nodes.first <=> 'asdf')
+      end
+
+      def test_document_compare
+        nodes = @xml.xpath('//employee')
+        assert_equal(-1, (nodes.first <=> @xml))
+      end
+
+      def test_different_document_compare
+        nodes = @xml.xpath('//employee')
+        doc = Nokogiri::XML('<a><b/></a>')
+        b = doc.at('b')
+        assert_nil(nodes.first <=> b)
+      end
+
+      def test_duplicate_node_removes_namespace
+        fruits = Nokogiri::XML(<<-eoxml)
+        <Fruit xmlns='www.fruits.org'>
+        <Apple></Apple>
+        </Fruit>
+        eoxml
+        apple = fruits.root.xpath('fruit:Apple', {'fruit'=>'www.fruits.org'})[0]
+        new_apple = apple.dup
+        fruits.root << new_apple
+        assert_equal 2, fruits.xpath('//xmlns:Apple').length
+        assert_equal 1, fruits.to_xml.scan('www.fruits.org').length
+      end
+      
+      def test_node_added_to_root_should_get_namespace
+        fruits = Nokogiri::XML(<<-eoxml)
+          <Fruit xmlns='http://www.fruits.org'>
+          </Fruit>
+        eoxml
+        apple = fruits.fragment('<Apple/>')
+        fruits << apple
+        assert_equal 1, fruits.xpath('//xmlns:Apple').length
+      end
+
+      def test_add_child_path_following_sequential_text_nodes
+        xml = Nokogiri::XML('<root>text</root>')
+        xml.root.add_child(Nokogiri::XML::Text.new('text', xml))
+        item = xml.root.add_child(Nokogiri::XML::Element.new('item', xml))
+        assert_equal '/root/item', item.path
+      end
+
+      def test_children
+        doc = Nokogiri::XML(<<-eoxml)
+          <root>#{'<a/>' * 9 }</root>
+        eoxml
+        assert_equal 9, doc.root.children.length
+        assert_equal 9, doc.root.children.to_a.length
+
+        doc = Nokogiri::XML(<<-eoxml)
+          <root>#{'<a/>' * 15 }</root>
+        eoxml
+        assert_equal 15, doc.root.children.length
+        assert_equal 15, doc.root.children.to_a.length
+      end
+
       def test_add_namespace
         node = @xml.at('address')
         node.add_namespace('foo', 'http://tenderlovemaking.com')
@@ -190,6 +263,12 @@ module Nokogiri
         text_node = Nokogiri::XML::Text.new('hello', xml)
         xml.root << text_node
         assert_match 'hello', xml.to_s
+      end
+
+      def test_set_content_with_symbol
+        node = @xml.at('//name')
+        node.content = :foo
+        assert_equal 'foo', node.content
       end
 
       def test_add_previous_sibling

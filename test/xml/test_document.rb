@@ -10,6 +10,14 @@ module Nokogiri
         @xml = Nokogiri::XML.parse(File.read(XML_FILE), XML_FILE)
       end
 
+      def test_encoding=
+        @xml.encoding = 'UTF-8'
+        assert_match 'UTF-8', @xml.to_xml
+
+        @xml.encoding = 'EUC-JP'
+        assert_match 'EUC-JP', @xml.to_xml
+      end
+
       def test_namespace_should_not_exist
         assert_raises(NoMethodError) {
           @xml.namespace
@@ -23,7 +31,7 @@ module Nokogiri
       end
 
       def test_ancestors
-        assert_equal [], @xml.ancestors
+        assert_equal 0, @xml.ancestors.length
       end
 
       def test_root_node_parent_is_document

@@ -48,8 +48,18 @@ static VALUE reparent_node_with(VALUE node_obj, VALUE other_obj, node_other_func
   }
 
   // Make sure that our reparented node has the correct namespaces
-  if(reparented->doc != reparented->parent)
+  if(reparented->doc != (xmlDocPtr)reparented->parent)
     reparented->ns = reparented->parent->ns;
+
+  // Search our parents for an existing definition
+  if(reparented->nsDef) {
+    xmlNsPtr ns = xmlSearchNsByHref(
+        reparented->doc,
+        reparented,
+        reparented->nsDef->href
+    );
+    if(ns) reparented->nsDef = NULL;
+  }
 
   reparented_obj = Nokogiri_wrap_xml_node(reparented);
 
@@ -214,6 +224,30 @@ static VALUE replace(VALUE self, VALUE _new_node)
   return self ;
 }
 
+/*
+ * call-seq:
+ *  children
+ *
+ * Get the list of children for this node as a NodeSet
+ */
+static VALUE children(VALUE self)
+{
+  xmlNodePtr node;
+  Data_Get_Struct(self, xmlNode, node);
+
+  xmlNodePtr child = node->children;
+  xmlNodeSetPtr set = xmlXPathNodeSetCreate(child);
+
+  if(!child) return Nokogiri_wrap_xml_node_set(set);
+
+  child = child->next;
+  while(NULL != child) {
+    xmlXPathNodeSetAdd(set, child);
+    child = child->next;
+  }
+
+  return Nokogiri_wrap_xml_node_set(set);
+}
 
 /*
  * call-seq:
@@ -621,6 +655,21 @@ static VALUE dump_html(VALUE self)
   return html ;
 }
 
+/*
+ * call-seq:
+ *  compare(other)
+ *
+ * Compare this Node to +other+ with respect to their Document
+ */
+static VALUE compare(VALUE self, VALUE _other)
+{
+  xmlNodePtr node, other;
+  Data_Get_Struct(self, xmlNode, node);
+  Data_Get_Struct(_other, xmlNode, other);
+
+  return INT2NUM(xmlXPathCmpNodes(other, node));
+}
+
 VALUE Nokogiri_wrap_xml_node(xmlNodePtr node)
 {
   assert(node);
@@ -770,6 +819,7 @@ void init_xml_node()
   rb_define_method(klass, "add_child", add_child, 1);
   rb_define_method(klass, "parent", get_parent, 0);
   rb_define_method(klass, "child", child, 0);
+  rb_define_method(klass, "children", children, 0);
   rb_define_method(klass, "next_sibling", next_sibling, 0);
   rb_define_method(klass, "previous_sibling", previous_sibling, 0);
   rb_define_method(klass, "node_type", node_type, 0);
@@ -796,4 +846,5 @@ void init_xml_node()
   rb_define_private_method(klass, "replace_with_node", replace, 1);
   rb_define_private_method(klass, "native_content=", set_content, 1);
   rb_define_private_method(klass, "get", get, 1);
+  rb_define_private_method(klass, "compare", compare, 1);
 }

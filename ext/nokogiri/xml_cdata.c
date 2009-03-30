@@ -12,9 +12,9 @@ static VALUE new(VALUE klass, VALUE doc, VALUE content)
   Data_Get_Struct(doc, xmlDoc, xml_doc);
 
   xmlNodePtr node = xmlNewCDataBlock(
-      xml_doc,
-      (const xmlChar *)StringValuePtr(content),
-      RSTRING_LEN(content)
+      xml_doc->doc,
+      Qnil == content ? NULL : (const xmlChar *)StringValuePtr(content),
+      Qnil == content ? 0 : RSTRING_LEN(content)
   );
 
   VALUE rb_node = Nokogiri_wrap_xml_node(node);

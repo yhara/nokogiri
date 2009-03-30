@@ -66,22 +66,6 @@ module Nokogiri
       end
 
       ###
-      # Get the list of children for this node as a NodeSet
-      def children
-        list = NodeSet.new(document)
-        document.decorate(list)
-
-        first = self.child
-        return list unless first # Empty list
-
-        list << first
-        while first = first.next
-          list << first
-        end
-        list
-      end
-
-      ###
       # Search this node for +paths+.  +paths+ can be XPath or CSS, and an
       # optional hash of namespaces may be appended.
       # See Node#xpath and Node#css.
@@ -248,6 +232,12 @@ module Nokogiri
       end
       alias :delete :remove_attribute
 
+      ###
+      # Returns true if this Node matches +selector+
+      def matches? selector
+        document.search(selector).include?(self)
+      end
+
       ####
       # Create nodes from +data+ and insert them before this node
       # (as a sibling).
@@ -305,7 +295,7 @@ module Nokogiri
       ####
       # Set the content to +string+.
       def content= string
-        self.native_content = encode_special_chars(string)
+        self.native_content = encode_special_chars(string.to_s)
       end
 
       ###
@@ -338,6 +328,14 @@ module Nokogiri
       # Returns true if this is a Text node
       def text?
         type == TEXT_NODE
+      end
+
+      ###
+      # Fetch the Nokogiri::HTML::ElementDescription for this node.  Returns
+      # nil on XML documents and on unknown tags.
+      def description
+        return nil if document.xml?
+        Nokogiri::HTML::ElementDescription[name]
       end
 
       def read_only?
@@ -375,16 +373,23 @@ module Nokogiri
       end
 
       ###
-      # Get a list of ancestor Node for this Node
-      def ancestors
-        return [] unless respond_to?(:parent)
+      # Get a list of ancestor Node for this Node.  If +selector+ is given,
+      # the ancestors must match +selector+
+      def ancestors selector = nil
+        return NodeSet.new(document) unless respond_to?(:parent)
 
         parents = [parent]
 
         while parents.last.respond_to?(:parent)
-          parents << parents.last.parent
+          break unless ctx_parent = parents.last.parent
+          parents << ctx_parent
         end
-        parents
+
+        return NodeSet.new(document, parents) unless selector
+
+        NodeSet.new(document, parents.find_all { |parent|
+          parent.matches?(selector)
+        })
       end
 
       ####
@@ -511,6 +516,15 @@ Node.replace requires a Node argument, and cannot accept a Document.
       def self.new_from_str string
         $stderr.puts("This method is deprecated and will be removed in 1.3.0 or by March 1, 2009. Instead, use Nokogiri::XML::Node#fragment")
         Nokogiri::HTML.fragment(string).first
+      end
+
+      ###
+      # Compare two Node objects with respect to their Document.  Nodes from
+      # different documents cannot be compared.
+      def <=> other
+        return nil unless other.is_a?(Nokogiri::XML::Node)
+        return nil unless document == other.document
+        compare other
       end
     end
   end

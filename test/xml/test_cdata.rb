@@ -14,6 +14,19 @@ module Nokogiri
         assert cdata.cdata?
         assert_equal '#cdata-section', cdata.name
       end
+
+      def test_new
+        node = CDATA.new(@xml, "foo")
+        assert_equal "foo", node.content
+
+        node = CDATA.new(@xml.root, "foo")
+        assert_equal "foo", node.content
+      end
+
+      def test_new_with_nil
+        node = CDATA.new(@xml, nil)
+        assert_equal nil, node.content
+      end
     end
   end
 end

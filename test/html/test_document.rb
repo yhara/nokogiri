@@ -8,6 +8,10 @@ module Nokogiri
         @html = Nokogiri::HTML.parse(File.read(HTML_FILE))
       end
 
+      def test_emtpy_string_returns_empty_doc
+        doc = Nokogiri::HTML('')
+      end
+
       def test_swap_should_not_exist
         assert_raises(NoMethodError) {
           @html.swap
@@ -18,6 +22,15 @@ module Nokogiri
         assert_raises(NoMethodError) {
           @html.namespace
         }
+      end
+
+      def test_meta_encoding
+        assert_equal 'UTF-8', @html.meta_encoding
+      end
+
+      def test_meta_encoding=
+        @html.meta_encoding = 'EUC-JP'
+        assert_equal 'EUC-JP', @html.meta_encoding
       end
 
       def test_root_node_parent_is_document

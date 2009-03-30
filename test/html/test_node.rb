@@ -11,10 +11,32 @@ module Nokogiri
         <html>
           <head></head>
           <body>
-            <div>first</div>
+            <div class='baz'><a href="foo" class="bar">first</a></div>
           </body>
         </html>
         eohtml
+      end
+
+      def test_description
+        assert desc = @html.at('a.bar').description
+        assert_equal 'a', desc.name
+      end
+
+      def test_ancestors_with_selector
+        assert node = @html.at('a.bar').child
+        assert list = node.ancestors('.baz')
+        assert_equal 1, list.length
+        assert_equal 'div', list.first.name
+      end
+
+      def test_css_matches?
+        assert node = @html.at('a.bar')
+        assert node.matches?('a.bar')
+      end
+
+      def test_xpath_matches?
+        assert node = @html.at('//a')
+        assert node.matches?('//a')
       end
 
       def test_swap
@@ -22,6 +44,12 @@ module Nokogiri
         a_tag = @html.css('a').first
         assert_equal 'body', a_tag.parent.name
         assert_equal 0, @html.css('div').length
+      end
+
+      def test_swap_with_regex_characters
+        @html.at('div').swap('<a href="foo">ba)r</a>')
+        a_tag = @html.css('a').first
+        assert_equal 'ba)r', a_tag.text
       end
 
       def test_attribute_decodes_entities

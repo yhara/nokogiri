@@ -1,6 +1,7 @@
 require 'nokogiri/html/entity_lookup'
 require 'nokogiri/html/document'
 require 'nokogiri/html/sax/parser'
+require 'nokogiri/html/element_description'
 
 module Nokogiri
   class << self
@@ -38,6 +39,7 @@ module Nokogiri
           return Document.read_io(string_or_io, url, encoding, options)
         end
 
+        return Document.new if(string_or_io.length == 0)
         Document.read_memory(string_or_io, url, encoding, options)
       end
 

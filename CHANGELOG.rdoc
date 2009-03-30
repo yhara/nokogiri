@@ -1,8 +1,39 @@
 === HEAD
 
+* New Features
+
+  * Builder changes scope based on block arity
+  * Builder supports methods ending in underscore similar to tagz
+  * Nokogiri::XML::Node#<=> compares nodes based on Document position
+  * Nokogiri::XML::Node#matches? returns true if Node can be found with
+    given selector.
+  * Nokogiri::XML::Node#ancestors now returns an Nokogiri::XML::NodeSet
+  * Nokogiri::XML::Node#ancestors will match parents against optional selector
+  * Nokogiri::HTML::Document#meta_encoding for getting the meta encoding
+  * Nokogiri::HTML::Document#meta_encoding= for setting the meta encoding
+  * Nokogiri::XML::Document#encoding= to set the document encoding
+  * Nokogiri::XML::Schema for validating documents against XSD schema
+  * Nokogiri::XML::RelaxNG for validating documents against RelaxNG schema
+  * Nokogiri::HTML::ElementDescription for fetching HTML element descriptions
+  * Nokogiri::XML::Node#description to fetch the node description
+
+* Bugfixes
+
+  * Fixed a problem with nil passed to CDATA constructor
+  * Fragment method deals with regular expression characters
+    (Thanks Joel!) LH #73
+  * Fixing builder scope issues LH #61, LH #74, LH #70
+
+=== 1.2.3 / 2009-03-22
+
 * Bugfixes
 
   * Fixing bug where a node is passed in to Node#new
+  * Namespace should be assigned on DocumentFragment creation. LH #66
+  * Nokogiri::XML::NodeSet#dup works GH #10
+  * Nokogiri::HTML returns an empty Document when given a blank string GH#11
+  * Adding a child will remove duplicate namespace declarations LH #67
+  * Builder methods take a hash as a second argument
 
 === 1.2.2 / 2009-03-14
 

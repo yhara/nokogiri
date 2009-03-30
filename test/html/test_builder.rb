@@ -3,8 +3,20 @@ require File.expand_path(File.join(File.dirname(__FILE__), '..', "helper"))
 module Nokogiri
   module HTML
     class TestBuilder < Nokogiri::TestCase
+      def test_builder_with_explicit_tags
+        html_doc = Nokogiri::HTML::Builder.new {
+          div.slide(:class => 'another_class') {
+            node = Nokogiri::XML::Node.new("id", doc)
+            node.content = "hello"
+            insert(node)
+          }
+        }.doc
+        assert_equal 1, html_doc.css('div.slide > id').length
+        assert_equal 'hello', html_doc.at('div.slide > id').content
+      end
+
       def test_hash_as_attributes_for_attribute_method
-        html = Nokogiri::HTML::Builder.new {
+        html = Nokogiri::HTML::Builder.new { ||
           div.slide(:class => 'another_class') {
             span 'Slide 1'
           }
@@ -20,6 +32,17 @@ module Nokogiri
         end
         assert_equal('<div id="awesome"><h1>america</h1></div>',
                      builder.doc.root.to_html.gsub(/\n/, '').gsub(/>\s*</, '><'))
+      end
+
+      def test_href_with_attributes
+        uri = 'http://tenderlovemaking.com/'
+        built = Nokogiri::XML::Builder.new {
+          div {
+            a('King Khan & The Shrines', :href => uri)
+          }
+        }
+        assert_equal 'http://tenderlovemaking.com/',
+          built.doc.at('a')[:href]
       end
 
       def test_tag_nesting
@@ -104,6 +127,29 @@ module Nokogiri
 
         builder = Nokogiri::HTML::Builder.new { text foo }
         assert builder.to_html.include?("foo!")
+      end
+
+      def test_builder_with_param
+        doc = Nokogiri::HTML::Builder.new { |html|
+          html.body {
+            html.p "hello world"
+          }
+        }.doc
+
+        assert node = doc.xpath('//body/p').first
+        assert_equal 'hello world', node.content
+      end
+
+      def test_builder_with_id
+        text = "hello world"
+        doc = Nokogiri::HTML::Builder.new { |html|
+          html.body {
+            html.id_ text
+          }
+        }.doc
+
+        assert node = doc.xpath('//body/id').first
+        assert_equal text, node.content
       end
     end
   end
