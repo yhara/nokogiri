@@ -2,7 +2,7 @@
 
 module Nokogiri
   module LibXML
-    class XmlNodeSet < CrossFFI::Struct
+    class XmlNodeSet < FFI::ManagedStruct
       @@@
       struct do |s|
         s.name "struct _xmlNodeSet"

@@ -2,7 +2,7 @@
 
 module Nokogiri
   module LibXML
-    class XsltStylesheet < CrossFFI::Struct
+    class XsltStylesheet < FFI::ManagedStruct
       
       layout :dummy, :int, 0 # to avoid @layout warnings
 

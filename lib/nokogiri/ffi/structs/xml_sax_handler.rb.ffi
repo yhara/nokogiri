@@ -2,7 +2,7 @@
 
 module Nokogiri
   module LibXML
-    class XmlSaxHandler < CrossFFI::Struct
+    class XmlSaxHandler < FFI::ManagedStruct
 
       layout(:internalSubset,           :pointer,
              :isStandalone,             :pointer,

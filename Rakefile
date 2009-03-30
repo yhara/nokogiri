@@ -2,7 +2,6 @@
 
 require 'rubygems'
 require 'rake'
-require 'lib/cross-ffi/rake'
 require 'hoe'
 
 kind = Config::CONFIG['DLEXT']
@@ -252,11 +251,6 @@ Rake::Task['test:valgrind_mem'].prerequisites << :build
 Rake::Task['test:valgrind_mem0'].prerequisites << :build
 Rake::Task['test:coverage'].prerequisites << :build
 
-desc "build ffi files"
-task :ffi do
-  ffi_generate("lib/nokogiri", {:cflags => "-I/usr/include/libxml2"})
-end
-
 namespace :install do
   desc "Install frex and racc for development"
   task :deps => %w(frex racc)
@@ -276,5 +270,7 @@ unless windows
   Rake::Task[:check_manifest].prerequisites << GENERATED_PARSER
   Rake::Task[:check_manifest].prerequisites << GENERATED_TOKENIZER
 end
+
+require 'tasks/ffi'
 
 # vim: syntax=Ruby

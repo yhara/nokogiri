@@ -5,7 +5,7 @@ module Nokogiri
     #
     #  this class only exists to create a xmlFree() finalizer
     #
-    class XmlAlloc < CrossFFI::Struct
+    class XmlAlloc < FFI::ManagedStruct
 
       layout :dummy, :int, 0 # to avoid @layout warnings
 

@@ -2,7 +2,7 @@
 
 module Nokogiri
   module LibXML
-    class XmlXpath < CrossFFI::Struct
+    class XmlXpath < FFI::ManagedStruct
       
       @@@
       struct do |s|

@@ -2,7 +2,7 @@
 
 module Nokogiri
   module LibXML
-    class XmlTextReader < CrossFFI::Struct
+    class XmlTextReader < FFI::ManagedStruct
       @@@
       struct do |s|
         s.name "struct _xmlNotation"

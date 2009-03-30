@@ -2,7 +2,7 @@
 
 module Nokogiri
   module LibXML
-    class XmlXpathContext < CrossFFI::Struct
+    class XmlXpathContext < FFI::ManagedStruct
       @@@
       struct do |s|
         s.name "struct _xmlXPathContext"

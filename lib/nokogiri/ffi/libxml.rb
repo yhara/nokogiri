@@ -3,157 +3,165 @@ require 'cross-ffi'
 
 module Nokogiri
   module LibXML
-    extend CrossFFI::ModuleMixin
+
+    def self.expand_library_path(library)
+      return File.expand_path(library) if library =~ %r{^[^/].*/}
+      library ? "/usr/lib/#{library}.so" : nil # TODO: how to set jruby library load paths?
+    end
+
+    extend FFI::Library
+    ffi_lib expand_library_path('libxml2')
+    ffi_lib expand_library_path('libxslt')
+    ffi_lib expand_library_path('libexslt')
 
     # useful callback signatures
-    ffi_callback :syntax_error_handler, [:pointer, :pointer], :void
-    ffi_callback :io_write_callback, [:pointer, :string, :int], :int
-    ffi_callback :io_read_callback, [:pointer, :pointer, :int], :int
-    ffi_callback :io_close_callback, [:pointer], :int
-    ffi_callback :hash_copier_callback, [:pointer, :pointer, :string], :void
-    ffi_callback :xpath_lookup_callback, [:pointer, :string, :pointer], :pointer
-    ffi_callback :xpath_callback, [:pointer, :int], :void
+    callback :syntax_error_handler, [:pointer, :pointer], :void
+    callback :io_write_callback, [:pointer, :string, :int], :int
+    callback :io_read_callback, [:pointer, :pointer, :int], :int
+    callback :io_close_callback, [:pointer], :int
+    callback :hash_copier_callback, [:pointer, :pointer, :string], :void
+    callback :xpath_lookup_callback, [:pointer, :string, :pointer], :pointer
+    callback :xpath_callback, [:pointer, :int], :void
 
     # html documents
-    ffi_attach 'libxml2', :htmlReadMemory, [:string, :int, :string, :string, :int], :pointer
-    ffi_attach 'libxml2', :htmlReadIO, [:io_read_callback, :io_close_callback, :pointer, :string, :string, :int], :pointer
-    ffi_attach 'libxml2', :htmlDocDumpMemory, [:pointer, :pointer, :pointer], :void
+    attach_function :htmlReadMemory, [:string, :int, :string, :string, :int], :pointer
+    attach_function :htmlReadIO, [:io_read_callback, :io_close_callback, :pointer, :string, :string, :int], :pointer
+    attach_function :htmlDocDumpMemory, [:pointer, :pointer, :pointer], :void
 
     # xml documents
-    ffi_attach 'libxml2', :xmlNewDoc, [:string], :pointer
-    ffi_attach 'libxml2', :xmlNewDocFragment, [:pointer], :pointer
-    ffi_attach 'libxml2', :xmlReadMemory, [:string, :int, :string, :string, :int], :pointer
-    ffi_attach 'libxml2', :xmlDocDumpMemory, [:pointer, :pointer, :pointer], :void
-    ffi_attach 'libxml2', :xmlDocGetRootElement, [:pointer], :pointer
-    ffi_attach 'libxml2', :xmlDocSetRootElement, [:pointer, :pointer], :pointer
-    ffi_attach 'libxml2', :xmlSubstituteEntitiesDefault, [:int], :int
-    ffi_attach 'libxml2', :xmlCopyDoc, [:pointer, :int], :pointer
-    ffi_attach 'libxml2', :xmlFreeDoc, [:pointer], :void
-    ffi_attach 'libxml2', :xmlSetTreeDoc, [:pointer, :pointer], :void
+    attach_function :xmlNewDoc, [:string], :pointer
+    attach_function :xmlNewDocFragment, [:pointer], :pointer
+    attach_function :xmlReadMemory, [:string, :int, :string, :string, :int], :pointer
+    attach_function :xmlDocDumpMemory, [:pointer, :pointer, :pointer], :void
+    attach_function :xmlDocGetRootElement, [:pointer], :pointer
+    attach_function :xmlDocSetRootElement, [:pointer, :pointer], :pointer
+    attach_function :xmlSubstituteEntitiesDefault, [:int], :int
+    attach_function :xmlCopyDoc, [:pointer, :int], :pointer
+    attach_function :xmlFreeDoc, [:pointer], :void
+    attach_function :xmlSetTreeDoc, [:pointer, :pointer], :void
 
     # nodes
-    ffi_attach 'libxml2', :xmlNewNode, [:pointer, :pointer], :pointer
-    ffi_attach 'libxml2', :xmlEncodeSpecialChars, [:pointer, :pointer], :pointer
-    ffi_attach 'libxml2', :xmlCopyNode, [:pointer, :int], :pointer
-    ffi_attach 'libxml2', :xmlDocCopyNode, [:pointer, :pointer, :int], :pointer
-    ffi_attach 'libxml2', :xmlReplaceNode, [:pointer, :pointer], :pointer
-    ffi_attach 'libxml2', :xmlUnlinkNode, [:pointer], :void
-    ffi_attach 'libxml2', :xmlAddChild, [:pointer, :pointer], :pointer
-    ffi_attach 'libxml2', :xmlAddNextSibling, [:pointer, :pointer], :pointer
-    ffi_attach 'libxml2', :xmlAddPrevSibling, [:pointer, :pointer], :pointer
-    ffi_attach 'libxml2', :xmlIsBlankNode, [:pointer], :int
-    ffi_attach 'libxml2', :xmlHasProp, [:pointer, :pointer], :pointer
-    ffi_attach 'libxml2', :xmlGetProp, [:pointer, :pointer], :pointer
-    ffi_attach 'libxml2', :xmlSetProp, [:pointer, :pointer, :pointer], :pointer
-    ffi_attach 'libxml2', :xmlRemoveProp, [:pointer], :int
-    ffi_attach 'libxml2', :xmlNodeSetContent, [:pointer, :pointer], :void
-    ffi_attach 'libxml2', :xmlNodeGetContent, [:pointer], :pointer
-    ffi_attach 'libxml2', :xmlNodeSetName, [:pointer, :pointer], :void
-    ffi_attach 'libxml2', :xmlGetNodePath, [:pointer], :pointer
-    ffi_attach 'libxml2', :xmlNodeDump, [:pointer, :pointer, :pointer, :int, :int], :int
-    ffi_attach 'libxml2', :xmlNewCDataBlock, [:pointer, :pointer, :int], :pointer
-    ffi_attach 'libxml2', :xmlNewDocComment, [:pointer, :pointer], :pointer
-    ffi_attach 'libxml2', :xmlNewText, [:pointer], :pointer
-    ffi_attach 'libxml2', :xmlFreeNode, [:pointer], :void
-    ffi_attach 'libxml2', :xmlFreeNodeList, [:pointer], :void
-    ffi_attach 'libxml2', :htmlNodeDump, [:pointer, :pointer, :pointer], :int
-    ffi_attach 'libxml2', :xmlEncodeEntitiesReentrant, [:pointer, :string], :string
-    ffi_attach 'libxml2', :xmlStringGetNodeList, [:pointer, :string], :pointer
-    ffi_attach 'libxml2', :xmlNewNs, [:pointer, :string, :string], :pointer
-    ffi_attach 'libxml2', :xmlNewNsProp, [:pointer, :pointer, :string, :string], :pointer
+    attach_function :xmlNewNode, [:pointer, :pointer], :pointer
+    attach_function :xmlEncodeSpecialChars, [:pointer, :pointer], :pointer
+    attach_function :xmlCopyNode, [:pointer, :int], :pointer
+    attach_function :xmlDocCopyNode, [:pointer, :pointer, :int], :pointer
+    attach_function :xmlReplaceNode, [:pointer, :pointer], :pointer
+    attach_function :xmlUnlinkNode, [:pointer], :void
+    attach_function :xmlAddChild, [:pointer, :pointer], :pointer
+    attach_function :xmlAddNextSibling, [:pointer, :pointer], :pointer
+    attach_function :xmlAddPrevSibling, [:pointer, :pointer], :pointer
+    attach_function :xmlIsBlankNode, [:pointer], :int
+    attach_function :xmlHasProp, [:pointer, :pointer], :pointer
+    attach_function :xmlGetProp, [:pointer, :pointer], :pointer
+    attach_function :xmlSetProp, [:pointer, :pointer, :pointer], :pointer
+    attach_function :xmlRemoveProp, [:pointer], :int
+    attach_function :xmlNodeSetContent, [:pointer, :pointer], :void
+    attach_function :xmlNodeGetContent, [:pointer], :pointer
+    attach_function :xmlNodeSetName, [:pointer, :pointer], :void
+    attach_function :xmlGetNodePath, [:pointer], :pointer
+    attach_function :xmlNodeDump, [:pointer, :pointer, :pointer, :int, :int], :int
+    attach_function :xmlNewCDataBlock, [:pointer, :pointer, :int], :pointer
+    attach_function :xmlNewDocComment, [:pointer, :pointer], :pointer
+    attach_function :xmlNewText, [:pointer], :pointer
+    attach_function :xmlFreeNode, [:pointer], :void
+    attach_function :xmlFreeNodeList, [:pointer], :void
+    attach_function :htmlNodeDump, [:pointer, :pointer, :pointer], :int
+    attach_function :xmlEncodeEntitiesReentrant, [:pointer, :string], :string
+    attach_function :xmlStringGetNodeList, [:pointer, :string], :pointer
+    attach_function :xmlNewNs, [:pointer, :string, :string], :pointer
+    attach_function :xmlNewNsProp, [:pointer, :pointer, :string, :string], :pointer
 
-    ffi_attach 'libxml2', :xmlSaveToIO, [:io_write_callback, :io_close_callback, :pointer, :string, :int], :pointer
-    ffi_attach 'libxml2', :xmlSaveTree, [:pointer, :pointer], :int
-    ffi_attach 'libxml2', :xmlSaveClose, [:pointer], :int
+    attach_function :xmlSaveToIO, [:io_write_callback, :io_close_callback, :pointer, :string, :int], :pointer
+    attach_function :xmlSaveTree, [:pointer, :pointer], :int
+    attach_function :xmlSaveClose, [:pointer], :int
 
     # buffer
-    ffi_attach 'libxml2', :xmlBufferCreate, [], :pointer
-    ffi_attach 'libxml2', :xmlBufferFree, [:pointer], :void
+    attach_function :xmlBufferCreate, [], :pointer
+    attach_function :xmlBufferFree, [:pointer], :void
 
     # miscellaneous
-    ffi_attach 'libxml2', :xmlInitParser, [], :void
-    ffi_attach 'libxml2', :__xmlParserVersion, [], :pointer
-    ffi_attach 'libxml2', :xmlSplitQName2, [:string, :pointer], :pointer
+    attach_function :xmlInitParser, [], :void
+    attach_function :__xmlParserVersion, [], :pointer
+    attach_function :xmlSplitQName2, [:string, :pointer], :pointer
 
     # xpath
-    ffi_attach 'libxml2', :xmlXPathInit, [], :void
-    ffi_attach 'libxml2', :xmlXPathNewContext, [:pointer], :pointer
-    ffi_attach 'libxml2', :xmlXPathFreeContext, [:pointer], :void
-    ffi_attach 'libxml2', :xmlXPathEvalExpression, [:pointer, :pointer], :pointer
-    ffi_attach 'libxml2', :xmlXPathRegisterNs, [:pointer, :pointer, :pointer], :int
-    ffi_attach 'libxml2', :xmlXPathNodeSetAdd, [:pointer, :pointer], :void
-    ffi_attach 'libxml2', :xmlXPathNodeSetCreate, [:pointer], :pointer
-    ffi_attach 'libxml2', :xmlXPathFreeNodeSetList, [:pointer], :void
-#    ffi_attach 'libxml2', :xmlXPathRegisterFuncLookup, [:pointer, :xpath_lookup_callback, :pointer], :xpath_callback
+    attach_function :xmlXPathInit, [], :void
+    attach_function :xmlXPathNewContext, [:pointer], :pointer
+    attach_function :xmlXPathFreeContext, [:pointer], :void
+    attach_function :xmlXPathEvalExpression, [:pointer, :pointer], :pointer
+    attach_function :xmlXPathRegisterNs, [:pointer, :pointer, :pointer], :int
+    attach_function :xmlXPathNodeSetAdd, [:pointer, :pointer], :void
+    attach_function :xmlXPathNodeSetCreate, [:pointer], :pointer
+    attach_function :xmlXPathFreeNodeSetList, [:pointer], :void
+#    attach_function :xmlXPathRegisterFuncLookup, [:pointer, :xpath_lookup_callback, :pointer], :xpath_callback
 
     # xmlFree is a C preprocessor macro, not an actual address.
-    ffi_attach nil, :calloc, [:int, :int], :pointer
-    ffi_attach nil, :free, [:pointer], :void
+    attach_function :calloc, [:int, :int], :pointer
+    attach_function :free, [:pointer], :void
     def self.xmlFree(pointer)
       self.free(pointer)
     end
 
     # syntax error handler
-    ffi_attach 'libxml2', :xmlSetStructuredErrorFunc, [:pointer, :syntax_error_handler], :void
-    ffi_attach 'libxml2', :xmlResetLastError, [], :void
-    ffi_attach 'libxml2', :xmlCopyError, [:pointer, :pointer], :int
-    ffi_attach 'libxml2', :xmlGetLastError, [], :pointer
+    attach_function :xmlSetStructuredErrorFunc, [:pointer, :syntax_error_handler], :void
+    attach_function :xmlResetLastError, [], :void
+    attach_function :xmlCopyError, [:pointer, :pointer], :int
+    attach_function :xmlGetLastError, [], :pointer
 
     # IO
-    ffi_attach nil, :memcpy, [:pointer, :pointer, :int], :pointer
-    ffi_attach 'libxml2', :xmlReadIO, [:io_read_callback, :io_close_callback, :pointer, :string, :string, :int], :pointer
-    ffi_attach 'libxml2', :xmlCreateIOParserCtxt, [:pointer, :pointer, :io_read_callback, :io_close_callback, :pointer, :int], :pointer
+    attach_function nil, :memcpy, [:pointer, :pointer, :int], :pointer
+    attach_function :xmlReadIO, [:io_read_callback, :io_close_callback, :pointer, :string, :string, :int], :pointer
+    attach_function :xmlCreateIOParserCtxt, [:pointer, :pointer, :io_read_callback, :io_close_callback, :pointer, :int], :pointer
 
     # dtd
-    ffi_attach 'libxml2', :xmlHashScan, [:pointer, :hash_copier_callback, :pointer], :void
+    attach_function :xmlHashScan, [:pointer, :hash_copier_callback, :pointer], :void
 
     # reader
-    ffi_attach 'libxml2', :xmlReaderForMemory, [:pointer, :int, :string, :string, :int], :pointer
-    ffi_attach 'libxml2', :xmlTextReaderGetAttribute, [:pointer, :string], :pointer
-    ffi_attach 'libxml2', :xmlTextReaderGetAttributeNo, [:pointer, :int], :pointer
-    ffi_attach 'libxml2', :xmlTextReaderLookupNamespace, [:pointer, :pointer], :pointer
-    ffi_attach 'libxml2', :xmlTextReaderRead, [:pointer], :int
-    ffi_attach 'libxml2', :xmlTextReaderAttributeCount, [:pointer], :int
-    ffi_attach 'libxml2', :xmlTextReaderCurrentNode, [:pointer], :pointer
-    ffi_attach 'libxml2', :xmlTextReaderExpand, [:pointer], :pointer
-    ffi_attach 'libxml2', :xmlTextReaderIsDefault, [:pointer], :int
-    ffi_attach 'libxml2', :xmlTextReaderDepth, [:pointer], :int
-    ffi_attach 'libxml2', :xmlTextReaderConstEncoding, [:pointer], :pointer
-    ffi_attach 'libxml2', :xmlTextReaderConstXmlLang, [:pointer], :pointer
-    ffi_attach 'libxml2', :xmlTextReaderConstLocalName, [:pointer], :pointer
-    ffi_attach 'libxml2', :xmlTextReaderConstName, [:pointer], :pointer
-    ffi_attach 'libxml2', :xmlTextReaderConstNamespaceUri, [:pointer], :pointer
-    ffi_attach 'libxml2', :xmlTextReaderConstPrefix, [:pointer], :pointer
-    ffi_attach 'libxml2', :xmlTextReaderConstValue, [:pointer], :pointer
-    ffi_attach 'libxml2', :xmlTextReaderConstXmlVersion, [:pointer], :pointer
-    ffi_attach 'libxml2', :xmlTextReaderReadState, [:pointer], :int
-    ffi_attach 'libxml2', :xmlTextReaderHasValue, [:pointer], :int
-    ffi_attach 'libxml2', :xmlFreeTextReader, [:pointer], :void
+    attach_function :xmlReaderForMemory, [:pointer, :int, :string, :string, :int], :pointer
+    attach_function :xmlTextReaderGetAttribute, [:pointer, :string], :pointer
+    attach_function :xmlTextReaderGetAttributeNo, [:pointer, :int], :pointer
+    attach_function :xmlTextReaderLookupNamespace, [:pointer, :pointer], :pointer
+    attach_function :xmlTextReaderRead, [:pointer], :int
+    attach_function :xmlTextReaderAttributeCount, [:pointer], :int
+    attach_function :xmlTextReaderCurrentNode, [:pointer], :pointer
+    attach_function :xmlTextReaderExpand, [:pointer], :pointer
+    attach_function :xmlTextReaderIsDefault, [:pointer], :int
+    attach_function :xmlTextReaderDepth, [:pointer], :int
+    attach_function :xmlTextReaderConstEncoding, [:pointer], :pointer
+    attach_function :xmlTextReaderConstXmlLang, [:pointer], :pointer
+    attach_function :xmlTextReaderConstLocalName, [:pointer], :pointer
+    attach_function :xmlTextReaderConstName, [:pointer], :pointer
+    attach_function :xmlTextReaderConstNamespaceUri, [:pointer], :pointer
+    attach_function :xmlTextReaderConstPrefix, [:pointer], :pointer
+    attach_function :xmlTextReaderConstValue, [:pointer], :pointer
+    attach_function :xmlTextReaderConstXmlVersion, [:pointer], :pointer
+    attach_function :xmlTextReaderReadState, [:pointer], :int
+    attach_function :xmlTextReaderHasValue, [:pointer], :int
+    attach_function :xmlFreeTextReader, [:pointer], :void
 
     # xslt
-    ffi_attach 'libxslt', :xsltParseStylesheetDoc, [:pointer], :pointer
-    ffi_attach 'libxslt', :xsltFreeStylesheet, [:pointer], :void
-    ffi_attach 'libxslt', :xsltApplyStylesheet, [:pointer, :pointer, :pointer], :pointer
-    ffi_attach 'libxslt', :xsltSaveResultToString, [:pointer, :pointer, :pointer, :pointer], :void
-    ffi_attach 'libexslt', :exsltRegisterAll, [], :void
+    attach_function :xsltParseStylesheetDoc, [:pointer], :pointer
+    attach_function :xsltFreeStylesheet, [:pointer], :void
+    attach_function :xsltApplyStylesheet, [:pointer, :pointer, :pointer], :pointer
+    attach_function :xsltSaveResultToString, [:pointer, :pointer, :pointer, :pointer], :void
+    attach_function :exsltRegisterAll, [], :void
 
     # sax
-    ffi_callback :start_document_sax_func, [:pointer], :void
-    ffi_callback :end_document_sax_func, [:pointer], :void
-    ffi_callback :start_element_sax_func, [:pointer, :string, :pointer], :void
-    ffi_callback :end_element_sax_func, [:pointer, :string], :void
-    ffi_callback :characters_sax_func, [:pointer, :string, :int], :void
-    ffi_callback :comment_sax_func, [:pointer, :string], :void
-    ffi_callback :warning_sax_func, [:pointer, :string], :void
-    ffi_callback :error_sax_func, [:pointer, :string], :void
-    ffi_callback :cdata_block_sax_func, [:pointer, :string, :int], :void
-    ffi_attach 'libxml2', :xmlSAXUserParseMemory, [:pointer, :pointer, :pointer, :int], :int
-    ffi_attach 'libxml2', :xmlSAXUserParseFile, [:pointer, :pointer, :string], :int
-    ffi_attach 'libxml2', :xmlParseDocument, [:pointer], :int
-    ffi_attach 'libxml2', :xmlFreeParserCtxt, [:pointer], :void
-    ffi_attach 'libxml2', :htmlSAXParseFile, [:pointer, :pointer, :pointer, :pointer], :pointer
-    ffi_attach 'libxml2', :htmlSAXParseDoc, [:pointer, :pointer, :pointer, :pointer], :pointer
-
+    callback :start_document_sax_func, [:pointer], :void
+    callback :end_document_sax_func, [:pointer], :void
+    callback :start_element_sax_func, [:pointer, :string, :pointer], :void
+    callback :end_element_sax_func, [:pointer, :string], :void
+    callback :characters_sax_func, [:pointer, :string, :int], :void
+    callback :comment_sax_func, [:pointer, :string], :void
+    callback :warning_sax_func, [:pointer, :string], :void
+    callback :error_sax_func, [:pointer, :string], :void
+    callback :cdata_block_sax_func, [:pointer, :string, :int], :void
+    attach_function :xmlSAXUserParseMemory, [:pointer, :pointer, :pointer, :int], :int
+    attach_function :xmlSAXUserParseFile, [:pointer, :pointer, :string], :int
+    attach_function :xmlParseDocument, [:pointer], :int
+    attach_function :xmlFreeParserCtxt, [:pointer], :void
+    attach_function :htmlSAXParseFile, [:pointer, :pointer, :pointer, :pointer], :pointer
+    attach_function :htmlSAXParseDoc, [:pointer, :pointer, :pointer, :pointer], :pointer
   end
 
   # initialize constants

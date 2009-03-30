@@ -41,7 +41,7 @@ module Nokogiri
       end
     end
 
-    class XmlDocument < CrossFFI::Struct
+    class XmlDocument < FFI::ManagedStruct
       include XmlDocumentMixin
 
       def initialize(ptr)

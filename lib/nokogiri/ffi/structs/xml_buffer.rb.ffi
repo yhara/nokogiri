@@ -2,7 +2,7 @@
 
 module Nokogiri
   module LibXML
-    class XmlBuffer < CrossFFI::Struct
+    class XmlBuffer < FFI::ManagedStruct
       @@@
       struct do |s|
         s.name 'struct _xmlBuffer'
