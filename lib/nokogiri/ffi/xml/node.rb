@@ -135,10 +135,9 @@ module Nokogiri
         ahash
       end
 
-      def type
+      def node_type
         cstruct[:type]
       end
-      alias_method :node_type, :type
 
       def native_content=(content)
         LibXML.xmlNodeSetContent(cstruct, content)
@@ -163,16 +162,14 @@ module Nokogiri
         cstruct_node_from :parent
       end
       
-      def name=(string)
+      def node_name=(string)
         LibXML.xmlNodeSetName(cstruct, string)
         string
       end
-      alias_method :node_name=, :name=
 
-      def name
+      def node_name
         cstruct[:name] # TODO: encoding?
       end
-      alias_method :node_name, :name
 
       def path
         path_ptr = LibXML.xmlGetNodePath(cstruct)
@@ -251,8 +248,7 @@ module Nokogiri
           return document
         end
 
-        node = document.node_cache[node_struct.pointer.address] if document
-        return node if node
+        # TODO: check for cached ruby object in _private
 
         klasses = case node_struct[:type]
                   when ELEMENT_NODE then [XML::Element]
@@ -270,12 +266,26 @@ module Nokogiri
         node = klasses.first.allocate
         node.cstruct = klasses[1] ? klasses[1].new(node_struct.pointer) : node_struct
 
+        # TODO: cache ruby object in _private
+
         document.node_cache[node_struct.pointer.address] = node if document
 
         node.document = document
         node.decorate!
         node
       end
+
+      alias :next           :next_sibling
+      alias :previous       :previous_sibling
+      alias :remove         :unlink
+      alias :set_attribute  :[]=
+      alias :text           :content
+      alias :inner_text     :content
+      alias :has_attribute? :key?
+      alias :<<             :add_child
+      alias :name           :node_name
+      alias :name=          :node_name=
+      alias :type           :node_type
 
       private
 
@@ -293,28 +303,32 @@ module Nokogiri
           LibXML.xmlXPathNodeSetAdd(node.cstruct.document.node_set, node.cstruct);
         end
         
+        reparented_struct = LibXML::XmlNode.new(reparented_struct)
+
         # the child was a text node that was coalesced. we need to have the object
         # point at SOMETHING, or we'll totally bomb out.
-        if reparented_struct != node.cstruct.pointer
-          node.cstruct = Node.wrap(reparented_struct).cstruct
+        if reparented_struct != node.cstruct
+          node.cstruct = reparented_struct
         end
 
         # Make sure that our reparented node has the correct namespaces
-        if node.cstruct[:doc] != node.cstruct[:parent]
-          node.cstruct[:ns] = LibXML::XmlNode.new(node.cstruct[:parent])[:ns]
+        if reparented_struct[:doc] != reparented_struct[:parent]
+          reparented_struct[:ns] = LibXML::XmlNode.new(reparented_struct[:parent])[:ns]
         end
 
+        # Search our parents for an existing definition
         if ! node.cstruct[:nsDef].null?
           ns = LibXML.xmlSearchNsByHref(
-            node.cstruct.document,
-            node.cstruct,
-            LibXML::XmlNs.new(node.cstruct[:ns])[:href]
+            reparented_struct[:doc],
+            reparented_struct,
+            LibXML::XmlNs.new(reparented_struct[:nsDef])[:href]
             )
-          node.cstruct[:nsDef] = nil unless ns.null?
+          reparented_struct[:nsDef] = nil unless ns.null?
         end
 
-        node.decorate!
-        node
+        reparented = Node.wrap(reparented_struct)
+        reparented.decorate!
+        reparented
       end
 
       def cstruct_node_from(sym)
