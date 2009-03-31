@@ -6,7 +6,15 @@ module Nokogiri
 
     def self.expand_library_path(library)
       return File.expand_path(library) if library =~ %r{^[^/].*/}
-      library ? "/usr/lib/#{library}.so" : nil # TODO: how to set jruby library load paths?
+      library = Dir[
+        "/opt/local/lib/#{library}.{so,dylib}",
+        "/usr/local/lib/#{library}.{so,dylib}",
+        "/usr/lib/#{library}.{so,dylib}",
+      ].first
+
+      raise "Couldn't find #{library}" unless library
+
+      library
     end
 
     extend FFI::Library
