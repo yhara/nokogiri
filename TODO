@@ -1,0 +1,26 @@
+-*- text -*-   
+
+short term:
+
+- review xml/document.rb and html/document.rb (compare C to FFI side by side)
+- implement classes:
+  - ProcessingInstruction
+  - HTML::ElementDescription
+  - SAX::PushParser
+  - HTML::EntityLookup
+  - XML::EntityReference
+  - XML::RelaxNG
+  - XML::Schema
+- implement xpath custom handlers (Mike has this mostly done in a local branch)
+- encoding issues?
+- jruby
+  - lingering syntax error issues
+  - fucking annoying "warning: too many arguments for format string" messages everywhere
+
+
+longer term:
+
+- use (new) nested struct support in FFI?
+- convert structs to using layout() instead of FFI::Generator stubs
+  - then remove the 'rake ffi' task and supporting functions
+
