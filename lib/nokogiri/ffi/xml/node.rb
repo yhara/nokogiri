@@ -211,17 +211,17 @@ module Nokogiri
 
       def add_namespace(prefix, href)
         ns = LibXML.xmlNewNs(cstruct, href, prefix)
-        return self if ns.nil?
-        LibXML.xmlNewNsProp(cstruct, ns, href, prefix)
+        return self if ns.null?
+#         LibXML.xmlNewNsProp(cstruct, ns, href, prefix)
         self
       end
 
       def self.new(name, document, &block)
         ptr = LibXML.xmlNewNode(nil, name.to_s)
 
-        struct = LibXML::XmlNode.new(ptr)
-        struct[:doc] = document.cstruct
-        node = Node.wrap(struct)
+        node_cstruct = LibXML::XmlNode.new(ptr)
+        node_cstruct[:doc] = document.cstruct[:doc]
+        node = Node.wrap(node_cstruct)
 
         yield node if block_given?
 
@@ -232,7 +232,7 @@ module Nokogiri
         return to_xml if type == DOCUMENT_NODE
         buffer = LibXML::XmlBuffer.new(LibXML.xmlBufferCreate())
         LibXML.htmlNodeDump(buffer, cstruct[:doc], cstruct)
-        buffer[:content]
+        buffer[:content] # TODO: encoding?
       end
 
       def compare(other)
@@ -245,7 +245,6 @@ module Nokogiri
           return nil if node_struct.null?
           node_struct = LibXML::XmlNode.new(node_struct) 
         end
-
         document = node_struct[:doc].null? ? nil : LibXML::XmlDocumentCast.new(node_struct[:doc]).ruby_doc
 
         if node_struct[:type] == DOCUMENT_NODE || node_struct[:type] == HTML_DOCUMENT_NODE
@@ -256,19 +255,23 @@ module Nokogiri
         return node if node
 
         klasses = case node_struct[:type]
-                  when TEXT_NODE then [XML::Text]
-                  when COMMENT_NODE then [XML::Comment]
                   when ELEMENT_NODE then [XML::Element]
+                  when TEXT_NODE then [XML::Text]
+                  when ENTITY_REF_NODE then [XML::EntityReference]
+                  when COMMENT_NODE then [XML::Comment]
+                  when DOCUMENT_FRAG_NODE then [XML::DocumentFragment]
+                  when PI_NODE then [XML::ProcessingInstruction]
+                  when ATTRIBUTE_NODE then [XML::Attr]
                   when ENTITY_DECL then [XML::EntityDeclaration]
                   when CDATA_SECTION_NODE then [XML::CDATA]
                   when DTD_NODE then [XML::DTD, LibXML::XmlDtd]
-                  when ATTRIBUTE_NODE then [XML::Attr]
-                  when DOCUMENT_FRAG_NODE then [XML::DocumentFragment]
                   else [XML::Node]
                   end
         node = klasses.first.allocate
         node.cstruct = klasses[1] ? klasses[1].new(node_struct.pointer) : node_struct
+
         document.node_cache[node_struct.pointer.address] = node if document
+
         node.document = document
         node.decorate!
         node
