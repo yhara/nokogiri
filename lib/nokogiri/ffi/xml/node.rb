@@ -5,12 +5,13 @@ module Nokogiri
       attr_accessor :cstruct
 
       def pointer_id
-        cstruct.pointer.address
+        cstruct.pointer
       end
 
       def encode_special_chars(string)
         char_ptr = LibXML.xmlEncodeSpecialChars(self[:doc], string)
         encoded = char_ptr.read_string
+        # TODO: encoding?
         LibXML.xmlFree(char_ptr)
         encoded
       end
@@ -18,8 +19,9 @@ module Nokogiri
       def internal_subset
         return nil if cstruct[:doc].null?
         doc = cstruct.document
-        return nil if doc[:intSubset].null?
-        Node.wrap(doc[:intSubset])
+        dtd = LibXML.xmlGetIntSubset(doc)
+        return nil if dtd.null?
+        Node.wrap(dtd)
       end
 
       def dup(deep = 1)
@@ -39,13 +41,11 @@ module Nokogiri
       end
 
       def next_sibling
-        val = cstruct[:next]
-        val.null? ? nil : Node.wrap(val)
+        cstruct_node_from :next
       end
 
       def previous_sibling
-        val = cstruct[:prev]
-        val.null? ? nil : Node.wrap(val)
+        cstruct_node_from :prev
       end
 
       def replace_with_node(new_node)
@@ -63,60 +63,57 @@ module Nokogiri
         set.cstruct = LibXML::XmlNodeSet.new(set_ptr)
         return set unless child
 
-        child = child.cstruct[:next]
-        while ! child.null?
-          child = Node.wrap(child)
+        child_ptr = child.cstruct[:next]
+        while ! child_ptr.null?
+          child = Node.wrap(child_ptr)
           LibXML.xmlXPathNodeSetAdd(set.cstruct, child.cstruct)
-          child = child.cstruct[:next]
+          child_ptr = child.cstruct[:next]
         end
 
         return set
       end
 
       def child
-        val = cstruct[:children]
-        val.null? ? nil : XML::Node.wrap(val)
+        (val = cstruct[:children]).null? ? nil : Node.wrap(val)
       end
 
       def key?(attribute)
-        prop = LibXML.xmlHasProp(cstruct, attribute.to_s)
-        prop.null? ? false : true
+        ! (prop = LibXML.xmlHasProp(cstruct, attribute.to_s)).null?
       end
 
       def []=(property, value)
-        buffer = LibXML.xmlEncodeEntitiesReentrant(cstruct[:doc], value)
-        LibXML.xmlSetProp(cstruct, property, buffer)
+        LibXML.xmlSetProp(cstruct, property, value)
         value
       end
 
       def get(attribute)
-        prop_str = LibXML.xmlGetProp(cstruct, attribute.to_s)
-        prop = prop_str.read_string
-        LibXML.xmlFree(prop_str)
-        prop
+        return nil unless attribute
+        propstr = LibXML.xmlGetProp(cstruct, attribute.to_s)
+        return nil if propstr.null?
+        rval = propstr.read_string # TODO: encoding?
+        LibXML.xmlFree(propstr)
+        rval
       end
 
       def attribute(name)
-        raise "not implemented"
+        raise "Node#attribute not implemented yet"
       end
 
       def attribute_nodes
-        prop_array = []
+        attr = []
         prop_cstruct = cstruct[:properties]
         while ! prop_cstruct.null?
           prop = Node.wrap(prop_cstruct)
-          prop_array << prop
+          attr << prop
           prop_cstruct = prop.cstruct[:next]
         end
-        prop_array
+        attr
       end
 
       def namespace
         return nil if cstruct[:ns].null?
-
         prefix = LibXML::XmlNs.new(cstruct[:ns])[:prefix]
-        return prefix if prefix
-
+        return prefix if prefix # TODO: encoding?
         nil
       end
 
@@ -132,8 +129,8 @@ module Nokogiri
                 else
                   "xmlns:#{prefix}"
                 end
-          ahash[key] = ns_cstruct[:href]
-          ns = ns_cstruct[:next]
+          ahash[key] = ns_cstruct[:href] # TODO: encoding?
+          ns = ns_cstruct[:next] # TODO: encoding?
         end
         ahash
       end
@@ -145,25 +142,25 @@ module Nokogiri
 
       def native_content=(content)
         LibXML.xmlNodeSetContent(cstruct, content)
+        content
       end
 
       def content
         content_ptr = LibXML.xmlNodeGetContent(cstruct)
         return nil if content_ptr.null?
-        content = content_ptr.read_string
+        content = content_ptr.read_string # TODO: encoding?
         LibXML.xmlFree(content_ptr)
         content
       end
 
       def add_child(child)
-        Node.reparent_node_with(child, self) do |child_cstruct, self_cstruct|
-          LibXML.xmlAddChild(self_cstruct, child_cstruct)
+        Node.reparent_node_with(child, self) do |child_cstruct, my_cstruct|
+          LibXML.xmlAddChild(my_cstruct, child_cstruct)
         end
       end
 
       def parent
-        val = cstruct[:parent]
-        val.null? ? nil : Node.wrap(val)
+        cstruct_node_from :parent
       end
       
       def name=(string)
@@ -173,26 +170,26 @@ module Nokogiri
       alias_method :node_name=, :name=
 
       def name
-        cstruct[:name]
+        cstruct[:name] # TODO: encoding?
       end
       alias_method :node_name, :name
 
       def path
         path_ptr = LibXML.xmlGetNodePath(cstruct)
-        val = path_ptr.null? ? nil : path_ptr.read_string
+        val = path_ptr.null? ? nil : path_ptr.read_string # TODO: encoding?
         LibXML.xmlFree(path_ptr)
         val
       end
 
       def add_next_sibling(next_sibling)
-        Node.reparent_node_with(next_sibling, self) do |sibling_cstruct, self_cstruct|
-          LibXML.xmlAddNextSibling(self_cstruct, sibling_cstruct)
+        Node.reparent_node_with(next_sibling, self) do |sibling_cstruct, my_cstruct|
+          LibXML.xmlAddNextSibling(my_cstruct, sibling_cstruct)
         end
       end
 
       def add_previous_sibling(prev_sibling)
-        Node.reparent_node_with(prev_sibling, self) do |sibling_cstruct, self_cstruct|
-          LibXML.xmlAddPrevSibling(self_cstruct, sibling_cstruct)
+        Node.reparent_node_with(prev_sibling, self) do |sibling_cstruct, my_cstruct|
+          LibXML.xmlAddPrevSibling(my_cstruct, sibling_cstruct)
         end
       end
 
@@ -299,12 +296,26 @@ module Nokogiri
           node.cstruct = Node.wrap(reparented_struct).cstruct
         end
 
+        # Make sure that our reparented node has the correct namespaces
         if node.cstruct[:doc] != node.cstruct[:parent]
           node.cstruct[:ns] = LibXML::XmlNode.new(node.cstruct[:parent])[:ns]
         end
 
+        if ! node.cstruct[:nsDef].null?
+          ns = LibXML.xmlSearchNsByHref(
+            node.cstruct.document,
+            node.cstruct,
+            LibXML::XmlNs.new(node.cstruct[:ns])[:href]
+            )
+          node.cstruct[:nsDef] = nil unless ns.null?
+        end
+
         node.decorate!
         node
+      end
+
+      def cstruct_node_from(sym)
+        (val = cstruct[sym]).null? ? nil : Node.wrap(val)
       end
 
     end

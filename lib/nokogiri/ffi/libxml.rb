@@ -70,11 +70,13 @@ module Nokogiri
     attach_function :xmlStringGetNodeList, [:pointer, :string], :pointer
     attach_function :xmlNewNs, [:pointer, :string, :string], :pointer
     attach_function :xmlNewNsProp, [:pointer, :pointer, :string, :string], :pointer
+    attach_function :xmlSearchNsByHref, [:pointer, :pointer, :pointer], :pointer
 
     attach_function :xmlSaveToIO, [:io_write_callback, :io_close_callback, :pointer, :string, :int], :pointer
     attach_function :xmlSaveTree, [:pointer, :pointer], :int
     attach_function :xmlSaveClose, [:pointer], :int
     attach_function :xmlXPathCmpNodes, [:pointer, :pointer], :int
+    attach_function :xmlGetIntSubset, [:pointer], :pointer
 
     # buffer
     attach_function :xmlBufferCreate, [], :pointer
