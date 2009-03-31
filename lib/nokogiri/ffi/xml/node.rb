@@ -4,6 +4,10 @@ module Nokogiri
 
       attr_accessor :cstruct
 
+      def pointer_id
+        cstruct.pointer.address
+      end
+
       def encode_special_chars(string)
         char_ptr = LibXML.xmlEncodeSpecialChars(self[:doc], string)
         encoded = char_ptr.read_string
