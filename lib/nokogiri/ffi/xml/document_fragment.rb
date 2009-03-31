@@ -6,7 +6,10 @@ module Nokogiri
         node_cstruct = LibXML.xmlNewDocFragment(document.cstruct)
         node = Node.wrap(node_cstruct)
         
-        node.cstruct[:ns] = node.document.child.cstruct[:ns] if node.document.child
+        if node.document.child && node.document.child.node_type == ELEMENT_NODE
+          # TODO: node_type check should be ported into master, because of e.g. DTD nodes
+          node.cstruct[:ns] = node.document.children.first.cstruct[:ns] 
+        end
 
         yield(node) if block_given?
 
