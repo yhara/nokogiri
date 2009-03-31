@@ -2,7 +2,12 @@
 
 short term:
 
-- review xml/document.rb and html/document.rb (compare C to FFI side by side)
+- code review (compare C to FFI side by side)
+  - xml/node.rb [DONE]
+  - xml/document.rb [DONE]
+  - html/document.rb
+  - xml/node_set.rb
+  - xml/xpath_context.rb
 - implement classes:
   - ProcessingInstruction
   - HTML::ElementDescription
@@ -16,7 +21,7 @@ short term:
 - jruby
   - lingering syntax error issues
   - fucking annoying "warning: too many arguments for format string" messages everywhere
-
+  - how to lookup and find libxml2.so and libxslt.so?
 
 longer term:
 
