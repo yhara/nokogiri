@@ -98,10 +98,12 @@ module Nokogiri
     attach_function :xmlXPathFreeNodeSetList, [:pointer], :void
 #    attach_function :xmlXPathRegisterFuncLookup, [:pointer, :xpath_lookup_callback, :pointer], :xpath_callback
 
-    # xmlFree is a C preprocessor macro, not an actual address.
+    attach_function :xmlStrdup, [:pointer], :pointer
     attach_function :calloc, [:int, :int], :pointer
     attach_function :free, [:pointer], :void
+    attach_function :memcpy, [:pointer, :pointer, :int], :pointer
     def self.xmlFree(pointer)
+      # xmlFree is a C preprocessor macro, not an actual address.
       self.free(pointer)
     end
 
@@ -112,7 +114,6 @@ module Nokogiri
     attach_function :xmlGetLastError, [], :pointer
 
     # IO
-    attach_function :memcpy, [:pointer, :pointer, :int], :pointer
     attach_function :xmlReadIO, [:io_read_callback, :io_close_callback, :pointer, :string, :string, :int], :pointer
     attach_function :xmlCreateIOParserCtxt, [:pointer, :pointer, :io_read_callback, :io_close_callback, :pointer, :int], :pointer
 

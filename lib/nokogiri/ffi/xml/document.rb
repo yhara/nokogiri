@@ -4,15 +4,27 @@ module Nokogiri
 
       attr_accessor :cstruct
 
-      def self.new(*args)
-        version = args.first || "1.0"
-        wrap(LibXML.xmlNewDoc(version))
+      def url
+        cstruct[:URL]
       end
 
-      def self.read_memory(string, url, encoding, options)
-        wrap_with_error_handling(DOCUMENT_NODE) do
-          LibXML.xmlReadMemory(string, string.length, url, encoding, options)
-        end
+      def root=(node)
+        LibXML.xmlDocSetRootElement(cstruct, node.cstruct)
+        node
+      end
+
+      def root
+        ptr = LibXML.xmlDocGetRootElement(cstruct)
+        ptr.null? ? nil : Node.wrap(LibXML::XmlNode.new(ptr))
+      end
+
+      def encoding=(encoding)
+        # TODO: why can't I just write cstruct[:encoding] = foo if it's a :string type? add failing spec to ffi.
+        cstruct[:encoding] = LibXML.xmlStrdup(encoding)
+      end
+
+      def encoding
+        cstruct[:encoding].read_string
       end
 
       def self.read_io(io, url, encoding, options)
@@ -29,6 +41,31 @@ module Nokogiri
         end
       end
 
+      def self.read_memory(string, url, encoding, options)
+        wrap_with_error_handling(DOCUMENT_NODE) do
+          LibXML.xmlReadMemory(string, string.length, url, encoding, options)
+        end
+      end
+
+      def dup(deep = 1)
+        dup_ptr = LibXML.xmlCopyDoc(cstruct, deep)
+        return nil if dup_ptr.null?
+        Document.wrap(dup_ptr, self.cstruct[:type])
+      end
+
+      def self.new(*args)
+        version = args.first || "1.0"
+        Document.wrap(LibXML.xmlNewDoc(version))
+      end
+
+      def self.substitute_entities=(entities)
+        raise "Document#substitute_entities= not implemented"
+      end
+
+      def load_external_subsets=(subsets)
+        raise "Document#load_external_subsets= not implemented"
+      end
+
       def self.wrap(ptr, type=DOCUMENT_NODE) # :nodoc:
         if type == DOCUMENT_NODE
           doc = allocate
@@ -42,34 +79,6 @@ module Nokogiri
         doc.cstruct.ruby_doc = doc
         doc.instance_eval { @decorators = nil }
         doc
-      end
-
-      def type
-        cstruct[:type]
-      end
-
-      def root
-        ptr = LibXML.xmlDocGetRootElement(cstruct)
-        ptr.null? ? nil : Node.wrap(LibXML::XmlNode.new(ptr))
-      end
-
-      def root=(node)
-        LibXML.xmlDocSetRootElement(cstruct, node.cstruct)
-        node
-      end
-
-      def encoding
-        cstruct[:encoding]
-      end
-
-      def url
-        cstruct[:URL]
-      end
-
-      def dup(deep = 1)
-        dup_ptr = LibXML.xmlCopyDoc(cstruct, deep)
-        return nil if dup_ptr.null?
-        Document.wrap(dup_ptr, self.cstruct[:type])
       end
 
       private
