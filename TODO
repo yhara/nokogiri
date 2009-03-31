@@ -5,9 +5,9 @@ short term:
 - code review (compare C to FFI side by side)
   - xml/node.rb [DONE]
   - xml/document.rb [DONE]
-  - html/document.rb
-  - xml/node_set.rb
+  - xml/node_set.rb [DONE]
   - xml/xpath_context.rb
+  - html/document.rb
 - implement classes:
   - ProcessingInstruction
   - HTML::ElementDescription

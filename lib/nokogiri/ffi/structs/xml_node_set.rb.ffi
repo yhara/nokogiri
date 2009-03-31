@@ -24,6 +24,9 @@ module Nokogiri
       end
 
       def nodeTab
+        # TODO: think about whether we should take an argument and
+        # only return a single pointer instead of marshaling the
+        # entire array
         self[:nodeTab].read_array_of_pointer(self[:nodeNr])
       end
 
