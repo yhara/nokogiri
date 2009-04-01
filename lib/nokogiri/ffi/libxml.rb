@@ -16,12 +16,13 @@ module Nokogiri
 
     # useful callback signatures
     callback :syntax_error_handler, [:pointer, :pointer], :void
+    callback :generic_error_handler, [:pointer, :string], :void
     callback :io_write_callback, [:pointer, :string, :int], :int
     callback :io_read_callback, [:pointer, :pointer, :int], :int
     callback :io_close_callback, [:pointer], :int
     callback :hash_copier_callback, [:pointer, :pointer, :string], :void
-    callback :xpath_lookup_callback, [:pointer, :string, :pointer], :pointer
     callback :xpath_callback, [:pointer, :int], :void
+    callback :xpath_lookup_callback, [:pointer, :string, :pointer], :xpath_callback
 
     # html documents
     attach_function :htmlReadMemory, [:string, :int, :string, :string, :int], :pointer
@@ -96,7 +97,10 @@ module Nokogiri
     attach_function :xmlXPathNodeSetAdd, [:pointer, :pointer], :void
     attach_function :xmlXPathNodeSetCreate, [:pointer], :pointer
     attach_function :xmlXPathFreeNodeSetList, [:pointer], :void
-#    attach_function :xmlXPathRegisterFuncLookup, [:pointer, :xpath_lookup_callback, :pointer], :xpath_callback
+    attach_function :xmlXPathRegisterFuncLookup, [:pointer, :xpath_lookup_callback, :pointer], :xpath_callback
+    attach_function :valuePop, [:pointer], :pointer
+    attach_function :xmlXPathCastToString, [:pointer], :string
+    attach_function :xmlXPathNodeSetMerge, [:pointer, :pointer], :pointer
 
     attach_function :xmlStrdup, [:pointer], :pointer
     attach_function :calloc, [:int, :int], :pointer
@@ -109,6 +113,7 @@ module Nokogiri
 
     # syntax error handler
     attach_function :xmlSetStructuredErrorFunc, [:pointer, :syntax_error_handler], :void
+    attach_function :xmlSetGenericErrorFunc, [:pointer, :generic_error_handler], :void
     attach_function :xmlResetLastError, [], :void
     attach_function :xmlCopyError, [:pointer, :pointer], :int
     attach_function :xmlGetLastError, [], :pointer
@@ -190,6 +195,8 @@ require 'nokogiri/xml/syntax_error'
   "structs/xml_node_set",
   "structs/xml_xpath_context",
   "structs/xml_xpath",
+  "structs/xml_xpath_object.rb",
+  "structs/xml_xpath_parser_context.rb",
   "structs/xml_buffer",
   "structs/xml_syntax_error",
   "structs/xml_attr.rb",
