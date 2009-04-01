@@ -84,7 +84,6 @@ module Nokogiri
     attach_function :xmlSaveToIO, [:io_write_callback, :io_close_callback, :pointer, :string, :int], :pointer
     attach_function :xmlSaveTree, [:pointer, :pointer], :int
     attach_function :xmlSaveClose, [:pointer], :int
-    attach_function :xmlXPathCmpNodes, [:pointer, :pointer], :int
     attach_function :xmlGetIntSubset, [:pointer], :pointer
 
     # buffer
@@ -102,6 +101,7 @@ module Nokogiri
     attach_function :xmlXPathFreeContext, [:pointer], :void
     attach_function :xmlXPathEvalExpression, [:pointer, :pointer], :pointer
     attach_function :xmlXPathRegisterNs, [:pointer, :pointer, :pointer], :int
+    attach_function :xmlXPathCmpNodes, [:pointer, :pointer], :int
     attach_function :xmlXPathNodeSetAdd, [:pointer, :pointer], :void
     attach_function :xmlXPathNodeSetCreate, [:pointer], :pointer
     attach_function :xmlXPathFreeNodeSetList, [:pointer], :void
@@ -109,6 +109,30 @@ module Nokogiri
     attach_function :valuePop, [:pointer], :pointer
     attach_function :xmlXPathCastToString, [:pointer], :string
     attach_function :xmlXPathNodeSetMerge, [:pointer, :pointer], :pointer
+    attach_function :valuePush, [:pointer, :pointer], :int
+    attach_function :xmlXPathWrapNodeSet, [:pointer], :pointer
+    attach_function :xmlXPathWrapCString, [:pointer], :pointer
+    attach_function :xmlXPathWrapString, [:pointer], :pointer
+    attach_function :xmlXPathNewBoolean, [:int], :pointer
+    attach_function :xmlXPathNewFloat, [:double], :pointer
+    class << self
+      # these functions are implemented as C macros
+      def xmlXPathReturnNodeSet(ctx, ns)
+        valuePush(ctx, xmlXPathWrapNodeSet(ns))
+      end
+      def xmlXPathReturnTrue(ctx)
+        valuePush(ctx, xmlXPathNewBoolean(1))
+      end
+      def xmlXPathReturnFalse(ctx)
+        valuePush(ctx, xmlXPathNewBoolean(0))
+      end
+      def xmlXPathReturnString(ctx, str)
+        valuePush(ctx, xmlXPathWrapString(str))
+      end
+      def xmlXPathReturnNumber(ctx, val)
+        valuePush(ctx, xmlXPathNewFloat(val))
+      end
+    end
 
     attach_function :xmlStrdup, [:pointer], :pointer
     attach_function :calloc, [:int, :int], :pointer

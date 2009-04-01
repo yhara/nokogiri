@@ -81,7 +81,10 @@ module Nokogiri
             when LibXML::XmlXpathObject::XPATH_NUMBER
               params.unshift obj[:floatval]
             when LibXML::XmlXpathObject::XPATH_NODESET
-              params.unshift LibXML::XmlNodeSet.new(obj[:nodesetval])
+              ns_ptr = LibXML::XmlNodeSet.new(obj[:nodesetval])
+              set = NodeSet.allocate
+              set.cstruct = ns_ptr
+              params.unshift set
             else
               params.unshift LibXML.xmlXPathCastToString(obj)
             end
@@ -90,37 +93,38 @@ module Nokogiri
 
           result = xpath_handler.send(name, *params)
 
-          case result.class
-          when Fixnum
+          case result.class.to_s
+          when Fixnum.to_s, Float.to_s, Bignum.to_s
             LibXML.xmlXPathReturnNumber(ctx, result)
-          when String
+          when String.to_s
             LibXML.xmlXPathReturnString(
               ctx,
               LibXML.xmlXPathWrapCString(result)
               )
-          when TrueClass
+          when TrueClass.to_s
             LibXML.xmlXPathReturnTrue(ctx)
-          when FalseClass
+          when FalseClass.to_s
             LibXML.xmlXPathReturnFalse(ctx)
-          when NilClass
+          when NilClass.to_s
             ;
-          when Array
+          when Array.to_s
             node_set = XML::NodeSet.new(doc, result)
-            LiBXML.xmlXPathReturnNodeSet(
+            LibXML.xmlXPathReturnNodeSet(
               ctx,
               LibXML.xmlXPathNodeSetMerge(nil, node_set.cstruct)
               )
           else
-            if result.is_a?(LibXML::XmlNodeSet)
+            if result.is_a?(XML::NodeSet)
               LibXML.xmlXPathReturnNodeSet(
                 ctx,
-                LibXML.xmlXPathNodeSetMerge(nil, result)
+                LibXML.xmlXPathNodeSetMerge(nil, result.cstruct)
                 )
             else
               raise RuntimeError.new("Invalid return type #{result.class.inspect}")
             end
           end
 
+          nil
         end # lambda
       end # ruby_funcall
 

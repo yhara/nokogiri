@@ -22,7 +22,7 @@ module Nokogiri
         s.field :type, :int
         s.field :nodesetval, :pointer
         s.field :boolval, :int
-        s.field :floatval, :float
+        s.field :floatval, :double
         s.field :stringval, :string
         s.field :user, :pointer
         s.field :index, :int
