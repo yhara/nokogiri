@@ -4,10 +4,8 @@ module Nokogiri
 
       attr_accessor :cstruct
 
-      def self.read_memory(string, url, encoding, options)
-        wrap_with_error_handling(HTML_DOCUMENT_NODE) do
-          LibXML.htmlReadMemory(string, string.length, url, encoding, options)
-        end
+      def self.new(uri=nil, external_id=nil)
+        Document.wrap(LibXML.htmlNewDoc(uri, external_id))
       end
 
       def self.read_io(io, url, encoding, options)
@@ -24,10 +22,20 @@ module Nokogiri
         end
       end
 
-      def type
-        cstruct[:type]
+      def self.read_memory(string, url, encoding, options)
+        wrap_with_error_handling(HTML_DOCUMENT_NODE) do
+          LibXML.htmlReadMemory(string, string.length, url, encoding, options)
+        end
       end
 
+      def meta_encoding=(encoding)
+        LibXML.htmlSetMetaEncoding(cstruct, encoding)
+        encoding
+      end
+
+      def meta_encoding
+        LibXML.htmlGetMetaEncoding(cstruct, cstruct[:encoding])
+      end
     end
   end
 end

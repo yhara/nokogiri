@@ -36,6 +36,10 @@ module Nokogiri
     attach_function :htmlReadMemory, [:string, :int, :string, :string, :int], :pointer
     attach_function :htmlReadIO, [:io_read_callback, :io_close_callback, :pointer, :string, :string, :int], :pointer
     attach_function :htmlDocDumpMemory, [:pointer, :pointer, :pointer], :void
+    attach_function :htmlNewDoc, [:string, :string], :pointer
+    attach_function :htmlNodeDump, [:pointer, :pointer, :pointer], :int
+    attach_function :htmlGetMetaEncoding, [:pointer, :pointer], :string
+    attach_function :htmlSetMetaEncoding, [:pointer, :pointer], :void
 
     # xml documents
     attach_function :xmlNewDoc, [:string], :pointer
@@ -74,7 +78,6 @@ module Nokogiri
     attach_function :xmlNewText, [:pointer], :pointer
     attach_function :xmlFreeNode, [:pointer], :void
     attach_function :xmlFreeNodeList, [:pointer], :void
-    attach_function :htmlNodeDump, [:pointer, :pointer, :pointer], :int
     attach_function :xmlEncodeEntitiesReentrant, [:pointer, :string], :string
     attach_function :xmlStringGetNodeList, [:pointer, :string], :pointer
     attach_function :xmlNewNs, [:pointer, :string, :string], :pointer

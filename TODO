@@ -6,8 +6,8 @@ short term:
   - xml/node.rb [DONE]
   - xml/document.rb [DONE]
   - xml/node_set.rb [DONE]
-  - xml/xpath_context.rb
-  - html/document.rb
+  - xml/xpath_context.rb [DONE]
+  - html/document.rb [DONE]
 - implement classes:
   - ProcessingInstruction
   - HTML::ElementDescription
