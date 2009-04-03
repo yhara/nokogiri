@@ -20,7 +20,7 @@ module Nokogiri
             s.field :prev, :pointer
             s.field :doc, :pointer
             s.field :intSubset, :pointer
-            s.field :encoding, :string
+            s.field :encoding, :pointer
             s.field :URL, :string
           end
           @@@
