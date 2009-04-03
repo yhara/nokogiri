@@ -23,10 +23,10 @@ short term:
   - fucking annoying "warning: too many arguments for format string" messages everywhere [DONE-ish]
   - how to lookup and find libxml2.so and libxslt.so?
 - do we have string encoding issues?
+- i feel like we should refactor reader/writer/closer io callbacks
 
 longer term:
 
 - use (new) nested struct support in FFI?
 - convert structs to using layout() instead of FFI::Generator stubs
   - then remove the 'rake ffi' task and supporting functions
-
