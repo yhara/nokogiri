@@ -102,7 +102,7 @@ module Nokogiri
     attach_function :xmlXPathInit, [], :void
     attach_function :xmlXPathNewContext, [:pointer], :pointer
     attach_function :xmlXPathFreeContext, [:pointer], :void
-    attach_function :xmlXPathEvalExpression, [:pointer, :pointer], :pointer
+    attach_function :xmlXPathEvalExpression, [:string, :pointer], :pointer
     attach_function :xmlXPathRegisterNs, [:pointer, :pointer, :pointer], :int
     attach_function :xmlXPathCmpNodes, [:pointer, :pointer], :int
     attach_function :xmlXPathNodeSetAdd, [:pointer, :pointer], :void
@@ -204,7 +204,7 @@ module Nokogiri
     attach_function :xmlSAXUserParseFile, [:pointer, :pointer, :string], :int
     attach_function :xmlParseDocument, [:pointer], :int
     attach_function :xmlFreeParserCtxt, [:pointer], :void
-    attach_function :htmlSAXParseFile, [:pointer, :pointer, :pointer, :pointer], :pointer
+    attach_function :htmlSAXParseFile, [:string, :pointer, :pointer, :pointer], :pointer
     attach_function :htmlSAXParseDoc, [:pointer, :pointer, :pointer, :pointer], :pointer
   end
 

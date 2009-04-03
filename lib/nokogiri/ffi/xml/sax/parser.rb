@@ -5,35 +5,37 @@ module Nokogiri
         
         attr_accessor :cstruct
 
-        def self.new document
-          parser = allocate
-          parser.document = document
-          parser.cstruct = LibXML::XmlSaxHandler.allocate
-          parser.send(:setup_lambdas)
-          parser
-        end
-
-        def parse_memory data
+        def parse_memory(data)
           LibXML.xmlSAXUserParseMemory(cstruct, nil, data, data.length)
           data
         end
 
-        def native_parse_io io, encoding
-          read_proc = lambda do |ctx, buffer, len|
+        def native_parse_io(io, encoding)
+          reader = lambda do |ctx, buffer, len|
             string = io.read(len)
             return 0 if string.nil?
             LibXML.memcpy(buffer, string, string.length)
             string.length
           end
-          close_proc = lambda { |ctx| return 0 }
+          closer = lambda { |ctx| return 0 }
           
-          thing = LibXML.xmlCreateIOParserCtxt(cstruct, nil, read_proc, close_proc, nil, encoding)
-          LibXML.xmlParseDocument(thing)
+          sax_ctx = LibXML.xmlCreateIOParserCtxt(cstruct, nil, reader, closer, nil, encoding)
+          LibXML.xmlParseDocument(sax_ctx)
+          LibXML.xmlFreeParserCtxt(sax_ctx)
           io
         end
 
-        def native_parse_file data
+        def native_parse_file(data)
           LibXML.xmlSAXUserParseFile(cstruct, nil, data)
+        end
+
+        def self.new(doc = XML::SAX::Document.new, encoding = 'ASCII')
+          parser = allocate
+          parser.document = doc
+          parser.encoding = encoding
+          parser.cstruct = LibXML::XmlSaxHandler.allocate
+          parser.send(:setup_lambdas)
+          parser
         end
 
       private
@@ -54,9 +56,16 @@ module Nokogiri
                      end
           @closures[:endElement] = lambda { |_, name| @document.end_element name }
           @closures[:characters] = lambda { |_, data, data_length| @document.characters data.slice(0,data_length) }
-          @closures[:cdataBlock] = lambda { |_, data, data_length| @document.cdata_block data.slice(0,data_length) }
           @closures[:comment] = lambda { |_, data| @document.comment data }
-
+          @closures[:warning] = lambda do |_, msg|
+            # TODO: vasprintf here
+            @document.warning(msg)
+          end
+          @closures[:error] = lambda do |_, msg|
+            # TODO: vasprintf here
+            @document.error(msg)
+          end
+          @closures[:cdataBlock] = lambda { |_, data, data_length| @document.cdata_block data.slice(0,data_length) }
           @closures.each { |k,v| cstruct[k] = v }
         end
 
