@@ -33,7 +33,9 @@ module Nokogiri
       end
 
       def ruby_doc
-        ObjectSpace._id2ref(self[:_private].get_long(0))
+        ptr = self[:_private]
+        return nil if ptr.null?
+        ObjectSpace._id2ref(ptr.get_long(0))
       end
 
       def node_set

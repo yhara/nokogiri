@@ -9,21 +9,23 @@ short term:
   - xml/node_set.rb [DONE]
   - xml/xpath_context.rb [DONE]
   - html/document.rb [DONE]
+  - reader.rb [DONE]
 
 - implement classes:
+  - HTML::ElementDescription [DONE]
   - ProcessingInstruction
-  - HTML::ElementDescription
   - SAX::PushParser
   - HTML::EntityLookup
   - XML::EntityReference
   - XML::RelaxNG
   - XML::Schema
 - jruby
+  - fucking annoying "warning: too many arguments for format string" messages everywhere [DONE]
   - lingering syntax error issues. try test/xml/test_document.rb
-  - fucking annoying "warning: too many arguments for format string" messages everywhere [DONE-ish]
   - how to lookup and find libxml2.so and libxslt.so?
 - do we have string encoding issues?
 - i feel like we should refactor reader/writer/closer io callbacks
+- rdoc documentation? shit.
 
 longer term:
 
