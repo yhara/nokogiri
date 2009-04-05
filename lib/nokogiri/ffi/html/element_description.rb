@@ -29,7 +29,7 @@ module Nokogiri
       end
 
       def inline?
-        cstruct[:isinline] == 0
+        cstruct[:isinline] != 0
       end
 
       def deprecated?
