@@ -26,6 +26,7 @@ short term:
 - do we have string encoding issues?
 - i feel like we should refactor reader/writer/closer io callbacks
 - rdoc documentation? shit.
+- figure out how to cache the ruby objects (nodes and documents) without using Objectspace. ouch.
 
 longer term:
 
