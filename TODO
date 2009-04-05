@@ -13,12 +13,12 @@ short term:
 
 - implement classes:
   - HTML::ElementDescription [DONE]
+  - XML::Schema [DONE]
   - ProcessingInstruction
   - SAX::PushParser
   - HTML::EntityLookup
   - XML::EntityReference
   - XML::RelaxNG
-  - XML::Schema
 - jruby
   - fucking annoying "warning: too many arguments for format string" messages everywhere [DONE]
   - lingering syntax error issues. try test/xml/test_document.rb

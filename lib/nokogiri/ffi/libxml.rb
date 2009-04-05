@@ -207,6 +207,16 @@ module Nokogiri
     attach_function :xmlFreeParserCtxt, [:pointer], :void
     attach_function :htmlSAXParseFile, [:string, :pointer, :pointer, :pointer], :pointer
     attach_function :htmlSAXParseDoc, [:pointer, :pointer, :pointer, :pointer], :pointer
+
+    # schema
+    attach_function :xmlSchemaNewValidCtxt, [:pointer], :pointer
+    attach_function :xmlSchemaSetValidStructuredErrors, [:pointer, :syntax_error_handler, :pointer], :void
+    attach_function :xmlSchemaValidateDoc, [:pointer, :pointer], :void
+    attach_function :xmlSchemaFreeValidCtxt, [:pointer], :void
+    attach_function :xmlSchemaNewMemParserCtxt, [:pointer, :int], :pointer
+    attach_function :xmlSchemaSetParserStructuredErrors, [:pointer, :syntax_error_handler, :pointer], :void
+    attach_function :xmlSchemaParse, [:pointer], :pointer
+    attach_function :xmlSchemaFreeParserCtxt, [:pointer], :void
   end
 
   # initialize constants
@@ -237,6 +247,7 @@ require 'nokogiri/xml/syntax_error'
   "structs/xml_syntax_error",
   "structs/xml_attr.rb",
   "structs/xml_ns.rb",
+  "structs/xml_schema.rb",
   "structs/xml_text_reader.rb",
   "structs/xml_sax_handler.rb",
   "structs/html_elem_desc",
@@ -246,6 +257,7 @@ require 'nokogiri/xml/syntax_error'
   "xml/attr.rb",
   "xml/document.rb",
   "xml/document_fragment.rb",
+  "xml/schema.rb",
   "xml/text.rb",
   "xml/cdata.rb",
   "xml/comment.rb",
