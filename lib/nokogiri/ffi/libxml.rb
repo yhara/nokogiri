@@ -217,6 +217,16 @@ module Nokogiri
     attach_function :xmlSchemaSetParserStructuredErrors, [:pointer, :syntax_error_handler, :pointer], :void
     attach_function :xmlSchemaParse, [:pointer], :pointer
     attach_function :xmlSchemaFreeParserCtxt, [:pointer], :void
+
+    # relaxng
+    attach_function :xmlRelaxNGNewValidCtxt, [:pointer], :pointer
+    attach_function :xmlRelaxNGSetValidStructuredErrors, [:pointer, :syntax_error_handler, :pointer], :void
+    attach_function :xmlRelaxNGValidateDoc, [:pointer, :pointer], :void
+    attach_function :xmlRelaxNGFreeValidCtxt, [:pointer], :void
+    attach_function :xmlRelaxNGNewMemParserCtxt, [:pointer, :int], :pointer
+    attach_function :xmlRelaxNGSetParserStructuredErrors, [:pointer, :syntax_error_handler, :pointer], :void
+    attach_function :xmlRelaxNGParse, [:pointer], :pointer
+    attach_function :xmlRelaxNGFreeParserCtxt, [:pointer], :void
   end
 
   # initialize constants
@@ -248,6 +258,7 @@ require 'nokogiri/xml/syntax_error'
   "structs/xml_attr.rb",
   "structs/xml_ns.rb",
   "structs/xml_schema.rb",
+  "structs/xml_relax_ng.rb",
   "structs/xml_text_reader.rb",
   "structs/xml_sax_handler.rb",
   "structs/html_elem_desc",
@@ -258,6 +269,7 @@ require 'nokogiri/xml/syntax_error'
   "xml/document.rb",
   "xml/document_fragment.rb",
   "xml/schema.rb",
+  "xml/relax_ng.rb",
   "xml/text.rb",
   "xml/cdata.rb",
   "xml/comment.rb",
