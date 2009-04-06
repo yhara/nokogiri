@@ -14,6 +14,18 @@ module Nokogiri
         assert_nil @xml.at('employee').description
       end
 
+      def test_add_namespace_add_child
+        doc   = Nokogiri::XML::Document.new
+        item  = Nokogiri::XML::Element.new('item', doc)
+        doc.root = item
+
+        entry = Nokogiri::XML::Element.new('entry', doc)
+        entry.add_namespace('tlm', 'http://tenderlovemaking.com')
+        assert_equal 'http://tenderlovemaking.com', entry.namespaces['xmlns:tlm']
+        item.add_child(entry)
+        assert_equal 'http://tenderlovemaking.com', entry.namespaces['xmlns:tlm']
+      end
+
       def test_spaceship
         nodes = @xml.xpath('//employee')
         assert_equal(-1, (nodes.first <=> nodes.last))
@@ -67,6 +79,12 @@ module Nokogiri
         xml.root.add_child(Nokogiri::XML::Text.new('text', xml))
         item = xml.root.add_child(Nokogiri::XML::Element.new('item', xml))
         assert_equal '/root/item', item.path
+      end
+
+      def test_new_node_can_have_ancestors
+        xml = Nokogiri::XML('<root>text</root>')
+        item = Nokogiri::XML::Element.new('item', xml)
+        assert_equal 0, item.ancestors.length
       end
 
       def test_children
