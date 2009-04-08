@@ -8,7 +8,9 @@ short term:
   - xml/document.rb [DONE]
   - xml/node_set.rb [DONE]
   - xml/xpath_context.rb [DONE]
+  - xml/cdata.rb [DONE]
   - html/document.rb [DONE]
+  - html/entity_lookup.rb [DONE]
   - reader.rb [DONE]
 
 - implement classes:

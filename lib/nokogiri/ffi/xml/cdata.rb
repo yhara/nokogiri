@@ -3,7 +3,8 @@ module Nokogiri
     class CDATA < Text
       
       def self.new(document, content, &block)
-        node_ptr = LibXML.xmlNewCDataBlock(document.cstruct, content, content.length)
+        length = content.nil? ? 0 : content.length
+        node_ptr = LibXML.xmlNewCDataBlock(document.cstruct, content, length)
         node = Node.wrap(node_ptr)
         if block_given?
           yield node
