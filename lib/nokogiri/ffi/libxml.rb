@@ -41,6 +41,7 @@ module Nokogiri
     attach_function :htmlGetMetaEncoding, [:pointer, :pointer], :string
     attach_function :htmlSetMetaEncoding, [:pointer, :pointer], :void
     attach_function :htmlTagLookup, [:string], :pointer
+    attach_function :htmlEntityLookup, [:string], :pointer
 
     # xml documents
     attach_function :xmlNewDoc, [:string], :pointer
@@ -262,6 +263,7 @@ require 'nokogiri/xml/syntax_error'
   "structs/xml_text_reader.rb",
   "structs/xml_sax_handler.rb",
   "structs/html_elem_desc",
+  "structs/html_entity_desc",
   "structs/xslt_stylesheet.rb",
   "xml/node.rb",
   "xml/dtd.rb",
@@ -281,6 +283,7 @@ require 'nokogiri/xml/syntax_error'
   "xml/sax/parser.rb",
   "html/document.rb",
   "html/element_description.rb",
+  "html/entity_lookup.rb",
   "html/sax/parser.rb",
   "xslt/stylesheet.rb",
 ].each do |file|
