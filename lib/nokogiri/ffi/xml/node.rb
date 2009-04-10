@@ -242,13 +242,16 @@ module Nokogiri
           return nil if node_struct.null?
           node_struct = LibXML::XmlNode.new(node_struct) 
         end
-        document = node_struct[:doc].null? ? nil : LibXML::XmlDocumentCast.new(node_struct[:doc]).ruby_doc
 
+        document = node_struct[:doc].null? \
+          ? nil \
+          : LibXML::XmlDocumentCast.new(node_struct[:doc]).ruby_doc
         if node_struct[:type] == DOCUMENT_NODE || node_struct[:type] == HTML_DOCUMENT_NODE
           return document
         end
 
-        # TODO: check for cached ruby object in _private
+        ruby_node = node_struct.ruby_node
+        return ruby_node unless ruby_node.nil?
 
         klasses = case node_struct[:type]
                   when ELEMENT_NODE then [XML::Element]
@@ -266,7 +269,7 @@ module Nokogiri
         node = klasses.first.allocate
         node.cstruct = klasses[1] ? klasses[1].new(node_struct.pointer) : node_struct
 
-        # TODO: cache ruby object in _private
+        node.cstruct.ruby_node = node
 
         document.node_cache[node_struct.pointer.address] = node if document
 

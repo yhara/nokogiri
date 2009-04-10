@@ -3,10 +3,12 @@
 module Nokogiri
   module LibXML
     class XmlDtd < FFI::Struct
+
       @@@
       struct do |s|
         s.name "struct _xmlDtd"
         s.include "libxml/tree.h"
+        s.field :_private, :long # actually a pointer we're casting as an integer
         s.field :type, :int
         s.field :name, :string
         s.field :children, :pointer
@@ -21,6 +23,9 @@ module Nokogiri
         s.field :entities, :pointer
       end
       @@@
+
+      include CommonNode
+
     end
   end
 end    

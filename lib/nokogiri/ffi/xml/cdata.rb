@@ -4,7 +4,7 @@ module Nokogiri
       
       def self.new(document, content, &block)
         length = content.nil? ? 0 : content.length
-        node_ptr = LibXML.xmlNewCDataBlock(document.cstruct, content, length)
+        node_ptr = LibXML.xmlNewCDataBlock(document.cstruct[:doc], content, length)
         node = Node.wrap(node_ptr)
         if block_given?
           yield node

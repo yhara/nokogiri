@@ -244,7 +244,8 @@ end
 require 'nokogiri/syntax_error'
 require 'nokogiri/xml/syntax_error'
 
-[ "structs/xml_alloc",
+[ "structs/common_node",
+  "structs/xml_alloc",
   "structs/xml_document",
   "structs/xml_node",
   "structs/xml_dtd",
