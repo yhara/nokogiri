@@ -54,6 +54,7 @@ module Nokogiri
     attach_function :xmlCopyDoc, [:pointer, :int], :pointer
     attach_function :xmlFreeDoc, [:pointer], :void
     attach_function :xmlSetTreeDoc, [:pointer, :pointer], :void
+    attach_function :xmlNewReference, [:pointer, :string], :pointer
 
     # nodes
     attach_function :xmlNewNode, [:pointer, :pointer], :pointer
@@ -281,6 +282,7 @@ require 'nokogiri/xml/syntax_error'
   "xml/xpath_context.rb",
   "xml/syntax_error.rb",
   "xml/reader.rb",
+  "xml/entity_reference.rb",
   "xml/sax/parser.rb",
   "html/document.rb",
   "html/element_description.rb",
