@@ -1,37 +1,36 @@
--*- text -*-   
+-*- org -*-   
 
-short term:
+* DONE implement xpath custom handlers
+* code review (compare C to FFI side by side)
+*** DONE xml/node.rb
+*** DONE xml/document.rb
+*** DONE xml/node_set.rb
+*** DONE xml/xpath_context.rb
+*** DONE xml/cdata.rb
+*** DONE html/document.rb
+*** DONE html/entity_lookup.rb
+*** DONE reader.rb
 
-- implement xpath custom handlers [DONE]
-- code review (compare C to FFI side by side)
-  - xml/node.rb [DONE]
-  - xml/document.rb [DONE]
-  - xml/node_set.rb [DONE]
-  - xml/xpath_context.rb [DONE]
-  - xml/cdata.rb [DONE]
-  - html/document.rb [DONE]
-  - html/entity_lookup.rb [DONE]
-  - reader.rb [DONE]
+* implement classes:
+*** DONE HTML::ElementDescription
+*** DONE XML::Schema
+*** DONE HTML::EntityLookup
+*** DONE XML::EntityReference
+*** DONE XML::RelaxNG
+*** ProcessingInstruction
+*** SAX::PushParser
 
-- implement classes:
-  - HTML::ElementDescription [DONE]
-  - XML::Schema [DONE]
-  - ProcessingInstruction
-  - SAX::PushParser
-  - HTML::EntityLookup
-  - XML::EntityReference
-  - XML::RelaxNG
-- jruby
-  - fucking annoying "warning: too many arguments for format string" messages everywhere [DONE]
-  - lingering syntax error issues. try test/xml/test_document.rb
-  - how to lookup and find libxml2.so and libxslt.so?
-- do we have string encoding issues?
-- i feel like we should refactor reader/writer/closer io callbacks
-- rdoc documentation? shit.
-- figure out how to cache the ruby objects (nodes and documents) without using Objectspace. ouch.
+* jruby-only bugs
+*** DONE fucking annoying "warning: too many arguments for format string" messages everywhere
+*** lingering syntax error issues. try test/xml/test_document.rb
+*** how to lookup and find libxml2.so and libxslt.so?
 
-longer term:
+* convert structs to using layout() instead of FFI::Generator stubs
+*** then remove the 'rake ffi' task and supporting functions
 
-- use (new) nested struct support in FFI?
-- convert structs to using layout() instead of FFI::Generator stubs
-  - then remove the 'rake ffi' task and supporting functions
+* figure out how to cache the ruby objects (nodes and documents) without using Objectspace.
+
+* use (new) nested struct support in FFI?
+* do we have string encoding issues?
+* i feel like we should refactor reader/writer/closer io callbacks
+* rdoc documentation? shit.
