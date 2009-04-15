@@ -323,7 +323,7 @@ module Nokogiri
         if ! node.cstruct[:nsDef].null?
           ns = LibXML.xmlSearchNsByHref(
             reparented_struct[:doc],
-            reparented_struct,
+            reparented_struct[:parent],
             LibXML::XmlNs.new(reparented_struct[:nsDef])[:href]
             )
           reparented_struct[:nsDef] = nil unless ns.null?
