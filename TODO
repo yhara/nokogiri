@@ -10,16 +10,14 @@
 *** DONE html/document.rb
 *** DONE html/entity_lookup.rb
 *** DONE reader.rb
-
 * implement classes:
 *** DONE HTML::ElementDescription
 *** DONE XML::Schema
 *** DONE HTML::EntityLookup
 *** DONE XML::EntityReference
 *** DONE XML::RelaxNG
-*** ProcessingInstruction
-*** SAX::PushParser
-
+*** DONE SAX::PushParser
+*** DONE ProcessingInstruction
 * jruby-only bugs
 *** DONE fucking annoying "warning: too many arguments for format string" messages everywhere
 *** lingering syntax error issues. try test/xml/test_document.rb

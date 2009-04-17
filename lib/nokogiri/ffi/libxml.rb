@@ -78,6 +78,7 @@ module Nokogiri
     attach_function :xmlNodeDump, [:pointer, :pointer, :pointer, :int, :int], :int
     attach_function :xmlNewCDataBlock, [:pointer, :pointer, :int], :pointer
     attach_function :xmlNewDocComment, [:pointer, :pointer], :pointer
+    attach_function :xmlNewDocPI, [:pointer, :string, :string], :pointer
     attach_function :xmlNewText, [:pointer], :pointer
     attach_function :xmlFreeNode, [:pointer], :void
     attach_function :xmlFreeNodeList, [:pointer], :void
@@ -280,6 +281,7 @@ require 'nokogiri/xml/syntax_error'
   "xml/text.rb",
   "xml/cdata.rb",
   "xml/comment.rb",
+  "xml/processing_instruction.rb",
   "xml/node_set.rb",
   "xml/xpath.rb",
   "xml/xpath_context.rb",
