@@ -207,6 +207,8 @@ module Nokogiri
     attach_function :xmlSAXUserParseFile, [:pointer, :pointer, :string], :int
     attach_function :xmlParseDocument, [:pointer], :int
     attach_function :xmlFreeParserCtxt, [:pointer], :void
+    attach_function :xmlCreatePushParserCtxt, [:pointer, :pointer, :pointer, :int, :string], :pointer
+    attach_function :xmlParseChunk, [:pointer, :string, :int, :int], :int
     attach_function :htmlSAXParseFile, [:string, :pointer, :pointer, :pointer], :pointer
     attach_function :htmlSAXParseDoc, [:pointer, :pointer, :pointer, :pointer], :pointer
 
@@ -264,6 +266,7 @@ require 'nokogiri/xml/syntax_error'
   "structs/xml_relax_ng.rb",
   "structs/xml_text_reader.rb",
   "structs/xml_sax_handler.rb",
+  "structs/xml_sax_push_parser_context.rb",
   "structs/html_elem_desc",
   "structs/html_entity_desc",
   "structs/xslt_stylesheet.rb",
@@ -284,6 +287,7 @@ require 'nokogiri/xml/syntax_error'
   "xml/reader.rb",
   "xml/entity_reference.rb",
   "xml/sax/parser.rb",
+  "xml/sax/push_parser.rb",
   "html/document.rb",
   "html/element_description.rb",
   "html/entity_lookup.rb",
