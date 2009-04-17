@@ -10,6 +10,7 @@
 *** DONE html/document.rb
 *** DONE html/entity_lookup.rb
 *** DONE reader.rb
+*** xslt.rb, xslt/stylesheet.rb
 * implement classes:
 *** DONE HTML::ElementDescription
 *** DONE XML::Schema
@@ -18,6 +19,23 @@
 *** DONE XML::RelaxNG
 *** DONE SAX::PushParser
 *** DONE ProcessingInstruction
+* miscellaneous issues
+*** blanks being escaped in output
+    - test/xml/test_unparented_node.rb:58:in `test_write_html_to'
+    - test/xml/test_unparented_node.rb:58:in `test_write_xhtml_to'
+    - test/xml/test_node.rb:153:in `test_write_html_to'
+    - test/xml/test_node.rb:153:in `test_write_xhtml_to'
+*** heisenbug:
+test_attribute_roundtrip(TestReader):
+NoMethodError: undefined method `attribute_nodes' for [-617503368]:Array
+    /home/mike/code/nokogiri/lib/nokogiri/ffi/xml/reader.rb:42:in `attribute_nodes'
+    /home/mike/code/nokogiri/lib/nokogiri/xml/reader.rb:14:in `attributes'
+    ./test/test_reader.rb:81:in `test_attribute_roundtrip'
+    /home/mike/code/nokogiri/lib/nokogiri/xml/reader.rb:21:in `call'
+    /home/mike/code/nokogiri/lib/nokogiri/xml/reader.rb:21:in `each'
+    ./test/test_reader.rb:80:in `test_attribute_roundtrip'
+    /usr/lib/ruby/gems/1.8/gems/mocha-0.9.3/lib/mocha/test_case_adapter.rb:69:in `__send__'
+    /usr/lib/ruby/gems/1.8/gems/mocha-0.9.3/lib/mocha/test_case_adapter.rb:69:in `run'
 * jruby-only bugs
 *** DONE fucking annoying "warning: too many arguments for format string" messages everywhere
 *** lingering syntax error issues. try test/xml/test_document.rb
