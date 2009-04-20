@@ -86,7 +86,10 @@ module Nokogiri
               set.cstruct = ns_ptr
               params.unshift set
             else
-              params.unshift LibXML.xmlXPathCastToString(obj)
+              char_ptr = params.unshift LibXML.xmlXPathCastToString(obj)
+              string = char_ptr.read_string
+              LibXML.xmlFree(char_ptr)
+              string
             end
             LibXML.xmlXPathFreeNodeSetList(obj)
           end

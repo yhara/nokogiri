@@ -34,7 +34,7 @@ module Nokogiri
       end
 
       def meta_encoding
-        LibXML.htmlGetMetaEncoding(cstruct, cstruct[:encoding])
+        LibXML.htmlGetMetaEncoding(cstruct)
       end
     end
   end

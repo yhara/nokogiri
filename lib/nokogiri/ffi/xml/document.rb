@@ -19,7 +19,7 @@ module Nokogiri
       end
 
       def encoding=(encoding)
-        # TODO: why can't I just write cstruct[:encoding] = foo if it's a :string type? add failing spec to ffi.
+        # TODO: if :encoding is already set, then it's probably getting leaked.
         cstruct[:encoding] = LibXML.xmlStrdup(encoding)
       end
 

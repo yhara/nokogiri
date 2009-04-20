@@ -9,9 +9,9 @@ module Nokogiri
         cstruct[:children] = cstruct[:last] = nil
         return unless content
 
-        buffer = LibXML.xmlEncodeEntitiesReentrant(cstruct[:doc], content)
+        char_ptr = LibXML.xmlEncodeEntitiesReentrant(cstruct[:doc], content)
 
-        cstruct[:children] = LibXML.xmlStringGetNodeList(cstruct[:doc], buffer)
+        cstruct[:children] = LibXML.xmlStringGetNodeList(cstruct[:doc], char_ptr)
         child_cstruct = cstruct[:children]
         while ! child_cstruct.null?
           child = Node.wrap(child_cstruct)
@@ -20,6 +20,7 @@ module Nokogiri
           cstruct[:last] = child.cstruct
           child_cstruct = child.cstruct[:next]
         end
+        LibXML.xmlFree(char_ptr)
 
         content
       end

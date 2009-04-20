@@ -42,7 +42,7 @@ module Nokogiri
         node.attribute_nodes
       end
 
-      def attribute_at index
+      def attribute_at(index)
         return nil if index.nil?
         index = index.to_i
         attr_ptr = LibXML.xmlTextReaderGetAttributeNo(cstruct, index)
@@ -53,7 +53,7 @@ module Nokogiri
         attr
       end
 
-      def attribute name
+      def attribute(name)
         return nil if name.nil?
         attr_ptr = LibXML.xmlTextReaderGetAttribute(cstruct, name)
         if attr_ptr.null?
@@ -61,11 +61,11 @@ module Nokogiri
           # don't handle namespaces properly in all attribute-and-friends functions
           prefix = FFI::MemoryPointer.new :pointer
           localname = LibXML.xmlSplitQName2(name, prefix)
-          if localname.null?
+          if ! localname.null?
             attr_ptr = LibXML.xmlTextReaderLookupNamespace(cstruct, localname)
             LibXML.xmlFree(localname)
           else
-            attr_ptr = LibXML.xmlTextReaderLookupNamespace(cstruct, prefix)
+            attr_ptr = LibXML.xmlTextReaderLookupNamespace(cstruct, prefix.read_string)
           end
           LibXML.xmlFree(prefix.read_pointer)
         end
