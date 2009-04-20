@@ -92,7 +92,7 @@ module Nokogiri
     attach_function :xmlAddPrevSibling, [:pointer, :pointer], :pointer
     attach_function :xmlIsBlankNode, [:pointer], :int
     attach_function :xmlHasProp, [:pointer, :string], :pointer
-    attach_function :xmlGetProp, [:pointer, :pointer], :pointer # returns char* that must be freed
+    attach_function :xmlGetProp, [:pointer, :string], :pointer # returns char* that must be freed
     attach_function :xmlSetProp, [:pointer, :string, :string], :pointer
     attach_function :xmlRemoveProp, [:pointer], :int
     attach_function :xmlNodeSetContent, [:pointer, :string], :void
