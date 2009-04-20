@@ -112,7 +112,7 @@ module Nokogiri
     attach_function :xmlXPathNodeSetAdd, [:pointer, :pointer], :void
     attach_function :xmlXPathNodeSetCreate, [:pointer], :pointer
     attach_function :xmlXPathFreeNodeSetList, [:pointer], :void
-    attach_function :xmlXPathRegisterFuncLookup, [:pointer, :xpath_lookup_callback, :pointer], :xpath_callback
+    attach_function :xmlXPathRegisterFuncLookup, [:pointer, :xpath_lookup_callback, :pointer], :void
     attach_function :valuePop, [:pointer], :pointer
     attach_function :xmlXPathCastToString, [:pointer], :string
     attach_function :xmlXPathNodeSetMerge, [:pointer, :pointer], :pointer
