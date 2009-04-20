@@ -1,32 +1,32 @@
 -*- org -*-   
 
 * DONE implement xpath custom handlers
-* code review (compare C to FFI side by side)
-*** DONE xml/node.rb
-*** DONE xml/document.rb
-*** DONE xml/node_set.rb
-*** DONE xml/xpath_context.rb
-*** DONE xml/cdata.rb
-*** DONE html/document.rb
-*** DONE html/entity_lookup.rb
-*** DONE reader.rb
-*** xslt.rb, xslt/stylesheet.rb
+* [8/9] code review (compare C to FFI side by side)
+  - [X] xml/node.rb
+  - [X] xml/document.rb
+  - [X] xml/node_set.rb
+  - [X] xml/xpath_context.rb
+  - [X] xml/cdata.rb
+  - [X] html/document.rb
+  - [X] html/entity_lookup.rb
+  - [X] reader.rb
+  - [ ] xslt.rb, xslt/stylesheet.rb
 * DONE code review of function prototypes
-* implement classes:
-*** DONE HTML::ElementDescription
-*** DONE XML::Schema
-*** DONE HTML::EntityLookup
-*** DONE XML::EntityReference
-*** DONE XML::RelaxNG
-*** DONE SAX::PushParser
-*** DONE ProcessingInstruction
+* [7/7] implement classes:
+  - [X] HTML::ElementDescription
+  - [X] XML::Schema
+  - [X] HTML::EntityLookup
+  - [X] XML::EntityReference
+  - [X] XML::RelaxNG
+  - [X] SAX::PushParser
+  - [X] ProcessingInstruction
 * miscellaneous issues
-*** blanks being escaped in output
+*** TODO blanks being escaped in output
     - test/xml/test_unparented_node.rb:58:in `test_write_html_to'
     - test/xml/test_unparented_node.rb:58:in `test_write_xhtml_to'
     - test/xml/test_node.rb:153:in `test_write_html_to'
     - test/xml/test_node.rb:153:in `test_write_xhtml_to'
-*** heisenbug:
+*** TODO heisenbug:
 test_attribute_roundtrip(TestReader):
 NoMethodError: undefined method `attribute_nodes' for [-617503368]:Array
     /home/mike/code/nokogiri/lib/nokogiri/ffi/xml/reader.rb:42:in `attribute_nodes'
@@ -56,12 +56,13 @@ RangeError: 0xdb387178 is recycled object
 
 * jruby-only bugs
 *** DONE fucking annoying "warning: too many arguments for format string" messages everywhere
-*** lingering syntax error issues. try test/xml/test_document.rb
-*** how to lookup and find libxml2.so and libxslt.so?
+*** TODO lingering syntax error issues. try test/xml/test_document.rb
+*** TODO how to lookup and find libxml2.so and libxslt.so?
 
-* convert structs to using layout() instead of FFI::Generator stubs
-*** then remove the 'rake ffi' task and supporting functions
+* TODO convert structs to using layout() instead of FFI::Generator stubs
+*** TODO then remove the 'rake ffi' task and supporting functions
 
+* TODO open jira tickets: support varags in callbacks (needed for syntax error and sax error)
 * figure out how to cache the ruby objects (nodes and documents) without using Objectspace.
 
 * use (new) nested struct support in FFI?
