@@ -57,7 +57,7 @@ module Nokogiri
     attach_function :xmlNewReference, [:pointer, :string], :pointer
 
     # nodes
-    attach_function :xmlNewNode, [:pointer, :pointer], :pointer
+    attach_function :xmlNewNode, [:pointer, :string], :pointer
     attach_function :xmlEncodeSpecialChars, [:pointer, :pointer], :pointer
     attach_function :xmlCopyNode, [:pointer, :int], :pointer
     attach_function :xmlDocCopyNode, [:pointer, :pointer, :int], :pointer
