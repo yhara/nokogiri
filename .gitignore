@@ -15,3 +15,5 @@ cross
 tags
 *.rbc
 stash
+.rake_tasks
+tmp

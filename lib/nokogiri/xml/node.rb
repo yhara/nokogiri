@@ -174,6 +174,7 @@ module Nokogiri
       def at path, ns = document.root ? document.root.namespaces : {}
         search(path, ns).first
       end
+      alias :% :at
 
       ###
       # Get the attribute value for the attribute +name+
@@ -293,7 +294,7 @@ module Nokogiri
       end
 
       ####
-      # Set the content to +string+.
+      # Set the Node content to +string+.  The content gets XML escaped.
       def content= string
         self.native_content = encode_special_chars(string.to_s)
       end
@@ -393,15 +394,27 @@ module Nokogiri
         })
       end
 
+      ###
+      # Set the default namespace for this node to +url+
+      def default_namespace= url
+        add_namespace(nil, url)
+      end
+
       ####
       # Yields self and all children to +block+ recursively.
-      def traverse(&block)
+      def traverse &block
         children.each{|j| j.traverse(&block) }
         block.call(self)
       end
 
+      ###
+      # Accept a visitor.  This method calls "visit" on +visitor+ with self.
+      def accept visitor
+        visitor.visit(self)
+      end
+
       ####
-      #  replace node with the new node in the document.
+      #  replace this Node with the +new_node+ in the Document.
       def replace(new_node)
         if new_node.is_a?(Document) || !new_node.is_a?(XML::Node)
           raise ArgumentError, <<-EOERR
@@ -421,97 +434,249 @@ Node.replace requires a Node argument, and cannot accept a Document.
       end
 
       ###
-      # Serialize Node using +encoding+ and +save_options+.  Save options 
+      # Serialize Node using +options+.  Save options 
       # can also be set using a block. See SaveOptions.
       #
       # These two statements are equivalent:
       #
-      #  node.serialize('UTF-8', FORMAT | AS_XML)
+      #  node.serialize(:encoding => 'UTF-8', :save_with => FORMAT | AS_XML)
       #
       # or
       #
-      #   node.serialize('UTF-8') do |config|
+      #   node.serialize(:encoding => 'UTF-8') do |config|
       #     config.format.as_xml
       #   end
       #
-      def serialize encoding = nil, save_options = SaveOptions::FORMAT, &block
+      def serialize *args, &block
+        if args.first && !args.first.is_a?(Hash)
+          $stderr.puts(<<-eowarn)
+#{self.class}#serialize(encoding, save_opts) is deprecated and will be removed in
+Nokogiri version 1.4.0 *or* after June 1 2009.
+You called serialize from here:
+
+  #{caller.first}
+
+Please change to #{self.class}#serialize(:encoding => enc, :save_with => opts)
+          eowarn
+        end
+
+        options = args.first.is_a?(Hash) ? args.shift : {
+          :encoding   => args[0],
+          :save_with  => args[1] || SaveOptions::FORMAT
+        }
+
         io = StringIO.new
-        write_to io, encoding, save_options, &block
+        write_to io, options, &block
         io.rewind
         io.read
       end
 
       ###
-      # Serialize this Node to HTML using +encoding+
-      def to_html encoding = nil
+      # Serialize this Node to HTML
+      #
+      #   doc.to_html
+      #
+      # See Node#write_to for a list of +options+.  For formatted output,
+      # use Node#to_xhtml instead.
+      def to_html options = {}
+        if options.is_a?(String)
+          $stderr.puts(<<-eowarn)
+Node#to_html(encoding) is deprecated and will be removed in
+Nokogiri version 1.4.0 *or* after June 1 2009.
+You called to_html from here:
+
+  #{caller.first}
+
+Please change to Node#to_html(:encoding => #{options})
+          eowarn
+          options = { :encoding => options }
+        end
+
         # FIXME: this is a hack around broken libxml versions
         return dump_html if %w[2 6] === LIBXML_VERSION.split('.')[0..1]
 
-        serialize(encoding, SaveOptions::FORMAT |
-                            SaveOptions::NO_DECLARATION |
-                            SaveOptions::NO_EMPTY_TAGS |
-                            SaveOptions::AS_HTML)
+        options[:save_with] ||= SaveOptions::FORMAT |
+                                SaveOptions::NO_DECLARATION |
+                                SaveOptions::NO_EMPTY_TAGS |
+                                SaveOptions::AS_HTML
+
+        serialize(options)
       end
 
       ###
-      # Serialize this Node to XML using +encoding+
-      def to_xml encoding = nil
-        serialize(encoding, SaveOptions::FORMAT | SaveOptions::AS_XML)
+      # Serialize this Node to XML using +options+
+      #
+      #   doc.to_xml(:indent => 5, :encoding => 'UTF-8')
+      #
+      # See Node#write_to for a list of +options+
+      def to_xml options = {}
+        encoding = nil
+
+        # FIXME add a deprecation warning
+        if options.is_a? String
+          $stderr.puts(<<-eowarn)
+Node#to_xml(encoding) is deprecated and will be removed in
+Nokogiri version 1.4.0 *or* after June 1 2009.
+You called to_xml from here:
+
+  #{caller.first}
+
+Please change to Node#to_xml(:encoding => #{options})
+          eowarn
+          options = {
+            :encoding => options
+          }
+        end
+        options[:save_with] ||= SaveOptions::FORMAT | SaveOptions::AS_XML
+
+        serialize(options)
       end
 
       ###
-      # Serialize this Node to XML using +encoding+
-      def to_xhtml encoding = nil
+      # Serialize this Node to XHTML using +options+
+      #
+      #   doc.to_xhtml(:indent => 5, :encoding => 'UTF-8')
+      #
+      # See Node#write_to for a list of +options+
+      def to_xhtml options = {}
+        if options.is_a?(String)
+          options = { :encoding => options }
+          $stderr.puts(<<-eowarn)
+Node#to_xml(encoding) is deprecated and will be removed in
+Nokogiri version 1.4.0 *or* after June 1 2009.
+You called to_xhtml from here:
+
+  #{caller.first}
+
+Please change to Node#to_xhtml(:encoding => #{options})
+          eowarn
+        end
+
         # FIXME: this is a hack around broken libxml versions
         return dump_html if %w[2 6] === LIBXML_VERSION.split('.')[0..1]
 
-        serialize(encoding, SaveOptions::FORMAT |
-                            SaveOptions::NO_DECLARATION |
-                            SaveOptions::NO_EMPTY_TAGS |
-                            SaveOptions::AS_XHTML)
+        options[:save_with] ||= SaveOptions::FORMAT |
+                                SaveOptions::NO_DECLARATION |
+                                SaveOptions::NO_EMPTY_TAGS |
+                                SaveOptions::AS_XHTML
+
+        serialize(options)
       end
 
       ###
-      # Write Node to +io+ with +encoding+ and +save_options+
-      def write_to io, encoding = nil, save_options = SaveOptions::FORMAT
+      # Write Node to +io+ with +options+. +options+ modify the output of
+      # this method.  Valid options are:
+      #
+      # * +:encoding+ for changing the encoding
+      # * +:indent_text+ the indentation text, defaults to one space
+      # * +:indent+ the number of +:indent_text+ to use, defaults to 2
+      # * +:save_with+ a combination of SaveOptions constants.
+      #
+      # To save with UTF-8 indented twice:
+      #
+      #   node.write_to(io, :encoding => 'UTF-8', :indent => 2)
+      #
+      # To save indented with two dashes:
+      #
+      #   node.write_to(io, :indent_text => '-', :indent => 2
+      #
+      def write_to io, *options
+        if options.length > 0 && !options.first.is_a?(Hash)
+          $stderr.puts(<<-eowarn)
+Node#write_to(io, encoding, save_options) is deprecated and will be removed in
+Nokogiri version 1.4.0 *or* after June 1 2009.
+You called write_to from here:
+
+  #{caller.first}
+
+Please change to: Node#write_to(io, :encoding => e, :save_options => opts)
+          eowarn
+        end
+
+        options       = options.first.is_a?(Hash) ? options.shift : {}
+        encoding      = options[:encoding] || options[0]
+        save_options  = options[:save_with] || options[1] || SaveOptions::FORMAT
+        indent_text   = options[:indent_text] || ' '
+        indent_times  = options[:indent] || 2
+        
+
         config = SaveOptions.new(save_options)
         yield config if block_given?
 
-        native_write_to(io, encoding, config.options)
+        native_write_to(io, encoding, indent_text * indent_times, config.options)
       end
 
       ###
-      # Write Node as HTML to +io+ with +encoding+
-      def write_html_to io, encoding = nil
-        write_to io, encoding, SaveOptions::FORMAT |
+      # Write Node as HTML to +io+ with +options+
+      #
+      # See Node#write_to for a list of +options+
+      def write_html_to io, options = {}
+        if options.is_a?(String)
+          $stderr.puts(<<-eowarn)
+Node#write_html_to(io, encoding) is deprecated and will be removed in
+Nokogiri version 1.4.0 *or* after June 1 2009.
+You called write_html_to from here:
+
+  #{caller.first}
+
+Please change to Node#write_html_to(io, :encoding => #{options})
+          eowarn
+          options = { :encoding => options }
+        end
+
+        options[:save_with] ||= SaveOptions::FORMAT |
           SaveOptions::NO_DECLARATION |
           SaveOptions::NO_EMPTY_TAGS |
           SaveOptions::AS_HTML
+        write_to io, options
       end
 
       ###
-      # Write Node as XHTML to +io+ with +encoding+
-      def write_xhtml_to io, encoding = nil
-        write_to io, encoding, SaveOptions::FORMAT |
+      # Write Node as XHTML to +io+ with +options+
+      #
+      # See Node#write_to for a list of +options+
+      def write_xhtml_to io, options = {}
+        if options.is_a?(String)
+          $stderr.puts(<<-eowarn)
+Node#write_xhtml_to(io, encoding) is deprecated and will be removed in
+Nokogiri version 1.4.0 *or* after June 1 2009.
+You called write_xhtml_to from here:
+
+  #{caller.first}
+
+Please change to Node#write_xhtml_to(io, :encoding => #{options})
+          eowarn
+          options = { :encoding => options }
+        end
+
+        options[:save_with] ||= SaveOptions::FORMAT |
           SaveOptions::NO_DECLARATION |
           SaveOptions::NO_EMPTY_TAGS |
           SaveOptions::AS_XHTML
+        write_to io, options
       end
 
       ###
-      # Write Node as XML to +io+ with +encoding+
-      def write_xml_to io, encoding = nil
-        write_to io, encoding, SaveOptions::FORMAT | SaveOptions::AS_XML
-      end
-
-      # Create a new node from +string+
+      # Write Node as XML to +io+ with +options+
       #
-      # THIS METHOD IS DEPRECATED
-      # This method is deprecated and will be removed in 1.3.0 or by
-      # March 1, 2009. Instead, use Nokogiri::XML::Node#fragment()
-      def self.new_from_str string
-        $stderr.puts("This method is deprecated and will be removed in 1.3.0 or by March 1, 2009. Instead, use Nokogiri::XML::Node#fragment")
-        Nokogiri::HTML.fragment(string).first
+      #   doc.write_xml_to io, :encoding => 'UTF-8'
+      #
+      # See Node#write_to for a list of options
+      def write_xml_to io, options = {}
+        if options.is_a?(String)
+          $stderr.puts(<<-eowarn)
+Node#write_xml_to(io, encoding) is deprecated and will be removed in
+Nokogiri version 1.4.0 *or* after June 1 2009.
+You called write_xml_to from here:
+
+  #{caller.first}
+
+Please change to Node#write_xml_to(io, :encoding => #{options})
+          eowarn
+          options = { :encoding => options }
+        end
+        options[:save_with] ||= SaveOptions::FORMAT | SaveOptions::AS_XML
+        write_to io, options
       end
 
       ###

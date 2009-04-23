@@ -9,6 +9,8 @@ end
 
 require 'nokogiri'
 
+puts "#{__FILE__}:#{__LINE__}: libxml version info: #{Nokogiri::VERSION_INFO.inspect}"
+
 module Nokogiri
   class TestCase < Test::Unit::TestCase
     ASSETS_DIR      = File.join(File.dirname(__FILE__), 'files')
@@ -34,6 +36,18 @@ module Nokogiri
       if ENV['NOKOGIRI_GC']
         STDOUT.putc '!'
         GC.start 
+      end
+    end
+
+    def assert_indent amount, doc, message = nil
+      nodes = []
+      doc.traverse do |node|
+        nodes << node if node.text? && node.blank?
+      end
+      assert nodes.length > 0
+      nodes.each do |node|
+        len = node.content.gsub(/[\r\n]/, '').length
+        assert_equal(0, len % amount, message)
       end
     end
   end

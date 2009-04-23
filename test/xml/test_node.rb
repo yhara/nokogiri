@@ -10,6 +10,19 @@ module Nokogiri
         @xml = Nokogiri::XML.parse(File.read(XML_FILE), XML_FILE)
       end
 
+      def test_namespace_goes_to_children
+        fruits = Nokogiri::XML(<<-eoxml)
+        <Fruit xmlns='www.fruits.org'>
+        </Fruit>
+        eoxml
+        apple = Nokogiri::XML::Node.new('Apple', fruits)
+        orange = Nokogiri::XML::Node.new('Orange', fruits)
+        apple << orange
+        fruits.root << apple
+        assert fruits.at('//fruit:Orange',{'fruit'=>'www.fruits.org'})
+        assert fruits.at('//fruit:Apple',{'fruit'=>'www.fruits.org'})
+      end
+
       def test_description
         assert_nil @xml.at('employee').description
       end
@@ -105,6 +118,72 @@ module Nokogiri
         node = @xml.at('address')
         node.add_namespace('foo', 'http://tenderlovemaking.com')
         assert_equal 'http://tenderlovemaking.com', node.namespaces['xmlns:foo']
+      end
+
+      def test_add_default_ns
+        node = @xml.at('address')
+        node.add_namespace(nil, 'http://tenderlovemaking.com')
+        assert_equal 'http://tenderlovemaking.com', node.namespaces['xmlns']
+      end
+
+      def test_add_multiple_namespaces
+        node = @xml.at('address')
+
+        node.add_namespace(nil, 'http://tenderlovemaking.com')
+        assert_equal 'http://tenderlovemaking.com', node.namespaces['xmlns']
+
+        node.add_namespace('foo', 'http://tenderlovemaking.com')
+        assert_equal 'http://tenderlovemaking.com', node.namespaces['xmlns:foo']
+      end
+
+      def test_default_namespace=
+        node = @xml.at('address')
+        node.default_namespace = 'http://tenderlovemaking.com'
+        assert_equal 'http://tenderlovemaking.com', node.namespaces['xmlns']
+        assert_equal node, @xml.xpath('//foo:address', {
+          'foo' => 'http://tenderlovemaking.com'
+        }).first
+      end
+
+      def test_at
+        node = @xml.at('address')
+        assert_equal node, @xml.xpath('//address').first
+      end
+
+      def test_percent
+        node = @xml % ('address')
+        assert_equal node, @xml.xpath('//address').first
+      end
+
+      def test_accept
+        visitor = Class.new {
+          attr_accessor :visited
+          def accept target
+            target.accept(self)
+          end
+
+          def visit node
+            node.children.each { |c| c.accept(self) }
+            @visited = true
+          end
+        }.new
+        visitor.accept(@xml.root)
+        assert visitor.visited
+      end
+
+      def test_replace_with_default_namespaces
+        fruits = Nokogiri::XML(<<-eoxml)
+          <fruit xmlns="http://fruits.org">
+            <apple />
+          </fruit>
+        eoxml
+
+        apple = fruits.css('apple').first
+
+        orange = Nokogiri::XML::Node.new('orange', fruits)
+        apple.replace(orange)
+
+        assert_equal orange, fruits.css('orange').first
       end
 
       def test_add_child_should_inherit_namespace
@@ -589,6 +668,19 @@ EOF
         assert_equal nil, set[3].namespace
       end
 
+      def test_namespace_without_an_href_on_html_node
+        # because microsoft word's HTML formatting does this. ick.
+        xml = Nokogiri::HTML.parse <<-EOF
+<div><o:p>foo</o:p></div>
+        EOF
+
+        assert_not_nil(node = xml.at('p'))
+
+        assert_equal 1, node.namespaces.keys.size
+        assert       node.namespaces.has_key?('xmlns:o')
+        assert_equal nil, node.namespaces['xmlns:o']
+      end
+
       def test_line
         xml = Nokogiri::XML(<<-eoxml)
         <root>
@@ -601,6 +693,34 @@ EOF
         set = xml.search("//a")
         node = set.first
         assert_equal 2, node.line
+      end
+
+      def test_unlink_then_reparent
+        # see http://github.com/tenderlove/nokogiri/issues#issue/22
+        10.times do
+          STDOUT.putc "."
+          STDOUT.flush
+          begin
+            doc = Nokogiri::XML <<-EOHTML
+              <root>
+                <a>
+                  <b/>
+                  <c/>
+                </a>
+              </root>
+            EOHTML
+
+            root = doc.at("root")
+            a = root.at("a")
+            b = a.at("b")
+            c = a.at("c")
+            a.add_next_sibling(b.unlink)
+            c.unlink
+          end
+
+          GC.start
+        end
+        
       end
 
     end

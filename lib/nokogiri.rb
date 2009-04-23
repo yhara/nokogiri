@@ -10,7 +10,7 @@ if ENV['NOKOGIRI_FFI'] || RUBY_PLATFORM =~ /java/
   require 'ffi'
   require 'nokogiri/ffi/libxml'
 else
-  require 'nokogiri/native'
+  require 'nokogiri/nokogiri'
 end
 
 require 'nokogiri/version'

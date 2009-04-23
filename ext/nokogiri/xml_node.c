@@ -14,6 +14,36 @@ static void debug_node_dealloc(xmlNodePtr x)
 typedef xmlNodePtr (*node_other_func)(xmlNodePtr, xmlNodePtr);
 
 /* :nodoc: */
+static void relink_namespace(xmlNodePtr reparented)
+{
+  // Make sure that our reparented node has the correct namespaces
+  if(reparented->doc != (xmlDocPtr)reparented->parent)
+    xmlSetNs(reparented, reparented->parent->ns);
+
+  // Search our parents for an existing definition
+  if(reparented->nsDef) {
+    xmlNsPtr ns = xmlSearchNsByHref(
+        reparented->doc,
+        reparented->parent,
+        reparented->nsDef->href
+    );
+    if(ns && ns != reparented->nsDef) reparented->nsDef = NULL;
+  }
+
+  // Only walk all children if there actually is a namespace we need to
+  // reparent.
+  if(NULL == reparented->ns) return;
+
+  // When a node gets reparented, walk it's children to make sure that
+  // their namespaces are reparented as well.
+  xmlNodePtr child = reparented->children;
+  while(NULL != child) {
+    relink_namespace(child);
+    child = child->next;
+  }
+}
+
+/* :nodoc: */
 static VALUE reparent_node_with(VALUE node_obj, VALUE other_obj, node_other_func func)
 {
   VALUE reparented_obj ;
@@ -47,19 +77,8 @@ static VALUE reparent_node_with(VALUE node_obj, VALUE other_obj, node_other_func
     DATA_PTR(node_obj) = reparented ;
   }
 
-  // Make sure that our reparented node has the correct namespaces
-  if(reparented->doc != (xmlDocPtr)reparented->parent)
-    reparented->ns = reparented->parent->ns;
-
-  // Search our parents for an existing definition
-  if(reparented->nsDef) {
-    xmlNsPtr ns = xmlSearchNsByHref(
-        reparented->doc,
-        reparented->parent,
-        reparented->nsDef->href
-    );
-    if(ns && ns != reparented->nsDef) reparented->nsDef = NULL;
-  }
+  // Appropriately link in namespaces
+  relink_namespace(reparented);
 
   reparented_obj = Nokogiri_wrap_xml_node(reparented);
 
@@ -221,6 +240,9 @@ static VALUE replace(VALUE self, VALUE _new_node)
   Data_Get_Struct(_new_node, xmlNode, new_node);
 
   xmlReplaceNode(node, new_node);
+
+  // Appropriately link in namespaces
+  relink_namespace(new_node);
   return self ;
 }
 
@@ -550,11 +572,20 @@ static VALUE add_previous_sibling(VALUE self, VALUE rb_node)
  *
  * Write this Node to +io+ with +encoding+ and +options+
  */
-static VALUE native_write_to(VALUE self, VALUE io, VALUE encoding, VALUE options)
-{
+static VALUE native_write_to(
+    VALUE self,
+    VALUE io,
+    VALUE encoding,
+    VALUE indent_string,
+    VALUE options
+) {
   xmlNodePtr node;
 
   Data_Get_Struct(self, xmlNode, node);
+
+  xmlIndentTreeOutput = 1;
+
+  xmlTreeIndentString = StringValuePtr(indent_string);
 
   xmlSaveCtxtPtr savectx = xmlSaveToIO(
       (xmlOutputWriteCallback)io_write_callback,
@@ -594,22 +625,14 @@ static VALUE add_namespace(VALUE self, VALUE prefix, VALUE href)
   xmlNodePtr node;
   Data_Get_Struct(self, xmlNode, node);
 
+
   xmlNsPtr ns = xmlNewNs(
       node,
       (const xmlChar *)StringValuePtr(href),
-      (const xmlChar *)StringValuePtr(prefix)
+      (const xmlChar *)(prefix == Qnil ? NULL : StringValuePtr(prefix))
   );
 
-  if(NULL == ns) return self;
-
-  /*
-  xmlNewNsProp(
-      node,
-      ns,
-      (const xmlChar *)StringValuePtr(href),
-      (const xmlChar *)StringValuePtr(prefix)
-  );
-  */
+  xmlSetNs(node, ns);
 
   return self;
 }
@@ -791,7 +814,7 @@ void Nokogiri_xml_node_namespaces(xmlNodePtr node, VALUE attr_hash)
 
     rb_hash_aset(attr_hash,
         NOKOGIRI_STR_NEW2(key, node->doc->encoding),
-        NOKOGIRI_STR_NEW2(ns->href, node->doc->encoding)
+        (ns->href ? NOKOGIRI_STR_NEW2(ns->href, node->doc->encoding) : Qnil)
     );
     if (key != buffer) {
       free(key);
@@ -845,7 +868,7 @@ void init_xml_node()
   rb_define_method(klass, "line", line, 0);
 
   rb_define_private_method(klass, "dump_html", dump_html, 0);
-  rb_define_private_method(klass, "native_write_to", native_write_to, 3);
+  rb_define_private_method(klass, "native_write_to", native_write_to, 4);
   rb_define_private_method(klass, "replace_with_node", replace, 1);
   rb_define_private_method(klass, "native_content=", set_content, 1);
   rb_define_private_method(klass, "get", get, 1);
