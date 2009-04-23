@@ -1,6 +1,4 @@
 
-require 'cross-ffi'
-
 module Nokogiri
   module LibXML
 
