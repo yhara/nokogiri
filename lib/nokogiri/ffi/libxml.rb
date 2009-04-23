@@ -249,6 +249,16 @@ module Nokogiri
   }.call
 end
 
+require 'nokogiri/version'
+
+Nokogiri::VERSION_INFO['libxml'] = {}
+Nokogiri::VERSION_INFO['libxml']['loaded'] = Nokogiri::LIBXML_VERSION
+if RUBY_PLATFORM =~ /java/
+  Nokogiri::VERSION_INFO['libxml']['binding'] = 'jruby-ffi'
+else
+  Nokogiri::VERSION_INFO['libxml']['binding'] = 'ruby-ffi'
+end
+
 require 'nokogiri/syntax_error'
 require 'nokogiri/xml/syntax_error'
 

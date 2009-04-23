@@ -6,12 +6,20 @@ class TestNokogiri < Nokogiri::TestCase
     assert_match version_match, Nokogiri::VERSION
     assert_match version_match, Nokogiri::LIBXML_VERSION
 
+    if defined?(FFI)
+      if RUBY_PLATFORM =~ /java/
+        assert_equal 'jruby-ffi', Nokogiri::VERSION_INFO['libxml']['binding']
+      else
+        assert_equal 'ruby-ffi', Nokogiri::VERSION_INFO['libxml']['binding']
+      end
+    else
+      assert_equal 'extension', Nokogiri::VERSION_INFO['libxml']['binding']
+
+      assert_match version_match, Nokogiri::VERSION_INFO['libxml']['compiled']
+      assert_equal Nokogiri::LIBXML_VERSION, Nokogiri::VERSION_INFO['libxml']['compiled']
+    end
+
     assert_match version_match, Nokogiri::VERSION_INFO['libxml']['loaded']
-    assert_match version_match, Nokogiri::VERSION_INFO['libxml']['compiled']
-
-    assert_equal Nokogiri::LIBXML_VERSION, Nokogiri::VERSION_INFO['libxml']['compiled']
-    assert_equal 'extension', Nokogiri::VERSION_INFO['libxml']['binding']
-
     Nokogiri::LIBXML_PARSER_VERSION =~ /(\d)(\d{2})(\d{2})/
     major = $1.to_i
     minor = $2.to_i
