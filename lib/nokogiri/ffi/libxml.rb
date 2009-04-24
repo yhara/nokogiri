@@ -119,6 +119,7 @@ module Nokogiri
     attach_function :xmlSaveToIO, [:io_write_callback, :io_close_callback, :pointer, :string, :int], :pointer
     attach_function :xmlSaveTree, [:pointer, :pointer], :int
     attach_function :xmlSaveClose, [:pointer], :int
+    attach_function :xmlSetNs, [:pointer, :pointer], :void
 
     # parserInternals.c
     attach_function :xmlSubstituteEntitiesDefault, [:int], :int
@@ -128,6 +129,8 @@ module Nokogiri
 
     # globals.c
     attach_function :__xmlParserVersion, [], :pointer
+    attach_function :__xmlIndentTreeOutput, [], :pointer
+    attach_function :__xmlTreeIndentString, [], :pointer
 
     # xpath.c
     attach_function :xmlXPathInit, [], :void

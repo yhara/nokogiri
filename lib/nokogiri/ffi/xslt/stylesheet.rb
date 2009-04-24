@@ -32,10 +32,6 @@ module Nokogiri
         XML::Document.wrap(ptr)
       end
 
-      def apply_to document, params=[]
-        serialize(transform(document, params))
-      end
-
     end
   end
 end

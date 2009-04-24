@@ -6,6 +6,7 @@ module Nokogiri
         attr_accessor :cstruct
 
         def parse_memory(data)
+          raise(ArgumentError, 'data cannot be nil') if data.nil?
           LibXML.xmlSAXUserParseMemory(cstruct, nil, data, data.length)
           data
         end

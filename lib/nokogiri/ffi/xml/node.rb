@@ -50,6 +50,7 @@ module Nokogiri
 
       def replace_with_node(new_node)
         LibXML.xmlReplaceNode(cstruct, new_node.cstruct)
+        Node.send(:relink_namespace, new_node.cstruct)
         self
       end
 
@@ -190,7 +191,9 @@ module Nokogiri
         end
       end
 
-      def native_write_to(io, encoding, options)
+      def native_write_to(io, encoding, indent_string, options)
+        set_xml_indent_tree_output 1
+        set_xml_tree_indent_string indent_string
         writer = lambda do |context, buffer, len|
           io.write buffer
           len
@@ -208,8 +211,7 @@ module Nokogiri
 
       def add_namespace(prefix, href)
         ns = LibXML.xmlNewNs(cstruct, href, prefix)
-        return self if ns.null?
-#         LibXML.xmlNewNsProp(cstruct, ns, href, prefix)
+        LibXML.xmlSetNs(cstruct, ns)
         self
       end
 
@@ -313,13 +315,21 @@ module Nokogiri
           node.cstruct = reparented_struct
         end
 
+        relink_namespace reparented_struct
+
+        reparented = Node.wrap(reparented_struct)
+        reparented.decorate!
+        reparented
+      end
+
+      def self.relink_namespace(reparented_struct)
         # Make sure that our reparented node has the correct namespaces
         if reparented_struct[:doc] != reparented_struct[:parent]
-          reparented_struct[:ns] = LibXML::XmlNode.new(reparented_struct[:parent])[:ns]
+          LibXML.xmlSetNs(reparented_struct, LibXML::XmlNode.new(reparented_struct[:parent])[:ns])
         end
 
         # Search our parents for an existing definition
-        if ! node.cstruct[:nsDef].null?
+        if ! reparented_struct[:nsDef].null?
           ns = LibXML.xmlSearchNsByHref(
             reparented_struct[:doc],
             reparented_struct[:parent],
@@ -328,13 +338,29 @@ module Nokogiri
           reparented_struct[:nsDef] = nil unless ns.null?
         end
 
-        reparented = Node.wrap(reparented_struct)
-        reparented.decorate!
-        reparented
+        # Only walk all children if there actually is a namespace we need to reparent.
+        return if reparented_struct[:ns].null?
+
+        # When a node gets reparented, walk it's children to make sure that
+        # their namespaces are reparented as well.
+        child_ptr = reparented_struct[:children]
+        while ! child_ptr.null?
+          child_struct = LibXML::XmlNode.new(child_ptr) 
+          relink_namespace child_struct
+          child_ptr = child_struct[:next]
+        end
       end
 
       def cstruct_node_from(sym)
         (val = cstruct[sym]).null? ? nil : Node.wrap(val)
+      end
+
+      def set_xml_indent_tree_output(value)
+        LibXML.__xmlIndentTreeOutput.write_int(value)
+      end
+
+      def set_xml_tree_indent_string(value)
+        LibXML.__xmlTreeIndentString.write_pointer(LibXML.xmlStrdup(value.to_s))
       end
 
     end
