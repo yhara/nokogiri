@@ -220,6 +220,9 @@ module Nokogiri
 
         node_cstruct = LibXML::XmlNode.new(ptr)
         node_cstruct[:doc] = document.cstruct[:doc]
+
+        LibXML.xmlXPathNodeSetAdd(node_cstruct.document.node_set, node_cstruct);
+
         node = Node.wrap(node_cstruct)
 
         yield node if block_given?
