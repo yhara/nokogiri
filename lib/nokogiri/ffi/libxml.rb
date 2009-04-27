@@ -4,11 +4,10 @@ module Nokogiri
 
     def self.expand_library_path(library)
       return File.expand_path(library) if library =~ %r{^[^/].*/}
-      library = Dir[
-        "/opt/local/lib/#{library}.{so,dylib}",
-        "/usr/local/lib/#{library}.{so,dylib}",
-        "/usr/lib/#{library}.{so,dylib}",
-      ].first
+
+      dirs = ENV['LD_LIBRARY_PATH'].split(':') + ['/opt/local/lib', '/usr/local/lib', '/usr/lib']
+
+      library = Dir[ *( dirs.collect {|dir| File.join(dir, "#{library}.{so,dylib}")} ) ].first
 
       raise "Couldn't find #{library}" unless library
 
