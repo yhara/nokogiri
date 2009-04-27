@@ -111,6 +111,8 @@ module Nokogiri
     attach_function :xmlBufferCreate, [], :pointer
     attach_function :xmlBufferFree, [:pointer], :void
     attach_function :xmlSplitQName2, [:string, :pointer], :pointer # returns char* that must be freed
+    attach_function :xmlNewDocProp, [:pointer, :string, :string], :pointer
+    attach_function :xmlFreePropList, [:pointer], :void
 
     # xmlsave.c
     attach_function :xmlDocDumpMemory, [:pointer, :pointer, :pointer], :void
