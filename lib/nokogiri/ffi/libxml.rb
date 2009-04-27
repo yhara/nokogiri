@@ -255,10 +255,11 @@ require 'nokogiri/version'
 
 Nokogiri::VERSION_INFO['libxml'] = {}
 Nokogiri::VERSION_INFO['libxml']['loaded'] = Nokogiri::LIBXML_VERSION
+Nokogiri::VERSION_INFO['libxml']['binding'] = 'ffi'
 if RUBY_PLATFORM =~ /java/
-  Nokogiri::VERSION_INFO['libxml']['binding'] = 'jruby-ffi'
+  Nokogiri::VERSION_INFO['libxml']['platform'] = 'jruby'
 else
-  Nokogiri::VERSION_INFO['libxml']['binding'] = 'ruby-ffi'
+  Nokogiri::VERSION_INFO['libxml']['platform'] = 'ruby'
 end
 
 require 'nokogiri/syntax_error'
