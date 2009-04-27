@@ -3,7 +3,13 @@ module Nokogiri
     class DocumentFragment < Node
 
       def self.new(document, &block)
-        node_cstruct = LibXML.xmlNewDocFragment(document.cstruct)
+        node_ptr = LibXML.xmlNewDocFragment(document.cstruct)
+
+        node_cstruct = LibXML::XmlNode.new(node_ptr)
+        node_cstruct[:doc] = document.cstruct[:doc]
+
+        LibXML.xmlXPathNodeSetAdd(node_cstruct.document.node_set, node_cstruct)
+
         node = Node.wrap(node_cstruct)
         
         if node.document.child && node.document.child.node_type == ELEMENT_NODE
